@@ -6,8 +6,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import RAGHub from "./pages/RAGHub";
+import MCPCenter from "./pages/MCPCenter";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Navigation from "./components/Navigation";
 import { analytics } from "./services/analyticsService";
 import { performanceService } from "./services/performanceService";
 
@@ -40,8 +44,23 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <Navigation />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/rag-hub" element={<RAGHub />} />
+              <Route path="/mcp-center" element={<MCPCenter />} />
+              {/* PLACEHOLDER ROUTES - TO BE IMPLEMENTED */}
+              <Route path="/prompt-studio" element={<Index />} />
+              <Route path="/a2a-agents" element={<Index />} />
+              <Route path="/analytics" element={<Dashboard />} />
+              <Route path="/docs" element={<Index />} />
+              <Route path="/projects" element={<Index />} />
+              <Route path="/templates" element={<Index />} />
+              <Route path="/integrations" element={<Index />} />
+              <Route path="/settings" element={<Index />} />
+              <Route path="/auth" element={<Index />} />
+              <Route path="/get-started" element={<Index />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
