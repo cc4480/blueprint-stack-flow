@@ -17,7 +17,7 @@ const Logo = ({ size = 'md', className = '' }: LogoProps) => {
   return (
     <div className={`flex items-center ${className}`}>
       <img 
-        src="/placeholder.svg" 
+        src="/lovable-uploads/cd49efdf-9fb4-4552-b98b-348b575a8c29.png" 
         alt="NoCodeLos Logo" 
         className={`${sizes[size]} w-auto object-contain filter drop-shadow-lg`}
         style={{
