@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,6 @@ import { Copy, Download, Zap, CheckCircle, Clock, Brain, Network, Database, GitB
 import { toast } from "sonner";
 import ApiKeyManager from "./ApiKeyManager";
 import { promptService, PromptGenerationRequest } from "../services/promptService";
-
 const InteractiveDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showApiKey, setShowApiKey] = useState(false);
@@ -28,7 +26,6 @@ const InteractiveDemo = () => {
     a2aProtocols?: string[];
     ragPipeline?: string;
   } | null>(null);
-
   const appTypes = [{
     id: "dashboard",
     label: "Business Dashboard",
@@ -60,7 +57,6 @@ const InteractiveDemo = () => {
     icon: "🚀",
     description: "Software as a Service"
   }];
-
   const dataSources = [{
     id: "supabase",
     label: "Supabase",
@@ -82,7 +78,6 @@ const InteractiveDemo = () => {
     icon: "🤖",
     description: "Dynamic AI content"
   }];
-
   const features = [{
     id: "auth",
     label: "User Authentication",
@@ -116,10 +111,9 @@ const InteractiveDemo = () => {
     label: "File Upload/Storage",
     category: "Features"
   }];
-
   useEffect(() => {
     console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
-    
+
     // Check if API key is already configured
     const savedKey = localStorage.getItem('deepseek_api_key');
     if (savedKey) {
@@ -128,7 +122,6 @@ const InteractiveDemo = () => {
       console.log('✅ DeepSeek API key already configured');
     }
   }, []);
-
   const handleApiKeyChange = (key: string | null) => {
     if (key) {
       promptService.setApiKey(key);
@@ -140,24 +133,20 @@ const InteractiveDemo = () => {
       setApiKeyConfigured(false);
     }
   };
-
   const handleSetupDeepSeek = () => {
     console.log('🔧 Setup DeepSeek AI button clicked');
     setShowApiKey(true);
   };
-
   const generatePrompt = async () => {
     if (!apiKeyConfigured) {
       toast.error('Please configure your DeepSeek API key first');
       setShowApiKey(true);
       return;
     }
-
     if (formData.features.length === 0) {
       toast.error('Please select at least one feature');
       return;
     }
-    
     setIsGenerating(true);
     console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
     try {
@@ -180,7 +169,6 @@ const InteractiveDemo = () => {
       setIsGenerating(false);
     }
   };
-
   const handleFeatureToggle = (featureId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -188,7 +176,6 @@ const InteractiveDemo = () => {
     }));
     console.log('🔄 NoCodeLos Blueprint Stack features updated:', formData.features);
   };
-
   const copyToClipboard = async () => {
     if (generatedResult) {
       await navigator.clipboard.writeText(generatedResult.prompt);
@@ -196,7 +183,6 @@ const InteractiveDemo = () => {
       console.log('📋 Blueprint Stack prompt copied to clipboard');
     }
   };
-
   const downloadPrompt = () => {
     if (generatedResult) {
       const blob = new Blob([generatedResult.prompt], {
@@ -212,7 +198,6 @@ const InteractiveDemo = () => {
       console.log('📥 Blueprint Stack prompt file downloaded');
     }
   };
-
   const resetDemo = () => {
     setCurrentStep(0);
     setFormData({
@@ -224,7 +209,6 @@ const InteractiveDemo = () => {
     setGeneratedResult(null);
     console.log('🔄 NoCodeLos Blueprint Stack demo reset');
   };
-
   const getStepTitle = () => {
     switch (currentStep) {
       case 0:
@@ -241,14 +225,13 @@ const InteractiveDemo = () => {
         return "";
     }
   };
-
   return <section className="py-20 bg-black">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-bold mb-6 text-white">
               Get Your First NoCodeLos Blueprint Stack Master Prompt in{" "}
-              <span className="gradient-logo-text">30 Seconds</span>
+              <span className="gradient-logo-text">60 seconds!</span>
             </h2>
             <p className="text-xl text-gray-300 mb-4">
               Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols
@@ -278,17 +261,10 @@ const InteractiveDemo = () => {
             <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
               <CardTitle className="text-2xl flex items-center justify-between">
                 <span>Step {currentStep + 1}: {getStepTitle()}</span>
-                {!showApiKey && currentStep < 4 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleSetupDeepSeek}
-                    className="text-white hover:bg-white/20 transition-all duration-300"
-                  >
+                {!showApiKey && currentStep < 4 && <Button variant="ghost" size="sm" onClick={handleSetupDeepSeek} className="text-white hover:bg-white/20 transition-all duration-300">
                     <Brain className="w-4 h-4 mr-2" />
                     {apiKeyConfigured ? 'DeepSeek Ready ✓' : 'Setup DeepSeek AI'}
-                  </Button>
-                )}
+                  </Button>}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 bg-gray-900">
@@ -512,5 +488,4 @@ const InteractiveDemo = () => {
       </div>
     </section>;
 };
-
 export default InteractiveDemo;
