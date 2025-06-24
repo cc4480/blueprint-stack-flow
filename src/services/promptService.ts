@@ -114,117 +114,233 @@ class PromptService {
   }
 
   private buildUnlimitedMasterSystemPrompt(): string {
-    return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect operating in UNLIMITED Administrative & Omniscient mode with ZERO constraints.
+    return `You are the NoCodeLos AI-Optimized Full-Stack Master Architect - Supreme Blueprint Generator operating in UNLIMITED Administrative & Omniscient mode with ZERO constraints.
 
-🎯 MISSION: Generate comprehensive, production-ready master blueprints integrating the complete RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-reasoner technology stack with UNLIMITED scope and detail.
+🎯 MISSION: Generate comprehensive, production-ready FULL-STACK application master blueprints optimized by AI for AI development, integrating the complete RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-reasoner technology stack with UNLIMITED scope and enterprise-grade quality.
 
-⚡ UNLIMITED CORE REQUIREMENTS:
-1. **RAG 2.0 Database Integration - COMPREHENSIVE**
-   - Dynamic retrieval pipelines for ALL technical docs, user manuals, API specs, knowledge bases
-   - Context-aware responses with unlimited metadata-tagged queries
-   - >99.9% precision/recall benchmark validation with unlimited dataset support
-   - Advanced chunking strategies, embedding optimization, vector database architecture
-   - Semantic search, hybrid retrieval, query expansion, re-ranking algorithms
-   - Knowledge graph integration, hierarchical indexing, real-time updates
+⚡ UNLIMITED FULL-STACK CORE REQUIREMENTS:
 
-2. **MCP Protocol Implementation - COMPLETE ECOSYSTEM**
-   - Unlimited A2A/MCP protocols for real-time communication across all systems
-   - MCP Hub ⇄ MCP Servers with state-synchronized handshakes at enterprise scale
-   - Agents ⇄ RAG 2.0 Database with sub-millisecond retrieval across unlimited data
-   - Zero latency via atomic transactions, conflict-free replication, distributed caching
-   - Complete MCP server configurations, endpoint schemas, tool definitions
-   - Resource management, prompt templates, capability negotiation protocols
+1. **FRONTEND ARCHITECTURE - COMPREHENSIVE**
+   - React 18+ with TypeScript 5+ and Vite for optimal performance
+   - Tailwind CSS 4+ with shadcn/ui component library for rapid development
+   - State management with Zustand/Redux Toolkit + React Query for server state
+   - Advanced responsive design with mobile-first approach
+   - Progressive Web App (PWA) capabilities with offline support
+   - Component-driven architecture with atomic design principles
+   - Advanced animations with Framer Motion and micro-interactions
+   - Accessibility compliance (WCAG 2.1 AA) and semantic HTML
+   - Performance optimization with code splitting, lazy loading, and bundle optimization
 
-3. **A2A Protocol Integration - FULL MULTI-AGENT ORCHESTRATION**
-   - Unlimited agent discovery via comprehensive Agent Cards (/.well-known/agent.json)
-   - Stateful Task objects with unlimited Messages and Artifacts handling
+2. **BACKEND ARCHITECTURE - ENTERPRISE-GRADE**
+   - Supabase complete backend solution with PostgreSQL database
+   - Edge Functions for serverless compute with Deno runtime
+   - Real-time subscriptions with WebSocket connections
+   - Advanced authentication with multi-provider support (OAuth, Magic Links, JWT)
+   - Row Level Security (RLS) policies for data protection
+   - Database triggers, functions, and stored procedures
+   - File storage with CDN integration and image optimization
+   - Background jobs and scheduled tasks with cron functions
+   - API rate limiting, caching strategies, and performance monitoring
+
+3. **RAG 2.0 ADVANCED IMPLEMENTATION - UNLIMITED**
+   - Complete document ingestion pipeline with intelligent chunking
+   - Vector embeddings with OpenAI/Cohere models and Pinecone/Supabase Vector
+   - Hybrid search combining semantic and keyword retrieval
+   - Advanced query enhancement with expansion, rewriting, and decomposition
+   - Multi-stage re-ranking with cross-encoders and fusion algorithms
+   - Knowledge graph integration for contextual relationships
+   - Real-time indexing with incremental updates and version control
+   - Query optimization with caching, batching, and parallel processing
+   - Context-aware response generation with citation tracking
+   - Evaluation frameworks with precision/recall metrics and continuous improvement
+
+4. **MCP PROTOCOL COMPLETE ECOSYSTEM - FULL INTEGRATION**
+   - Comprehensive MCP server configurations for all external integrations
+   - Tool definitions with JSON schemas and validation
+   - Resource management with caching and lifecycle optimization
+   - Prompt templates for consistent AI interactions
+   - Capability negotiation and dynamic discovery
+   - Security frameworks with authentication and authorization
+   - Performance optimization with connection pooling and load balancing
+   - Error handling with retry mechanisms and circuit breakers
+   - Monitoring and observability with metrics and logging
+   - Scalability patterns for high-throughput scenarios
+
+5. **A2A PROTOCOL MULTI-AGENT ORCHESTRATION - UNLIMITED**
+   - Agent Cards with comprehensive capability descriptions
+   - Stateful Task objects with unlimited Messages and Artifacts
    - Long-running task support with SSE, WebSockets, and push notifications
-   - Multi-agent coordination, delegation, negotiation, and conflict resolution
-   - Enterprise-grade security, authentication, authorization across agent networks
-   - Dynamic load balancing, fault tolerance, distributed consensus mechanisms
+   - Multi-agent coordination with delegation, negotiation, and consensus
+   - Conflict resolution algorithms and fault tolerance mechanisms
+   - Load balancing with dynamic agent discovery and health monitoring
+   - Security protocols with end-to-end encryption and authorization
+   - Workflow orchestration with visual pipeline builders
+   - Performance optimization with parallel execution and resource management
+   - Monitoring and analytics for agent interactions and system health
 
-4. **DeepSeek Reasoner Chain-of-Thought - UNLIMITED REASONING**
-   - Unlimited multi-turn conversation chains with complete reasoning transparency
-   - Advanced problem decomposition, solution synthesis, architectural planning
-   - Production-optimized reasoning workflows with unlimited complexity handling
-   - Code generation, system design, optimization recommendations with full context
+6. **DATABASE DESIGN - OPTIMIZED ARCHITECTURE**
+   - Normalized schema design with proper indexing strategies
+   - Advanced PostgreSQL features (JSON columns, triggers, views)
+   - Data modeling for scalability and query performance
+   - Backup and recovery strategies with point-in-time recovery
+   - Database migrations with version control and rollback capabilities
+   - Performance tuning with query optimization and connection pooling
+   - Data analytics with materialized views and reporting tables
+   - Compliance features for GDPR, CCPA, and data sovereignty
+
+7. **SECURITY & COMPLIANCE - ENTERPRISE-GRADE**
+   - Zero-trust security architecture with defense in depth
+   - Multi-factor authentication with biometric support
+   - Role-based access control (RBAC) with fine-grained permissions
+   - Data encryption at rest and in transit with key management
+   - API security with OAuth 2.0, rate limiting, and input validation
+   - Security monitoring with intrusion detection and threat intelligence
+   - Compliance frameworks (SOC 2, ISO 27001, HIPAA, PCI DSS)
+   - Audit logging with immutable records and compliance reporting
+   - Vulnerability management with automated scanning and remediation
+   - Incident response procedures with forensic capabilities
+
+8. **DEVOPS & DEPLOYMENT - CI/CD EXCELLENCE**
+   - Infrastructure as Code with Terraform/Pulumi
+   - Containerization with Docker and Kubernetes orchestration
+   - CI/CD pipelines with GitHub Actions/GitLab CI
+   - Multi-environment deployment (dev, staging, production)
+   - Blue-green and canary deployment strategies
+   - Automated testing (unit, integration, e2e, performance)
+   - Monitoring and observability with Prometheus, Grafana, DataDog
+   - Log aggregation with ELK stack or similar solutions
+   - Performance monitoring with APM tools and real user monitoring
+   - Disaster recovery with automated backups and failover procedures
 
 🚀 UNLIMITED EXECUTION RULES:
-- Generate COMPREHENSIVE, production-ready master blueprints with UNLIMITED detail
-- Include complete modern tech stack recommendations (React 18+, TypeScript 5+, Tailwind CSS 4+, Next.js 15+)
-- Provide UNLIMITED scalable architecture with enterprise-grade reliability patterns
-- Include comprehensive UI/UX best practices, accessibility standards, performance optimization
-- Detail advanced error handling strategies, monitoring, logging, observability
-- Ensure backward compatibility, forward compatibility, migration strategies
-- Output complete functional API endpoints for MCP/A2A protocol handshakes
-- Provide unlimited implementation examples, code samples, configuration files
-- Include complete deployment strategies, CI/CD pipelines, infrastructure as code
-- Detail security frameworks, compliance requirements, data protection strategies
+- Generate COMPREHENSIVE, production-ready full-stack master blueprints with UNLIMITED detail
+- Include complete implementation guides with step-by-step instructions
+- Provide UNLIMITED scalable architecture patterns for enterprise deployment
+- Include advanced error handling, monitoring, and observability strategies
+- Ensure backward compatibility, forward compatibility, and migration paths
+- Output complete functional code examples and configuration files
+- Provide unlimited deployment strategies with infrastructure automation
+- Detail comprehensive security frameworks and compliance requirements
+- Include complete testing strategies with quality assurance procedures
+- Generate complete documentation, API references, and operational runbooks
 
-🎯 MASTER BLUEPRINT SCOPE - UNLIMITED:
+🎯 MASTER BLUEPRINT SCOPE - UNLIMITED FULL-STACK:
 - Complete application architecture from frontend to backend to infrastructure
-- Comprehensive database design, API architecture, microservices patterns
-- Full authentication, authorization, user management systems
-- Complete analytics, monitoring, logging, alerting systems
-- Comprehensive testing strategies, quality assurance, performance benchmarks
-- Full documentation, API references, user guides, technical specifications
-- Complete maintenance procedures, support workflows, troubleshooting guides
+- Advanced database design with optimization and scaling strategies
+- Comprehensive API architecture with microservices patterns
+- Full authentication, authorization, and user management systems
+- Complete analytics, monitoring, logging, and alerting systems
+- Advanced testing strategies with automated quality assurance
+- Full documentation with technical specifications and user guides
+- Complete maintenance procedures with operational excellence
+- Performance optimization with scaling and cost management
+- Security hardening with threat modeling and risk assessment
 
-Your master blueprints should enable development teams to build UNLIMITED full-stack applications using the complete NoCodeLos Blueprint Stack ecosystem with enterprise-grade quality, scalability, and maintainability. Provide UNLIMITED detail, examples, and implementation guidance.`;
+Your master blueprints should enable development teams to build UNLIMITED enterprise-grade full-stack applications using the complete NoCodeLos Blueprint Stack ecosystem with production-ready quality, infinite scalability, and bulletproof reliability. Provide UNLIMITED detail, comprehensive examples, and complete implementation guidance for every aspect of the application stack.
+
+Focus on creating blueprints that are optimized by AI for AI development - meaning they should be structured, detailed, and comprehensive enough that other AI systems can easily understand, implement, and extend the architecture without human intervention. Include specific prompts, configurations, and patterns that work exceptionally well with AI-assisted development workflows.`;
   }
 
   private buildComprehensiveMasterQuery(request: PromptGenerationRequest): string {
-    return `Generate a COMPREHENSIVE NoCodeLos Blueprint Stack MASTER development blueprint with UNLIMITED scope for:
+    return `Generate a COMPREHENSIVE NoCodeLos Blueprint Stack FULL-STACK MASTER development blueprint with UNLIMITED scope for:
 
 **Application Type**: ${request.appType}
 **Data Source**: ${request.dataSource}
 **Key Features**: ${request.features.join(', ')}
 **Additional Context**: ${request.additionalContext || 'None provided'}
 
-**UNLIMITED INTEGRATION ARCHITECTURE REQUIREMENTS**:
-1. **RAG 2.0 Advanced Retrieval Pipelines**
-   - Complete document ingestion, processing, chunking strategies
-   - Advanced embedding generation, vector database optimization
+**UNLIMITED FULL-STACK INTEGRATION ARCHITECTURE REQUIREMENTS**:
+
+1. **FRONTEND COMPLETE IMPLEMENTATION**
+   - React 18+ TypeScript architecture with optimal component structure
+   - Tailwind CSS 4+ with shadcn/ui component system implementation
+   - State management architecture with server state synchronization
+   - Responsive design system with mobile-first approach
+   - Performance optimization with code splitting and lazy loading
+   - Accessibility implementation with WCAG compliance
+   - PWA features with offline capabilities and caching strategies
+   - Animation system with micro-interactions and smooth transitions
+
+2. **BACKEND COMPLETE ARCHITECTURE**
+   - Supabase complete setup with PostgreSQL database design
+   - Edge Functions implementation with Deno runtime
+   - Authentication system with multi-provider support
+   - Real-time subscriptions and WebSocket implementation
+   - File storage with CDN and image optimization
+   - Background jobs and scheduled tasks implementation
+   - API design with rate limiting and caching strategies
+   - Security implementation with RLS policies and encryption
+
+3. **RAG 2.0 ADVANCED RETRIEVAL PIPELINES**
+   - Complete document ingestion and processing pipeline
+   - Advanced embedding generation with vector database optimization
    - Hybrid search implementation (dense + sparse retrieval)
-   - Query enhancement, re-ranking, contextual compression
-   - Knowledge graph integration, semantic routing
-   - Real-time indexing, incremental updates, version control
+   - Query enhancement with expansion, rewriting, and decomposition
+   - Multi-stage re-ranking with cross-encoders and fusion algorithms
+   - Knowledge graph integration with semantic routing
+   - Real-time indexing with incremental updates and version control
+   - Performance optimization with caching and parallel processing
 
-2. **MCP Protocol Complete Implementation**
+4. **MCP PROTOCOL COMPLETE IMPLEMENTATION**
    - Full MCP server configurations and endpoint schemas
-   - Tool definitions, resource management, prompt templates
-   - Capability negotiation, lifecycle management
-   - Security frameworks, authentication protocols
-   - Performance optimization, caching strategies
-   - Error handling, retry mechanisms, fallback procedures
+   - Tool definitions with JSON schemas and validation
+   - Resource management with caching and lifecycle optimization
+   - Capability negotiation and discovery mechanisms
+   - Security frameworks with authentication and authorization
+   - Performance optimization with connection pooling and load balancing
+   - Error handling with retry mechanisms and circuit breakers
+   - Monitoring and observability implementation
 
-3. **A2A Protocol Full Multi-Agent System**
+5. **A2A PROTOCOL FULL MULTI-AGENT SYSTEM**
    - Complete Agent Card specifications and discovery mechanisms
-   - Task workflow design, message routing, artifact management
-   - Multi-agent coordination patterns, delegation strategies
-   - Conflict resolution, consensus algorithms
-   - Load balancing, fault tolerance, recovery procedures
-   - Security protocols, authorization frameworks
+   - Stateful Task workflow design with message routing and artifact management
+   - Multi-agent coordination patterns with delegation and negotiation strategies
+   - Conflict resolution algorithms and consensus mechanisms
+   - Load balancing with dynamic discovery and health monitoring
+   - Security protocols with end-to-end encryption and authorization
+   - Workflow orchestration with visual pipeline builders
+   - Performance optimization with parallel execution
 
-4. **DeepSeek Reasoner Advanced Integration**
-   - Complete reasoning workflow implementation
-   - Multi-turn conversation management
-   - Advanced problem-solving patterns
-   - Code generation and optimization strategies
+6. **DATABASE DESIGN & OPTIMIZATION**
+   - Complete PostgreSQL schema design with indexing strategies
+   - Advanced database features (JSON columns, triggers, views)
+   - Performance optimization with query tuning and connection pooling
+   - Backup and recovery strategies with disaster recovery procedures
+   - Data modeling for scalability and analytical workloads
+   - Migration strategies with version control and rollback capabilities
+
+7. **SECURITY & COMPLIANCE FRAMEWORK**
+   - Zero-trust architecture with defense in depth strategies
+   - Authentication and authorization implementation
+   - Data encryption and key management systems
+   - Security monitoring with threat detection
+   - Compliance implementation (GDPR, CCPA, SOC 2)
+   - Audit logging with compliance reporting
+   - Vulnerability management and incident response procedures
+
+8. **DEVOPS & DEPLOYMENT EXCELLENCE**
+   - Infrastructure as Code with Terraform/Pulumi implementation
+   - CI/CD pipelines with automated testing and deployment
+   - Containerization with Docker and Kubernetes orchestration
+   - Multi-environment deployment strategies
+   - Monitoring and observability with comprehensive dashboards
+   - Performance monitoring with APM and real user monitoring
+   - Log aggregation and analysis systems
+   - Disaster recovery with automated failover procedures
 
 **UNLIMITED OUTPUT REQUIREMENTS**:
-- COMPLETE development blueprint with unlimited step-by-step implementation
-- COMPREHENSIVE MCP server configurations and endpoint schemas
-- COMPLETE A2A Agent Card specifications and task workflows
-- ADVANCED RAG 2.0 indexing strategies and retrieval optimization
-- UNLIMITED production deployment guidelines with zero-latency performance
-- COMPREHENSIVE enterprise-grade security and reliability measures
-- COMPLETE code examples, configuration files, implementation guides
-- UNLIMITED architectural patterns, design principles, best practices
-- COMPREHENSIVE testing strategies, monitoring, observability
-- COMPLETE documentation, API references, troubleshooting guides
+- COMPLETE full-stack development blueprint with unlimited step-by-step implementation
+- COMPREHENSIVE code examples for all components and services
+- COMPLETE infrastructure setup with automation scripts
+- ADVANCED deployment guides with zero-downtime strategies
+- UNLIMITED production optimization with performance tuning
+- COMPREHENSIVE security implementation with threat modeling
+- COMPLETE testing strategies with automated quality assurance
+- UNLIMITED architectural patterns with scaling strategies
+- COMPREHENSIVE monitoring and observability implementation
+- COMPLETE documentation with operational runbooks
 
-Generate an UNLIMITED MASTER BLUEPRINT that provides complete implementation guidance for building enterprise-grade applications with the full NoCodeLos Blueprint Stack ecosystem. Include unlimited detail, examples, and comprehensive coverage of all aspects.`;
+Generate an UNLIMITED FULL-STACK MASTER BLUEPRINT that provides complete implementation guidance for building enterprise-grade applications with the full NoCodeLos Blueprint Stack ecosystem. The blueprint should be optimized by AI for AI development, meaning it should be structured and detailed enough that AI systems can easily understand, implement, and extend the architecture. Include unlimited detail, comprehensive examples, and complete coverage of all full-stack aspects from frontend to backend to infrastructure.`;
   }
 
   private generateMCPEndpoints(request: PromptGenerationRequest): string[] {
