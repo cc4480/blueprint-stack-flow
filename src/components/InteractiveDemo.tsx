@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ const InteractiveDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [formData, setFormData] = useState({
     appType: "",
     dataSource: "",
@@ -117,21 +119,45 @@ const InteractiveDemo = () => {
 
   useEffect(() => {
     console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
+    
+    // Check if API key is already configured
+    const savedKey = localStorage.getItem('deepseek_api_key');
+    if (savedKey) {
+      setApiKeyConfigured(true);
+      promptService.setApiKey(savedKey);
+      console.log('✅ DeepSeek API key already configured');
+    }
   }, []);
 
   const handleApiKeyChange = (key: string | null) => {
     if (key) {
       promptService.setApiKey(key);
+      setApiKeyConfigured(true);
       setShowApiKey(false);
       console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
+      toast.success('🎉 DeepSeek API key configured successfully!');
+    } else {
+      setApiKeyConfigured(false);
     }
   };
 
+  const handleSetupDeepSeek = () => {
+    console.log('🔧 Setup DeepSeek AI button clicked');
+    setShowApiKey(true);
+  };
+
   const generatePrompt = async () => {
+    if (!apiKeyConfigured) {
+      toast.error('Please configure your DeepSeek API key first');
+      setShowApiKey(true);
+      return;
+    }
+
     if (formData.features.length === 0) {
       toast.error('Please select at least one feature');
       return;
     }
+    
     setIsGenerating(true);
     console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
     try {
@@ -252,10 +278,17 @@ const InteractiveDemo = () => {
             <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
               <CardTitle className="text-2xl flex items-center justify-between">
                 <span>Step {currentStep + 1}: {getStepTitle()}</span>
-                {!showApiKey && currentStep < 4 && <Button variant="ghost" size="sm" onClick={() => setShowApiKey(true)} className="text-white hover:bg-white/20">
+                {!showApiKey && currentStep < 4 && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSetupDeepSeek}
+                    className="text-white hover:bg-white/20 transition-all duration-300"
+                  >
                     <Brain className="w-4 h-4 mr-2" />
-                    Setup DeepSeek AI
-                  </Button>}
+                    {apiKeyConfigured ? 'DeepSeek Ready ✓' : 'Setup DeepSeek AI'}
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 bg-gray-900">
