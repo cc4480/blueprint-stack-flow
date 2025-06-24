@@ -1,47 +1,152 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Code, Database, Layout, Shield, Zap, CheckCircle } from 'lucide-react';
 
 const BuildingAnimation = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true); // Start playing immediately
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [typingText, setTypingText] = useState('');
+  const [showingCode, setShowingCode] = useState(false);
 
   const steps = [
-    { name: 'Canvas', description: 'Starting with blank canvas' },
-    { name: 'Layout', description: 'Building responsive layout' },
-    { name: 'Header', description: 'Adding navigation header' },
-    { name: 'Auth', description: 'Implementing authentication' },
-    { name: 'Content', description: 'Creating content areas' },
-    { name: 'Backend', description: 'Connecting backend services' },
-    { name: 'Polish', description: 'Adding final touches' },
-    { name: 'Complete', description: 'Production-ready app!' }
+    { 
+      name: 'Project Setup', 
+      description: 'Initializing React + TypeScript project',
+      icon: <Layout className="w-6 h-6" />,
+      code: `npx create-react-app my-app --template typescript
+cd my-app
+npm install @radix-ui/react-dialog tailwindcss`,
+      duration: 3000
+    },
+    { 
+      name: 'Component Structure', 
+      description: 'Building reusable UI components',
+      icon: <Code className="w-6 h-6" />,
+      code: `// Button.tsx
+export const Button = ({ children, onClick }) => {
+  return (
+    <button 
+      onClick={onClick}
+      className="px-4 py-2 bg-blue-500 text-white rounded"
+    >
+      {children}
+    </button>
+  );
+};`,
+      duration: 4000
+    },
+    { 
+      name: 'Authentication', 
+      description: 'Implementing secure login system',
+      icon: <Shield className="w-6 h-6" />,
+      code: `// AuthProvider.tsx
+const AuthContext = createContext();
+
+export const useAuth = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const login = async (email, password) => {
+    const response = await signIn(email, password);
+    setUser(response.user);
+  };
+}`,
+      duration: 5000
+    },
+    { 
+      name: 'Database Integration', 
+      description: 'Connecting to Supabase backend',
+      icon: <Database className="w-6 h-6" />,
+      code: `// supabase.ts
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://your-project.supabase.co'
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseKey)`,
+      duration: 4000
+    },
+    { 
+      name: 'API Routes', 
+      description: 'Creating RESTful endpoints',
+      icon: <Zap className="w-6 h-6" />,
+      code: `// api/users.ts
+export const getUsers = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  return data;
+};`,
+      duration: 3500
+    },
+    { 
+      name: 'Production Ready', 
+      description: 'Optimizing and deploying',
+      icon: <CheckCircle className="w-6 h-6" />,
+      code: `npm run build
+npm run test
+npm run deploy
+
+✅ Build successful!
+✅ Tests passing!
+✅ Deployed to production!`,
+      duration: 3000
+    }
   ];
 
+  // Typing animation effect
   useEffect(() => {
-    if (isPlaying) {
+    if (showingCode && currentStep < steps.length) {
+      const code = steps[currentStep].code;
+      let index = 0;
+      setTypingText('');
+      
+      const typeTimer = setInterval(() => {
+        if (index < code.length) {
+          setTypingText(code.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(typeTimer);
+        }
+      }, 30);
+
+      return () => clearInterval(typeTimer);
+    }
+  }, [showingCode, currentStep, steps]);
+
+  // Main animation progression
+  useEffect(() => {
+    if (isPlaying && currentStep < steps.length) {
+      setShowingCode(true);
+      
       const timer = setTimeout(() => {
-        setCurrentStep(prev => {
-          const nextStep = prev + 1;
-          if (nextStep >= steps.length) {
-            // Reset to beginning for continuous loop
-            setTimeout(() => setCurrentStep(0), 2000);
-            return prev;
-          }
-          return nextStep;
-        });
-      }, 2000);
+        if (currentStep < steps.length - 1) {
+          setCurrentStep(prev => prev + 1);
+          setShowingCode(false);
+        } else {
+          // Reset animation after completion
+          setTimeout(() => {
+            setCurrentStep(0);
+            setShowingCode(false);
+            setTypingText('');
+          }, 2000);
+        }
+      }, steps[currentStep]?.duration || 3000);
+
       return () => clearTimeout(timer);
     }
-  }, [currentStep, isPlaying, steps.length]);
-
-  // Auto-start the animation when component mounts
-  useEffect(() => {
-    setIsPlaying(true);
-  }, []);
+  }, [currentStep, isPlaying, steps]);
 
   const startAnimation = () => {
     setCurrentStep(0);
     setIsPlaying(true);
+    setShowingCode(false);
+    setTypingText('');
   };
 
   const pauseAnimation = () => {
@@ -53,7 +158,7 @@ const BuildingAnimation = () => {
       {/* Control Panel */}
       <div className="flex justify-center gap-4 mb-8">
         <Button 
-          onClick={isPlaying ? pauseAnimation : startAnimation}
+          onClick={isPlaying ? pauseAnimation : () => setIsPlaying(true)}
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
         >
           {isPlaying ? 'Pause' : 'Resume'} Building
@@ -67,227 +172,165 @@ const BuildingAnimation = () => {
         </Button>
       </div>
 
-      {/* Main Animation Canvas */}
-      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-2xl p-8 min-h-[600px] overflow-hidden">
-        {/* Background Grid */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="w-full h-full" style={{
-            backgroundImage: `
-              linear-gradient(rgba(147, 51, 234, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(147, 51, 234, 0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: '20px 20px'
-          }}></div>
+      {/* Main Build Container */}
+      <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-2xl p-8 min-h-[700px] overflow-hidden">
+        {/* Terminal/Code Window */}
+        <div className="relative bg-gray-900 rounded-lg border border-gray-700 mb-6 overflow-hidden">
+          {/* Terminal Header */}
+          <div className="bg-gray-800 px-4 py-2 flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="ml-4 text-gray-300 text-sm font-mono">Lovable AI Builder</span>
+          </div>
+          
+          {/* Code Content */}
+          <div className="p-6 h-64 overflow-y-auto">
+            <pre className="text-green-400 font-mono text-sm leading-relaxed">
+              {typingText}
+              {showingCode && <span className="animate-pulse">|</span>}
+            </pre>
+          </div>
         </div>
 
-        {/* Floating Particles */}
+        {/* Live Preview Window */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Progress Steps */}
+          <div className="space-y-4">
+            <h3 className="text-white text-xl font-bold mb-4">Build Progress</h3>
+            {steps.map((step, index) => (
+              <div 
+                key={index}
+                className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-500 ${
+                  index <= currentStep 
+                    ? 'bg-green-500/20 border border-green-500/30' 
+                    : index === currentStep + 1
+                    ? 'bg-yellow-500/20 border border-yellow-500/30 animate-pulse'
+                    : 'bg-gray-700/20 border border-gray-600/30'
+                }`}
+              >
+                <div className={`p-2 rounded-full ${
+                  index <= currentStep ? 'bg-green-500' : 'bg-gray-600'
+                }`}>
+                  {index <= currentStep ? <CheckCircle className="w-4 h-4 text-white" /> : step.icon}
+                </div>
+                <div>
+                  <div className={`font-semibold ${
+                    index <= currentStep ? 'text-green-400' : 'text-gray-300'
+                  }`}>
+                    {step.name}
+                  </div>
+                  <div className="text-gray-400 text-sm">{step.description}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Live App Preview */}
+          <div className="bg-white rounded-lg overflow-hidden shadow-2xl">
+            <div className="bg-gray-100 px-4 py-2 border-b">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="ml-4 text-gray-600 text-sm">localhost:3000</span>
+              </div>
+            </div>
+            
+            <div className="p-6 h-96 overflow-y-auto">
+              {/* Dynamically show built components based on current step */}
+              {currentStep >= 0 && (
+                <div className="animate-fade-in">
+                  <div className="text-center text-gray-600 mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800">My App</h1>
+                    <p className="text-gray-600">Building in progress...</p>
+                  </div>
+                </div>
+              )}
+              
+              {currentStep >= 1 && (
+                <div className="animate-fade-in space-y-4">
+                  <button className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    Sample Button
+                  </button>
+                  <div className="p-4 border rounded-lg">
+                    <h3 className="font-semibold text-gray-800">Card Component</h3>
+                    <p className="text-gray-600">Reusable UI component</p>
+                  </div>
+                </div>
+              )}
+              
+              {currentStep >= 2 && (
+                <div className="animate-fade-in mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2">Login Form</h4>
+                  <input 
+                    type="email" 
+                    placeholder="Email" 
+                    className="w-full p-2 border rounded mb-2"
+                    disabled
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="Password" 
+                    className="w-full p-2 border rounded mb-2"
+                    disabled
+                  />
+                  <button className="w-full p-2 bg-blue-500 text-white rounded">
+                    Sign In
+                  </button>
+                </div>
+              )}
+              
+              {currentStep >= 3 && (
+                <div className="animate-fade-in mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-2">Database Connected</h4>
+                  <div className="text-sm text-green-600">
+                    ✅ Supabase connection established
+                  </div>
+                </div>
+              )}
+              
+              {currentStep >= 4 && (
+                <div className="animate-fade-in mt-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    {['User 1', 'User 2', 'User 3'].map((user, i) => (
+                      <div key={i} className="p-2 bg-gray-100 rounded flex justify-between items-center">
+                        <span className="text-gray-800">{user}</span>
+                        <span className="text-xs text-gray-500">Online</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {currentStep >= 5 && (
+                <div className="animate-fade-in mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-purple-800">🚀 Production Ready!</h4>
+                  <p className="text-purple-600 text-sm">Your app is live and optimized</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Building Particles Effect */}
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(6)].map((_, i) => (
+          {isPlaying && [...Array(8)].map((_, i) => (
             <div
               key={i}
-              className={`absolute w-2 h-2 bg-purple-400 rounded-full animate-pulse ${
-                isPlaying ? 'animate-bounce' : ''
-              }`}
+              className="absolute w-1 h-1 bg-purple-400 rounded-full animate-ping"
               style={{
-                left: `${20 + i * 15}%`,
-                top: `${10 + i * 10}%`,
-                animationDelay: `${i * 0.5}s`
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 2}s`,
+                animationDuration: `${1 + Math.random()}s`
               }}
             />
           ))}
         </div>
-
-        {/* Step 0: Blank Canvas */}
-        {currentStep >= 0 && (
-          <div className={`transition-all duration-1000 ${currentStep >= 1 ? 'opacity-100' : 'opacity-50'}`}>
-            <div className="text-center text-white/60 text-lg">
-              {currentStep === 0 ? 'Ready to build...' : ''}
-            </div>
-          </div>
-        )}
-
-        {/* Step 1: Layout Structure */}
-        {currentStep >= 1 && (
-          <div className="absolute inset-4 transition-all duration-1000 transform animate-scale-in">
-            <div className="grid grid-cols-12 gap-4 h-full">
-              {/* Sidebar */}
-              <div className="col-span-2 bg-white/10 rounded-lg border border-purple-400/30 backdrop-blur-sm animate-fade-in">
-                <div className="p-4">
-                  <div className="w-full h-4 bg-purple-400/40 rounded mb-3 animate-pulse"></div>
-                  <div className="space-y-2">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="w-full h-2 bg-white/20 rounded animate-pulse" style={{animationDelay: `${i * 0.2}s`}}></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Main Content Area */}
-              <div className="col-span-10 bg-white/5 rounded-lg border border-purple-400/20 backdrop-blur-sm animate-fade-in" style={{animationDelay: '0.3s'}}>
-                <div className="p-6 h-full">
-                  <div className="w-full h-full border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center">
-                    <span className="text-white/40">Content Area</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Header Navigation */}
-        {currentStep >= 2 && (
-          <div className="absolute top-4 left-4 right-4 transition-all duration-1000 transform animate-fade-in">
-            <div className="bg-white/15 backdrop-blur-sm rounded-lg border border-purple-400/40 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
-                  <div className="w-24 h-4 bg-white/30 rounded animate-pulse"></div>
-                </div>
-                <div className="flex space-x-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-16 h-3 bg-white/25 rounded animate-pulse" style={{animationDelay: `${i * 0.1}s`}}></div>
-                  ))}
-                </div>
-                <div className="w-20 h-6 bg-purple-500/50 rounded animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Authentication Forms */}
-        {currentStep >= 3 && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 animate-scale-in">
-            <Card className="bg-white/10 backdrop-blur-lg border-purple-400/30 p-8 w-96">
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="w-32 h-6 bg-white/40 rounded mx-auto mb-4 animate-pulse"></div>
-                </div>
-                <div className="space-y-3">
-                  <div className="w-full h-10 bg-white/20 rounded border border-purple-400/30 animate-pulse"></div>
-                  <div className="w-full h-10 bg-white/20 rounded border border-purple-400/30 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                  <div className="w-full h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Step 4: Content Cards */}
-        {currentStep >= 4 && (
-          <div className="absolute bottom-4 left-4 right-4 transition-all duration-1000">
-            <div className="grid grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="bg-white/10 backdrop-blur-sm border-purple-400/30 p-4 animate-fade-in" style={{animationDelay: `${i * 0.2}s`}}>
-                  <div className="space-y-3">
-                    <div className="w-full h-20 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded animate-pulse"></div>
-                    <div className="w-3/4 h-3 bg-white/30 rounded animate-pulse"></div>
-                    <div className="w-1/2 h-2 bg-white/20 rounded animate-pulse"></div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Backend Connections */}
-        {currentStep >= 5 && (
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Animated Connection Lines */}
-            <svg className="w-full h-full absolute inset-0">
-              <defs>
-                <linearGradient id="connectionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="rgb(147, 51, 234)" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="rgb(236, 72, 153)" stopOpacity="0.8" />
-                </linearGradient>
-              </defs>
-              
-              {/* Flowing Lines */}
-              {[...Array(4)].map((_, i) => (
-                <path
-                  key={i}
-                  d={`M ${50 + i * 100} 50 Q ${200 + i * 50} ${100 + i * 80} ${300 + i * 80} ${200 + i * 50}`}
-                  stroke="url(#connectionGrad)"
-                  strokeWidth="2"
-                  fill="none"
-                  className="animate-pulse"
-                  style={{
-                    animationDelay: `${i * 0.3}s`,
-                    strokeDasharray: '10,5',
-                    strokeDashoffset: '15'
-                  }}
-                />
-              ))}
-            </svg>
-            
-            {/* Backend Service Nodes */}
-            <div className="absolute top-8 right-8 space-y-4">
-              {['API', 'DB', 'Auth'].map((service, i) => (
-                <div 
-                  key={service}
-                  className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold animate-pulse shadow-lg"
-                  style={{animationDelay: `${i * 0.2}s`}}
-                >
-                  {service}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Step 6: Polish & Microinteractions */}
-        {currentStep >= 6 && (
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Sparkle Effects */}
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-1 h-1 bg-yellow-400 rounded-full animate-ping"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`
-                }}
-              />
-            ))}
-            
-            {/* Success Glow Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10 animate-pulse"></div>
-          </div>
-        )}
-
-        {/* Step 7: Complete */}
-        {currentStep >= 7 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-sm rounded-2xl">
-            <div className="text-center space-y-4 animate-scale-in">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white">Production Ready!</h3>
-              <p className="text-purple-200">Full-stack app built in minutes, not months</p>
-            </div>
-          </div>
-        )}
-
-        {/* Progress Indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="flex space-x-2">
-            {steps.map((step, index) => (
-              <div
-                key={index}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index <= currentStep 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-110' 
-                    : 'bg-white/30'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Step Description */}
+      {/* Current Step Info */}
       <div className="text-center mt-6">
         <h3 className="text-xl font-semibold text-white mb-2">
           {steps[currentStep]?.name}
