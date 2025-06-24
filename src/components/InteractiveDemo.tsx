@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Copy, Download, Zap, CheckCircle, Clock, Brain } from "lucide-react";
+import { Copy, Download, Zap, CheckCircle, Clock, Brain, Network, Database, GitBranch } from "lucide-react";
 import { toast } from "sonner";
 import ApiKeyManager from "./ApiKeyManager";
 import { promptService, PromptGenerationRequest } from "../services/promptService";
@@ -21,6 +21,10 @@ const InteractiveDemo = () => {
     estimatedBuildTime: string;
     complexity: string;
     suggestedComponents: string[];
+    reasoningContent?: string;
+    mcpEndpoints?: string[];
+    a2aProtocols?: string[];
+    ragPipeline?: string;
   } | null>(null);
 
   const appTypes = [
@@ -51,14 +55,14 @@ const InteractiveDemo = () => {
   ];
 
   useEffect(() => {
-    console.log('🎯 Interactive Demo initialized');
+    console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
   }, []);
 
   const handleApiKeyChange = (key: string | null) => {
     if (key) {
       promptService.setApiKey(key);
       setShowApiKey(false);
-      console.log('✅ API key configured in prompt service');
+      console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
     }
   };
 
@@ -69,7 +73,7 @@ const InteractiveDemo = () => {
     }
 
     setIsGenerating(true);
-    console.log('🚀 Starting prompt generation process...');
+    console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
 
     try {
       const request: PromptGenerationRequest = {
@@ -85,12 +89,12 @@ const InteractiveDemo = () => {
       setGeneratedResult(result);
       setCurrentStep(4);
       
-      console.log('✅ Prompt generation completed:', result);
-      toast.success('🎉 Your custom prompt is ready!');
+      console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration:', result);
+      toast.success('🎉 Your NoCodeLos Blueprint Stack master prompt is ready!');
       
     } catch (error) {
-      console.error('❌ Prompt generation failed:', error);
-      toast.error('Failed to generate prompt. Please try again.');
+      console.error('❌ Blueprint Stack prompt generation failed:', error);
+      toast.error('Failed to generate blueprint. Please ensure your DeepSeek API key is configured.');
     } finally {
       setIsGenerating(false);
     }
@@ -104,14 +108,14 @@ const InteractiveDemo = () => {
         : [...prev.features, featureId]
     }));
     
-    console.log('🔄 Features updated:', formData.features);
+    console.log('🔄 NoCodeLos Blueprint Stack features updated:', formData.features);
   };
 
   const copyToClipboard = async () => {
     if (generatedResult) {
       await navigator.clipboard.writeText(generatedResult.prompt);
-      toast.success('📋 Prompt copied to clipboard!');
-      console.log('📋 Prompt copied to clipboard');
+      toast.success('📋 NoCodeLos Blueprint Stack prompt copied to clipboard!');
+      console.log('📋 Blueprint Stack prompt copied to clipboard');
     }
   };
 
@@ -121,11 +125,11 @@ const InteractiveDemo = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'nocodelos-blueprint-prompt.txt';
+      a.download = 'nocodelos-blueprint-stack-master-prompt.txt';
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('📥 Prompt downloaded!');
-      console.log('📥 Prompt file downloaded');
+      toast.success('📥 NoCodeLos Blueprint Stack prompt downloaded!');
+      console.log('📥 Blueprint Stack prompt file downloaded');
     }
   };
 
@@ -133,7 +137,7 @@ const InteractiveDemo = () => {
     setCurrentStep(0);
     setFormData({ appType: "", dataSource: "", features: [], additionalRequirements: "" });
     setGeneratedResult(null);
-    console.log('🔄 Demo reset to beginning');
+    console.log('🔄 NoCodeLos Blueprint Stack demo reset');
   };
 
   const getStepTitle = () => {
@@ -142,7 +146,7 @@ const InteractiveDemo = () => {
       case 1: return "Select Data Source";
       case 2: return "Pick Key Features";
       case 3: return "Add Final Details";
-      case 4: return "Your Custom Prompt is Ready!";
+      case 4: return "Your NoCodeLos Blueprint Stack Master Prompt is Ready!";
       default: return "";
     }
   };
@@ -153,12 +157,26 @@ const InteractiveDemo = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-bold mb-6 text-gray-900">
-              Get Your First System-Generated Prompt in{" "}
+              Get Your First NoCodeLos Blueprint Stack Master Prompt in{" "}
               <span className="text-purple-600">30 Seconds</span>
             </h2>
-            <p className="text-xl text-gray-600">
-              Experience the instant power of an AI-crafted prompt using the NoCodeLos Blueprint Stack
+            <p className="text-xl text-gray-600 mb-4">
+              Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols
             </p>
+            <div className="flex justify-center space-x-6 text-sm text-gray-600">
+              <div className="flex items-center space-x-1">
+                <Brain className="w-4 h-4 text-purple-600" />
+                <span>DeepSeek Reasoner</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Database className="w-4 h-4 text-blue-600" />
+                <span>RAG 2.0</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Network className="w-4 h-4 text-green-600" />
+                <span>MCP + A2A</span>
+              </div>
+            </div>
           </div>
 
           {/* API Key Setup */}
@@ -179,7 +197,8 @@ const InteractiveDemo = () => {
                     onClick={() => setShowApiKey(true)}
                     className="text-white hover:bg-white/20"
                   >
-                    🤖 Setup AI
+                    <Brain className="w-4 h-4 mr-2" />
+                    Setup DeepSeek AI
                   </Button>
                 )}
               </CardTitle>
@@ -312,12 +331,12 @@ const InteractiveDemo = () => {
                       {isGenerating ? (
                         <div className="flex items-center space-x-2">
                           <Brain className="w-5 h-5 animate-spin" />
-                          <span>Generating...</span>
+                          <span>Generating Blueprint...</span>
                         </div>
                       ) : (
                         <div className="flex items-center space-x-2">
                           <Zap className="w-5 h-5" />
-                          <span>Generate My Custom Prompt</span>
+                          <span>Generate NoCodeLos Blueprint</span>
                         </div>
                       )}
                     </Button>
@@ -325,19 +344,20 @@ const InteractiveDemo = () => {
                 </div>
               )}
 
-              {/* Step 4: Generated Result */}
+              {/* Step 4: Generated Result with Advanced Integration Details */}
               {currentStep === 4 && generatedResult && (
                 <div className="space-y-6">
                   {/* Success Header */}
                   <div className="text-center">
                     <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      Your NoCodeLos Blueprint Stack Prompt is Ready!
+                      Your NoCodeLos Blueprint Stack Master Prompt is Ready!
                     </h3>
+                    <p className="text-gray-600">Generated with DeepSeek Reasoner + RAG 2.0 + MCP + A2A integration</p>
                   </div>
 
-                  {/* Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Advanced Metrics */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg text-center">
                       <Clock className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                       <div className="font-semibold text-blue-800">{generatedResult.estimatedBuildTime}</div>
@@ -349,19 +369,73 @@ const InteractiveDemo = () => {
                       <div className="text-sm text-purple-600">Complexity</div>
                     </div>
                     <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg text-center">
-                      <Zap className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                      <div className="font-semibold text-green-800">{generatedResult.suggestedComponents.length}</div>
-                      <div className="text-sm text-green-600">Components</div>
+                      <Network className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                      <div className="font-semibold text-green-800">{generatedResult.mcpEndpoints?.length || 0}</div>
+                      <div className="text-sm text-green-600">MCP Endpoints</div>
+                    </div>
+                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg text-center">
+                      <GitBranch className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                      <div className="font-semibold text-orange-800">{generatedResult.a2aProtocols?.length || 0}</div>
+                      <div className="text-sm text-orange-600">A2A Protocols</div>
                     </div>
                   </div>
 
                   {/* Generated Prompt */}
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6">
-                    <h4 className="text-xl font-bold text-gray-900 mb-4">Your Custom Blueprint Stack Prompt:</h4>
+                    <h4 className="text-xl font-bold text-gray-900 mb-4">Your NoCodeLos Blueprint Stack Master Prompt:</h4>
                     <div className="bg-white border border-gray-200 rounded-lg p-6 font-mono text-sm text-gray-800 leading-relaxed max-h-96 overflow-y-auto">
                       {generatedResult.prompt}
                     </div>
                   </div>
+
+                  {/* Advanced Integration Details */}
+                  {generatedResult.ragPipeline && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Database className="w-5 h-5 mr-2 text-blue-600" />
+                        RAG 2.0 Pipeline:
+                      </h4>
+                      <p className="text-sm text-gray-700 font-mono">{generatedResult.ragPipeline}</p>
+                    </div>
+                  )}
+
+                  {generatedResult.mcpEndpoints && generatedResult.mcpEndpoints.length > 0 && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Network className="w-5 h-5 mr-2 text-green-600" />
+                        MCP Endpoints:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {generatedResult.mcpEndpoints.map((endpoint, index) => (
+                          <span 
+                            key={index}
+                            className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-mono"
+                          >
+                            {endpoint}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {generatedResult.a2aProtocols && generatedResult.a2aProtocols.length > 0 && (
+                    <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <GitBranch className="w-5 h-5 mr-2 text-orange-600" />
+                        A2A Protocols:
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {generatedResult.a2aProtocols.map((protocol, index) => (
+                          <span 
+                            key={index}
+                            className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"
+                          >
+                            {protocol}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Suggested Components */}
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6">
@@ -378,6 +452,19 @@ const InteractiveDemo = () => {
                     </div>
                   </div>
 
+                  {/* DeepSeek Reasoning Content */}
+                  {generatedResult.reasoningContent && (
+                    <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Brain className="w-5 h-5 mr-2 text-gray-600" />
+                        DeepSeek Reasoning Process:
+                      </h4>
+                      <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-48 overflow-y-auto">
+                        <pre className="text-xs text-gray-700 whitespace-pre-wrap">{generatedResult.reasoningContent}</pre>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button
@@ -385,7 +472,7 @@ const InteractiveDemo = () => {
                       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-full font-semibold"
                     >
                       <Copy className="w-4 h-4 mr-2" />
-                      Copy Prompt
+                      Copy Blueprint
                     </Button>
                     <Button
                       onClick={downloadPrompt}
@@ -400,7 +487,7 @@ const InteractiveDemo = () => {
                       variant="ghost"
                       className="text-gray-600 hover:text-gray-800 px-8 py-3 rounded-full font-semibold"
                     >
-                      🔄 Try Another
+                      🔄 Create Another
                     </Button>
                   </div>
                 </div>
