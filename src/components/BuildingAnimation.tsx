@@ -25,7 +25,7 @@ const BuildingAnimation = () => {
   } = useBuildingAnimation();
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto p-8 overflow-hidden">
+    <div className="relative w-full max-w-6xl mx-auto p-8 overflow-hidden bg-black">
       {/* Background Particle Canvas */}
       <ParticleCanvas isPlaying={isPlaying} />
       
@@ -50,7 +50,7 @@ const BuildingAnimation = () => {
       />
 
       {/* Main Build Container */}
-      <div className="relative bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 rounded-2xl p-8 min-h-[700px] backdrop-blur-sm border-2 border-blue-400/30"
+      <div className="relative bg-gradient-to-br from-black/95 via-gray-900/95 to-black/95 rounded-2xl p-8 min-h-[700px] backdrop-blur-sm border-2 border-blue-400/30"
            style={{
              boxShadow: '0 0 50px rgba(59, 130, 246, 0.3), 0 0 100px rgba(147, 51, 234, 0.2), inset 0 1px 3px rgba(255, 255, 255, 0.1)'
            }}>
