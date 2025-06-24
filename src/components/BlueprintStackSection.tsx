@@ -1,35 +1,48 @@
 
 const BlueprintStackSection = () => {
+  const scrollToDemo = () => {
+    const element = document.getElementById('interactive-demo');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      console.log('📍 Scrolled to interactive demo');
+    }
+  };
+
   const stackLayers = [
     {
       title: "Core Build Prompts",
       description: "Proven prompts to auto-generate app components in Lovable",
       icon: "🧠",
-      color: "from-purple-500 to-purple-600"
+      color: "from-purple-500 to-purple-600",
+      details: "50+ tested prompts for rapid component generation"
     },
     {
       title: "Master Blueprint Template",
       description: "A living system map detailing every module, dependency, and UI component",
       icon: "📐",
-      color: "from-blue-500 to-blue-600"
+      color: "from-blue-500 to-blue-600",
+      details: "Complete project structure and architecture guidelines"
     },
     {
       title: "Refactor Engine",
       description: "Automatic code cleaning that turns bloated files into efficient modules",
       icon: "⚡",
-      color: "from-green-500 to-green-600"
+      color: "from-green-500 to-green-600",
+      details: "Intelligent code splitting and optimization patterns"
     },
     {
       title: "Error Recovery Layer",
       description: "AI-driven prompts that detect and fix console errors automatically",
       icon: "🛠️",
-      color: "from-orange-500 to-orange-600"
+      color: "from-orange-500 to-orange-600",
+      details: "Smart debugging and error resolution workflows"
     },
     {
       title: "Platform Patterns",
       description: "Pre-trained flows and integrations for Lovable 2.0 and beyond",
       icon: "🚀",
-      color: "from-pink-500 to-pink-600"
+      color: "from-pink-500 to-pink-600",
+      details: "Future-ready patterns for emerging platforms"
     }
   ];
 
@@ -62,6 +75,7 @@ const BlueprintStackSection = () => {
                   key={index}
                   className="group hover:scale-105 transition-all duration-300 cursor-pointer"
                   style={{ animationDelay: `${index * 200}ms` }}
+                  onClick={() => console.log(`🔍 Exploring layer: ${layer.title}`)}
                 >
                   <div className={`bg-gradient-to-r ${layer.color} p-1 rounded-2xl shadow-lg hover:shadow-xl`}>
                     <div className="bg-white rounded-xl p-8">
@@ -71,8 +85,11 @@ const BlueprintStackSection = () => {
                           <h3 className="text-2xl font-bold text-gray-900 mb-3">
                             {layer.title}
                           </h3>
-                          <p className="text-gray-700 text-lg leading-relaxed">
+                          <p className="text-gray-700 text-lg leading-relaxed mb-2">
                             {layer.description}
+                          </p>
+                          <p className="text-sm text-gray-500 italic">
+                            {layer.details}
                           </p>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -100,7 +117,10 @@ const BlueprintStackSection = () => {
               <p className="text-xl text-gray-700 mb-8">
                 See how each layer works together to create your perfect build prompt.
               </p>
-              <button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-12 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+              <button 
+                onClick={scrollToDemo}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-12 py-4 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
                 Try the Interactive Demo
               </button>
             </div>

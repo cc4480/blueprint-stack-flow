@@ -7,7 +7,8 @@ const CommunitySection = () => {
       followers: "50K+",
       description: "Quick build tips and behind-the-scenes content",
       icon: "🎵",
-      color: "from-pink-500 to-red-500"
+      color: "from-pink-500 to-red-500",
+      url: "https://tiktok.com/@nocodelos"
     },
     {
       name: "YouTube",
@@ -15,7 +16,8 @@ const CommunitySection = () => {
       followers: "25K+",
       description: "Deep-dive tutorials and masterclass content",
       icon: "📺",
-      color: "from-red-500 to-orange-500"
+      color: "from-red-500 to-orange-500",
+      url: "https://youtube.com/@nocodelos"
     },
     {
       name: "Community",
@@ -23,7 +25,8 @@ const CommunitySection = () => {
       followers: "2K+",
       description: "Exclusive access to updates and live sessions",
       icon: "👥",
-      color: "from-purple-500 to-blue-500"
+      color: "from-purple-500 to-blue-500",
+      url: "https://discord.gg/nocodelos"
     }
   ];
 
@@ -33,6 +36,21 @@ const CommunitySection = () => {
     "Get exclusive updates and new methodologies",
     "Access live masterclasses and Q&A sessions"
   ];
+
+  const handleSocialClick = (platform: typeof socialPlatforms[0]) => {
+    window.open(platform.url, '_blank', 'noopener,noreferrer');
+    console.log(`🔗 Opening ${platform.name}: ${platform.url}`);
+  };
+
+  const handleYouTubeSubscribe = () => {
+    window.open('https://youtube.com/@nocodelos?sub_confirmation=1', '_blank', 'noopener,noreferrer');
+    console.log('📺 Opening YouTube subscription page');
+  };
+
+  const handleCommunityJoin = () => {
+    window.open('https://discord.gg/nocodelos', '_blank', 'noopener,noreferrer');
+    console.log('👥 Opening Discord community');
+  };
 
   return (
     <section className="py-20 bg-gradient-to-br from-purple-50 to-pink-50">
@@ -98,6 +116,7 @@ const CommunitySection = () => {
               <div 
                 key={index}
                 className="group hover:scale-105 transition-all duration-300 cursor-pointer"
+                onClick={() => handleSocialClick(platform)}
               >
                 <div className={`bg-gradient-to-br ${platform.color} p-1 rounded-2xl shadow-lg hover:shadow-xl`}>
                   <div className="bg-white rounded-xl p-8 text-center h-full">
@@ -130,10 +149,16 @@ const CommunitySection = () => {
                 Join thousands of builders who've already upgraded their no-code workflow
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <button className="bg-white text-purple-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+                <button 
+                  onClick={handleYouTubeSubscribe}
+                  className="bg-white text-purple-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
+                >
                   🎬 Subscribe to YouTube
                 </button>
-                <button className="bg-purple-800 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-purple-900 transition-all duration-300 transform hover:scale-105">
+                <button 
+                  onClick={handleCommunityJoin}
+                  className="bg-purple-800 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-purple-900 transition-all duration-300 transform hover:scale-105"
+                >
                   👥 Join the Masterclass Community
                 </button>
               </div>
