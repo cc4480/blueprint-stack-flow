@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ const InteractiveDemo = () => {
   const [formData, setFormData] = useState({
     appType: "",
     dataSource: "",
-    keyFeatures: [] as string[],
+    features: [] as string[],
     additionalRequirements: ""
   });
   const [generatedResult, setGeneratedResult] = useState<{
@@ -64,7 +63,7 @@ const InteractiveDemo = () => {
   };
 
   const generatePrompt = async () => {
-    if (formData.keyFeatures.length === 0) {
+    if (formData.features.length === 0) {
       toast.error('Please select at least one feature');
       return;
     }
@@ -76,8 +75,9 @@ const InteractiveDemo = () => {
       const request: PromptGenerationRequest = {
         appType: formData.appType,
         dataSource: formData.dataSource,
-        keyFeatures: formData.keyFeatures,
-        additionalRequirements: formData.additionalRequirements
+        features: formData.features,
+        platform: "web",
+        additionalContext: formData.additionalRequirements
       };
 
       const result = await promptService.generatePrompt(request);
@@ -99,12 +99,12 @@ const InteractiveDemo = () => {
   const handleFeatureToggle = (featureId: string) => {
     setFormData(prev => ({
       ...prev,
-      keyFeatures: prev.keyFeatures.includes(featureId)
-        ? prev.keyFeatures.filter(f => f !== featureId)
-        : [...prev.keyFeatures, featureId]
+      features: prev.features.includes(featureId)
+        ? prev.features.filter(f => f !== featureId)
+        : [...prev.features, featureId]
     }));
     
-    console.log('🔄 Features updated:', formData.keyFeatures);
+    console.log('🔄 Features updated:', formData.features);
   };
 
   const copyToClipboard = async () => {
@@ -131,7 +131,7 @@ const InteractiveDemo = () => {
 
   const resetDemo = () => {
     setCurrentStep(0);
-    setFormData({ appType: "", dataSource: "", keyFeatures: [], additionalRequirements: "" });
+    setFormData({ appType: "", dataSource: "", features: [], additionalRequirements: "" });
     setGeneratedResult(null);
     console.log('🔄 Demo reset to beginning');
   };
@@ -256,7 +256,7 @@ const InteractiveDemo = () => {
                       >
                         <input
                           type="checkbox"
-                          checked={formData.keyFeatures.includes(feature.id)}
+                          checked={formData.features.includes(feature.id)}
                           onChange={() => handleFeatureToggle(feature.id)}
                           className="w-5 h-5 text-purple-600 rounded"
                         />
@@ -271,7 +271,7 @@ const InteractiveDemo = () => {
                   <div className="text-center">
                     <Button
                       onClick={() => setCurrentStep(3)}
-                      disabled={formData.keyFeatures.length === 0}
+                      disabled={formData.features.length === 0}
                       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                     >
                       Continue to Final Details
@@ -286,7 +286,7 @@ const InteractiveDemo = () => {
                   <div className="text-center mb-6">
                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-4">
                       <p className="text-lg text-gray-800 font-medium">
-                        {formData.appType} • {formData.dataSource} • {formData.keyFeatures.length} features
+                        {formData.appType} • {formData.dataSource} • {formData.features.length} features
                       </p>
                     </div>
                   </div>
