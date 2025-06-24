@@ -14,6 +14,7 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
   const [apiKey, setApiKey] = useState<string>('');
   const [showKey, setShowKey] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
     // Load saved API key from localStorage
@@ -32,10 +33,17 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
       return;
     }
 
+    // Basic format validation
+    if (!apiKey.startsWith('sk-')) {
+      toast.error('DeepSeek API key should start with "sk-"');
+      return;
+    }
+
+    setIsValidating(true);
     console.log('🔍 Validating DeepSeek API key for RAG 2.0 + MCP + A2A integration...');
     
     try {
-      // Test the API key with DeepSeek Reasoner model
+      // Test the API key with DeepSeek API
       const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
@@ -44,24 +52,57 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
         },
         body: JSON.stringify({
           model: 'deepseek-reasoner',
-          messages: [{ role: 'user', content: 'Test NoCodeLos Blueprint Stack integration' }],
-          max_tokens: 10,
+          messages: [{ 
+            role: 'user', 
+            content: 'Hello' 
+          }],
+          max_tokens: 5,
         }),
       });
 
-      if (response.ok || response.status === 400) { // 400 is OK for test request
+      console.log('API Response status:', response.status);
+      
+      if (response.ok) {
+        // Successful response
         localStorage.setItem('deepseek_api_key', apiKey);
         setIsValidated(true);
         onApiKeyChange(apiKey);
         toast.success('✅ DeepSeek API key validated! RAG 2.0, MCP & A2A protocols ready');
         console.log('✅ DeepSeek Reasoner API key validated for NoCodeLos Blueprint Stack');
+      } else if (response.status === 401) {
+        throw new Error('Invalid API key - please check your DeepSeek API key');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded - please try again in a moment');
       } else {
-        throw new Error('Invalid DeepSeek API key');
+        // For other status codes, still consider it valid if it's an authentication issue
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error?.type === 'insufficient_quota' || errorData.error?.code === 'insufficient_quota') {
+          // Key is valid but no quota
+          localStorage.setItem('deepseek_api_key', apiKey);
+          setIsValidated(true);
+          onApiKeyChange(apiKey);
+          toast.success('✅ DeepSeek API key validated! (Note: Check your quota)');
+          console.log('✅ DeepSeek API key validated (quota issue noted)');
+        } else {
+          throw new Error(`API validation failed: ${response.status}`);
+        }
       }
     } catch (error) {
       console.error('❌ DeepSeek API key validation failed:', error);
-      toast.error('❌ Invalid API key. Please check and try again.');
+      
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          toast.error('❌ Network error. Please check your connection and try again.');
+        } else {
+          toast.error(`❌ ${error.message}`);
+        }
+      } else {
+        toast.error('❌ Invalid API key. Please check and try again.');
+      }
+      
       setIsValidated(false);
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -104,20 +145,25 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
               type={showKey ? 'text' : 'password'}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your DeepSeek API key for advanced AI integration"
+              placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
               className="w-full px-4 py-3 border-2 border-blue-300/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 pr-12 text-sm transition-all duration-300"
               style={{
                 boxShadow: 'inset 0 2px 4px rgba(59, 130, 246, 0.1)'
               }}
+              disabled={isValidating}
             />
             <button
               type="button"
               onClick={() => setShowKey(!showKey)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-700 transition-colors"
+              disabled={isValidating}
             >
               {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
+          <p className="text-xs text-gray-500">
+            Your API key should start with "sk-" and can be found at platform.deepseek.com
+          </p>
         </div>
 
         {isValidated && (
@@ -144,13 +190,23 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
         <div className="flex space-x-3">
           <Button
             onClick={validateAndSaveKey}
-            className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600 text-white border border-blue-300/30 transition-all duration-300 transform hover:scale-105"
+            disabled={isValidating || !apiKey.trim()}
+            className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600 text-white border border-blue-300/30 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
             style={{
               boxShadow: '0 0 20px rgba(59, 130, 246, 0.3), inset 0 1px 3px rgba(255, 255, 255, 0.2)'
             }}
           >
-            <Save className="w-4 h-4 mr-2" />
-            Validate & Enable
+            {isValidating ? (
+              <>
+                <Brain className="w-4 h-4 mr-2 animate-spin" />
+                Validating...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Validate & Enable
+              </>
+            )}
           </Button>
           
           {isValidated && (
@@ -161,6 +217,7 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
               style={{
                 boxShadow: '0 0 10px rgba(239, 68, 68, 0.2)'
               }}
+              disabled={isValidating}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -173,7 +230,7 @@ const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
             Access advanced AI reasoning, RAG 2.0, MCP & A2A protocols
           </p>
           <a 
-            href="https://platform.deepseek.com" 
+            href="https://platform.deepseek.com/api_keys" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-sm transition-colors"
