@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 const BuildingAnimation = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true); // Start playing immediately
 
   const steps = [
     { name: 'Canvas', description: 'Starting with blank canvas' },
@@ -19,23 +18,33 @@ const BuildingAnimation = () => {
   ];
 
   useEffect(() => {
-    if (isPlaying && currentStep < steps.length - 1) {
+    if (isPlaying) {
       const timer = setTimeout(() => {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep(prev => {
+          const nextStep = prev + 1;
+          if (nextStep >= steps.length) {
+            // Reset to beginning for continuous loop
+            setTimeout(() => setCurrentStep(0), 2000);
+            return prev;
+          }
+          return nextStep;
+        });
       }, 2000);
       return () => clearTimeout(timer);
-    } else if (currentStep >= steps.length - 1) {
-      setIsPlaying(false);
     }
-  }, [currentStep, isPlaying]);
+  }, [currentStep, isPlaying, steps.length]);
+
+  // Auto-start the animation when component mounts
+  useEffect(() => {
+    setIsPlaying(true);
+  }, []);
 
   const startAnimation = () => {
     setCurrentStep(0);
     setIsPlaying(true);
   };
 
-  const resetAnimation = () => {
-    setCurrentStep(0);
+  const pauseAnimation = () => {
     setIsPlaying(false);
   };
 
@@ -44,18 +53,17 @@ const BuildingAnimation = () => {
       {/* Control Panel */}
       <div className="flex justify-center gap-4 mb-8">
         <Button 
-          onClick={startAnimation} 
-          disabled={isPlaying}
+          onClick={isPlaying ? pauseAnimation : startAnimation}
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
         >
-          {isPlaying ? 'Building...' : 'Start Building'}
+          {isPlaying ? 'Pause' : 'Resume'} Building
         </Button>
         <Button 
-          onClick={resetAnimation} 
+          onClick={startAnimation} 
           variant="outline"
           className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white"
         >
-          Reset
+          Restart
         </Button>
       </div>
 
