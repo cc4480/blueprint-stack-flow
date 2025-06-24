@@ -29,6 +29,9 @@ class PromptService {
       // Create focused user query for faster processing
       const userQuery = this.promptBuilder.buildFocusedQuery(request);
 
+      console.log('📝 System prompt length:', systemPrompt.length);
+      console.log('📝 User query length:', userQuery.length);
+
       // Generate response using DeepSeek
       const data = await this.deepSeekClient.generateResponse(systemPrompt, userQuery);
       
@@ -66,5 +69,6 @@ class PromptService {
   }
 }
 
-// Export the service instance
+// Export the service instance and types
 export const promptService = new PromptService();
+export type { PromptGenerationRequest, PromptGenerationResult } from './types/promptTypes';
