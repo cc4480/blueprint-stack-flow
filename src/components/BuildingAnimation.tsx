@@ -8,6 +8,7 @@ import ParticleCanvas from './animation/ParticleCanvas';
 import ConnectionLines from './animation/ConnectionLines';
 import FloatingIndicators from './animation/FloatingIndicators';
 import StepInfo from './animation/StepInfo';
+import Logo from './Logo';
 import { animationSteps } from './animation/animationData';
 import { useBuildingAnimation } from '../hooks/useBuildingAnimation';
 
@@ -31,6 +32,15 @@ const BuildingAnimation = () => {
       {/* Connection Lines Between Elements */}
       <ConnectionLines currentStep={currentStep} builtElements={builtElements} />
 
+      {/* Logo Header */}
+      <div className="text-center mb-8">
+        <Logo size="lg" className="mx-auto mb-4" />
+        <h2 className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 bg-clip-text">
+          Live Application Builder
+        </h2>
+        <p className="text-gray-300 mt-2">Powered by DeepSeek Reasoner + RAG 2.0 + MCP + A2A</p>
+      </div>
+
       {/* Control Panel */}
       <AnimationControls 
         isPlaying={isPlaying}
@@ -40,7 +50,10 @@ const BuildingAnimation = () => {
       />
 
       {/* Main Build Container */}
-      <div className="relative bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 rounded-2xl p-8 min-h-[700px] backdrop-blur-sm border border-purple-500/20">
+      <div className="relative bg-gradient-to-br from-slate-900/95 via-purple-900/95 to-slate-900/95 rounded-2xl p-8 min-h-[700px] backdrop-blur-sm border-2 border-blue-400/30"
+           style={{
+             boxShadow: '0 0 50px rgba(59, 130, 246, 0.3), 0 0 100px rgba(147, 51, 234, 0.2), inset 0 1px 3px rgba(255, 255, 255, 0.1)'
+           }}>
         {/* Code Terminal */}
         <CodeTerminal 
           typingText={typingText}
