@@ -15,7 +15,7 @@ const AnimationControls = ({ isPlaying, onPause, onResume, onRestart }: Animatio
     <div className="flex justify-center gap-4 mb-8">
       <Button 
         onClick={isPlaying ? onPause : onResume}
-        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/25"
+        className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600 text-white transition-all duration-300 transform hover:scale-105 shadow-logo border border-blue-400/30"
         size="lg"
       >
         {isPlaying ? (
@@ -33,7 +33,7 @@ const AnimationControls = ({ isPlaying, onPause, onResume, onRestart }: Animatio
       <Button 
         onClick={onRestart} 
         variant="outline"
-        className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+        className="border-2 border-blue-400 text-blue-400 hover:bg-blue-400/10 hover:text-blue-300 transition-all duration-300 transform hover:scale-105 shadow-logo bg-black"
         size="lg"
       >
         <RotateCcw className="w-5 h-5 mr-2" />

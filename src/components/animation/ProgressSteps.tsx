@@ -24,12 +24,12 @@ const ProgressSteps = ({ currentStep, steps }: ProgressStepsProps) => {
       {steps.map((step, index) => (
         <div 
           key={index}
-          className={`group relative flex items-center gap-4 p-4 rounded-xl transition-all duration-500 ${
+          className={`group relative flex items-center gap-4 p-4 rounded-xl transition-all duration-500 border ${
             index < currentStep 
-              ? 'bg-green-500/20 border border-green-500/40 shadow-lg shadow-green-500/10' 
+              ? 'bg-black border-green-400/40 shadow-lg shadow-green-400/20' 
               : index === currentStep
-              ? 'bg-yellow-500/20 border border-yellow-500/40 animate-pulse shadow-lg shadow-yellow-500/10'
-              : 'bg-gray-700/20 border border-gray-600/30'
+              ? 'bg-black border-blue-400/40 animate-pulse shadow-lg shadow-blue-400/20'
+              : 'bg-black border-gray-600/30'
           }`}
         >
           {/* Connection line to next step */}
@@ -46,7 +46,7 @@ const ProgressSteps = ({ currentStep, steps }: ProgressStepsProps) => {
             index < currentStep 
               ? 'bg-green-500 shadow-lg shadow-green-500/30' 
               : index === currentStep
-              ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30'
+              ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 shadow-logo'
               : 'bg-gray-600'
           }`}>
             {index < currentStep ? (
@@ -69,8 +69,8 @@ const ProgressSteps = ({ currentStep, steps }: ProgressStepsProps) => {
             
             {/* Progress bar for current step */}
             {index === currentStep && (
-              <div className="mt-3 w-full bg-gray-700 rounded-full h-1 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-pulse" 
+              <div className="mt-3 w-full bg-gray-800 rounded-full h-1 overflow-hidden border border-blue-400/20">
+                <div className="h-full bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 rounded-full animate-pulse" 
                      style={{ width: '70%' }}></div>
               </div>
             )}
