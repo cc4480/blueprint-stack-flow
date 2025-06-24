@@ -1,103 +1,115 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import {
-  Database,
-  Search,
-  Upload,
-  Download,
-  Trash2,
-  RefreshCw,
-  BarChart3,
-  FileText,
-  Brain,
-  Zap,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Plus,
-  Settings,
-  Eye,
-  Filter
-} from 'lucide-react';
+import { Database, Search, Upload, Download, Trash2, RefreshCw, BarChart3, FileText, Brain, Zap, CheckCircle, Clock, AlertCircle, Plus, Settings, Eye, Filter } from 'lucide-react';
 import { toast } from 'sonner';
-
 const RAGHub = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isIndexing, setIsIndexing] = useState(false);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState('primary');
-
-  const [knowledgeBases] = useState([
-    {
-      id: 'primary',
-      name: 'Primary Knowledge Base',
-      documents: 47392,
-      size: '1.8TB',
-      lastUpdated: '2 minutes ago',
-      status: 'active',
-      accuracy: 99.7,
-      retrievalTime: 0.12
-    },
-    {
-      id: 'technical',
-      name: 'Technical Documentation',
-      documents: 12847,
-      size: '456GB',
-      lastUpdated: '15 minutes ago',
-      status: 'active',
-      accuracy: 98.9,
-      retrievalTime: 0.08
-    },
-    {
-      id: 'business',
-      name: 'Business Intelligence',
-      documents: 8934,
-      size: '234GB',
-      lastUpdated: '1 hour ago',
-      status: 'syncing',
-      accuracy: 97.3,
-      retrievalTime: 0.15
-    }
-  ]);
-
-  const [recentQueries] = useState([
-    { id: 1, query: 'How to implement MCP protocol with authentication?', results: 12, time: '0.08s', confidence: 98.7 },
-    { id: 2, query: 'DeepSeek Reasoner integration best practices', results: 8, time: '0.11s', confidence: 99.2 },
-    { id: 3, query: 'A2A agent communication patterns', results: 15, time: '0.09s', confidence: 97.8 },
-    { id: 4, query: 'RAG 2.0 performance optimization techniques', results: 23, time: '0.13s', confidence: 99.5 },
-    { id: 5, query: 'NoCodeLos Blueprint Stack deployment strategies', results: 7, time: '0.07s', confidence: 96.4 }
-  ]);
-
-  const [indexingQueue] = useState([
-    { id: 1, name: 'React 18 Documentation.pdf', size: '2.3MB', status: 'processing', progress: 67 },
-    { id: 2, name: 'TypeScript Handbook.md', size: '1.8MB', status: 'completed', progress: 100 },
-    { id: 3, name: 'API Integration Guide.docx', size: '945KB', status: 'queued', progress: 0 },
-    { id: 4, name: 'Database Schema.sql', size: '156KB', status: 'processing', progress: 34 }
-  ]);
-
+  const [knowledgeBases] = useState([{
+    id: 'primary',
+    name: 'Primary Knowledge Base',
+    documents: 47392,
+    size: '1.8TB',
+    lastUpdated: '2 minutes ago',
+    status: 'active',
+    accuracy: 99.7,
+    retrievalTime: 0.12
+  }, {
+    id: 'technical',
+    name: 'Technical Documentation',
+    documents: 12847,
+    size: '456GB',
+    lastUpdated: '15 minutes ago',
+    status: 'active',
+    accuracy: 98.9,
+    retrievalTime: 0.08
+  }, {
+    id: 'business',
+    name: 'Business Intelligence',
+    documents: 8934,
+    size: '234GB',
+    lastUpdated: '1 hour ago',
+    status: 'syncing',
+    accuracy: 97.3,
+    retrievalTime: 0.15
+  }]);
+  const [recentQueries] = useState([{
+    id: 1,
+    query: 'How to implement MCP protocol with authentication?',
+    results: 12,
+    time: '0.08s',
+    confidence: 98.7
+  }, {
+    id: 2,
+    query: 'DeepSeek Reasoner integration best practices',
+    results: 8,
+    time: '0.11s',
+    confidence: 99.2
+  }, {
+    id: 3,
+    query: 'A2A agent communication patterns',
+    results: 15,
+    time: '0.09s',
+    confidence: 97.8
+  }, {
+    id: 4,
+    query: 'RAG 2.0 performance optimization techniques',
+    results: 23,
+    time: '0.13s',
+    confidence: 99.5
+  }, {
+    id: 5,
+    query: 'NoCodeLos Blueprint Stack deployment strategies',
+    results: 7,
+    time: '0.07s',
+    confidence: 96.4
+  }]);
+  const [indexingQueue] = useState([{
+    id: 1,
+    name: 'React 18 Documentation.pdf',
+    size: '2.3MB',
+    status: 'processing',
+    progress: 67
+  }, {
+    id: 2,
+    name: 'TypeScript Handbook.md',
+    size: '1.8MB',
+    status: 'completed',
+    progress: 100
+  }, {
+    id: 3,
+    name: 'API Integration Guide.docx',
+    size: '945KB',
+    status: 'queued',
+    progress: 0
+  }, {
+    id: 4,
+    name: 'Database Schema.sql',
+    size: '156KB',
+    status: 'processing',
+    progress: 34
+  }]);
   useEffect(() => {
     console.log('🗄️ RAG 2.0 Hub initialized with full knowledge management capabilities');
   }, []);
-
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       toast.error('Please enter a search query');
       return;
     }
-
     console.log('🔍 Executing RAG 2.0 search:', searchQuery);
     toast.success(`Searching "${searchQuery}" in RAG 2.0 database...`);
-    
+
     // Simulate search
     setTimeout(() => {
       toast.success(`Found 12 relevant documents for "${searchQuery}"`);
     }, 1000);
   };
-
   const startReindexing = async () => {
     setIsIndexing(true);
     console.log('🔄 Starting RAG 2.0 database reindexing...');
@@ -109,27 +121,31 @@ const RAGHub = () => {
       toast.success('Knowledge base reindexing completed successfully!');
     }, 3000);
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'syncing': return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-500" />;
+      case 'active':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'syncing':
+        return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-500" />;
     }
   };
-
   const getProgressColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'processing': return 'bg-blue-500';
-      case 'error': return 'bg-red-500';
-      default: return 'bg-gray-300';
+      case 'completed':
+        return 'bg-green-500';
+      case 'processing':
+        return 'bg-blue-500';
+      case 'error':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-300';
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 pb-12">
+  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 pb-12 bg-zinc-950">
       <div className="container mx-auto px-6">
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-logo-text mb-2">
@@ -142,14 +158,7 @@ const RAGHub = () => {
 
         {/* Knowledge Base Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {knowledgeBases.map((kb) => (
-            <Card 
-              key={kb.id} 
-              className={`border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${
-                selectedKnowledgeBase === kb.id ? 'border-blue-400 shadow-lg' : 'border-gray-200'
-              }`}
-              onClick={() => setSelectedKnowledgeBase(kb.id)}
-            >
+          {knowledgeBases.map(kb => <Card key={kb.id} className={`border-2 cursor-pointer transition-all duration-300 hover:shadow-lg ${selectedKnowledgeBase === kb.id ? 'border-blue-400 shadow-lg' : 'border-gray-200'}`} onClick={() => setSelectedKnowledgeBase(kb.id)}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900">{kb.name}</h3>
@@ -177,8 +186,7 @@ const RAGHub = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         <Tabs defaultValue="search" className="space-y-6">
@@ -200,13 +208,7 @@ const RAGHub = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex space-x-4">
-                  <Input
-                    placeholder="Enter your query for semantic search across the knowledge base..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
+                  <Input placeholder="Enter your query for semantic search across the knowledge base..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="flex-1" onKeyPress={e => e.key === 'Enter' && handleSearch()} />
                   <Button onClick={handleSearch} className="bg-gradient-to-r from-blue-500 to-purple-500">
                     <Search className="w-4 h-4 mr-2" />
                     Search
@@ -236,8 +238,7 @@ const RAGHub = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentQueries.map((query) => (
-                    <div key={query.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  {recentQueries.map(query => <div key={query.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{query.query}</p>
                         <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
@@ -249,8 +250,7 @@ const RAGHub = () => {
                       <Button variant="ghost" size="sm">
                         <Eye className="w-4 h-4" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -301,24 +301,15 @@ const RAGHub = () => {
                     <RefreshCw className="w-5 h-5 text-blue-600" />
                     <span>Indexing Queue</span>
                   </div>
-                  <Button 
-                    onClick={startReindexing} 
-                    disabled={isIndexing}
-                    className="bg-gradient-to-r from-orange-500 to-red-500"
-                  >
-                    {isIndexing ? (
-                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Zap className="w-4 h-4 mr-2" />
-                    )}
+                  <Button onClick={startReindexing} disabled={isIndexing} className="bg-gradient-to-r from-orange-500 to-red-500">
+                    {isIndexing ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
                     {isIndexing ? 'Reindexing...' : 'Reindex All'}
                   </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {indexingQueue.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  {indexingQueue.map(item => <div key={item.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                       <FileText className="w-8 h-8 text-blue-600" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
@@ -331,17 +322,15 @@ const RAGHub = () => {
                           </div>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(item.status)}`}
-                            style={{ width: `${item.progress}%` }}
-                          ></div>
+                          <div className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(item.status)}`} style={{
+                        width: `${item.progress}%`
+                      }}></div>
                         </div>
                       </div>
                       <Button variant="ghost" size="sm">
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
@@ -497,8 +486,6 @@ const RAGHub = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default RAGHub;
