@@ -17,26 +17,26 @@ const InteractiveDemo = () => {
 
   const appTypes = {
     frontend: [
-      { id: 'react-spa', name: 'React SPA', icon: '⚛️', description: 'Single Page Application with modern React hooks and state management' },
-      { id: 'nextjs-app', name: 'Next.js App', icon: '▲', description: 'Full-stack React application with SSR and API routes' },
-      { id: 'vue-nuxt', name: 'Vue + Nuxt', icon: '💚', description: 'Vue 3 with Nuxt for SSR, file-based routing, and performance' },
-      { id: 'svelte-kit', name: 'SvelteKit', icon: '🧡', description: 'Fast, lightweight framework with excellent developer experience' },
-      { id: 'angular-app', name: 'Angular', icon: '🅰️', description: 'Enterprise application with Angular and TypeScript' },
-      { id: 'solid-js', name: 'Solid.js', icon: '🟦', description: 'High-performance reactive framework with fine-grained reactivity' },
-      { id: 'astro-app', name: 'Astro', icon: '🚀', description: 'Modern static site generator with partial hydration' },
-      { id: 'remix-app', name: 'Remix', icon: '💿', description: 'Full-stack web framework with nested routing and data loading' }
+      { id: 'react-spa', name: 'React SPA', icon: '⚛️', description: 'Single Page Application with modern React hooks and state management', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['All Backends'] },
+      { id: 'nextjs-app', name: 'Next.js App', icon: '▲', description: 'Full-stack React application with SSR and API routes', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['Node.js', 'Vercel', 'All Backends'] },
+      { id: 'vue-nuxt', name: 'Vue + Nuxt', icon: '💚', description: 'Vue 3 with Nuxt for SSR, file-based routing, and performance', difficulty: 'Beginner', popularity: '⭐ Popular', compatibility: ['Node.js', 'All Backends'] },
+      { id: 'svelte-kit', name: 'SvelteKit', icon: '🧡', description: 'Fast, lightweight framework with excellent developer experience', difficulty: 'Beginner', popularity: '⭐ Rising Star', compatibility: ['Node.js', 'Deno', 'All Backends'] },
+      { id: 'angular-app', name: 'Angular', icon: '🅰️', description: 'Enterprise application with Angular and TypeScript', difficulty: 'Intermediate', popularity: '💼 Enterprise', compatibility: ['All Backends'] },
+      { id: 'solid-js', name: 'Solid.js', icon: '🟦', description: 'High-performance reactive framework with fine-grained reactivity', difficulty: 'Intermediate', popularity: '⚡ Performance', compatibility: ['All Backends'] },
+      { id: 'astro-app', name: 'Astro', icon: '🚀', description: 'Modern static site generator with partial hydration', difficulty: 'Beginner', popularity: '🌟 Content Sites', compatibility: ['All Backends', 'Static'] },
+      { id: 'remix-app', name: 'Remix', icon: '💿', description: 'Full-stack web framework with nested routing and data loading', difficulty: 'Intermediate', popularity: '🎯 Modern', compatibility: ['Node.js', 'Edge Runtime'] }
     ],
     backend: [
-      { id: 'node-express', name: 'Node.js + Express', icon: '🟢', description: 'RESTful API with Express.js and middleware integration' },
-      { id: 'node-fastify', name: 'Node.js + Fastify', icon: '⚡', description: 'High-performance Node.js framework with TypeScript support' },
-      { id: 'bun-elysia', name: 'Bun + Elysia', icon: '🥟', description: 'Ultra-fast runtime with modern TypeScript-first framework' },
-      { id: 'deno-fresh', name: 'Deno + Fresh', icon: '🦕', description: 'Secure runtime with island architecture and edge computing' },
-      { id: 'python-fastapi', name: 'Python + FastAPI', icon: '🐍', description: 'High-performance Python API with automatic documentation' },
-      { id: 'python-django', name: 'Python + Django', icon: '🎸', description: 'Full-featured web framework with ORM and admin interface' },
-      { id: 'go-gin', name: 'Go + Gin', icon: '🔵', description: 'High-performance HTTP framework with minimal overhead' },
-      { id: 'rust-axum', name: 'Rust + Axum', icon: '🦀', description: 'Memory-safe, extremely fast web framework for Rust' },
-      { id: 'graphql-apollo', name: 'GraphQL + Apollo', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers' },
-      { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh and containers' }
+      { id: 'node-express', name: 'Node.js + Express', icon: '🟢', description: 'RESTful API with Express.js and middleware integration', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['All Frontends', 'All Databases'] },
+      { id: 'node-fastify', name: 'Node.js + Fastify', icon: '⚡', description: 'High-performance Node.js framework with TypeScript support', difficulty: 'Beginner', popularity: '⚡ Fast & Easy', compatibility: ['All Frontends', 'All Databases'] },
+      { id: 'bun-elysia', name: 'Bun + Elysia', icon: '🥟', description: 'Ultra-fast runtime with modern TypeScript-first framework', difficulty: 'Beginner', popularity: '🚀 Bleeding Edge', compatibility: ['React', 'Vue', 'Svelte'] },
+      { id: 'deno-fresh', name: 'Deno + Fresh', icon: '🦕', description: 'Secure runtime with island architecture and edge computing', difficulty: 'Intermediate', popularity: '🛡️ Secure', compatibility: ['React', 'Preact', 'Islands'] },
+      { id: 'python-fastapi', name: 'Python + FastAPI', icon: '🐍', description: 'High-performance Python API with automatic documentation', difficulty: 'Beginner', popularity: '🔥 AI/ML Friendly', compatibility: ['All Frontends', 'PostgreSQL', 'Vector DBs'] },
+      { id: 'python-django', name: 'Python + Django', icon: '🎸', description: 'Full-featured web framework with ORM and admin interface', difficulty: 'Intermediate', popularity: '💼 Enterprise', compatibility: ['All Frontends', 'PostgreSQL', 'MySQL'] },
+      { id: 'go-gin', name: 'Go + Gin', icon: '🔵', description: 'High-performance HTTP framework with minimal overhead', difficulty: 'Intermediate', popularity: '⚡ Performance', compatibility: ['All Frontends', 'All Databases'] },
+      { id: 'rust-axum', name: 'Rust + Axum', icon: '🦀', description: 'Memory-safe, extremely fast web framework for Rust', difficulty: 'Advanced', popularity: '🔥 Blazing Fast', compatibility: ['All Frontends', 'PostgreSQL'] },
+      { id: 'graphql-apollo', name: 'GraphQL + Apollo', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers', difficulty: 'Intermediate', popularity: '🎯 Flexible', compatibility: ['React', 'Vue', 'Angular'] },
+      { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh and containers', difficulty: 'Advanced', popularity: '🏢 Enterprise', compatibility: ['All Frontends', 'Distributed DBs'] }
     ],
     fullstack: [
       { id: 'saas-platform', name: 'SaaS Platform', icon: '🏢', description: 'Complete business application with subscriptions, analytics, and user management' },
@@ -57,15 +57,15 @@ const InteractiveDemo = () => {
   };
 
   const dataSources = [
-    { id: 'postgresql', name: 'PostgreSQL', icon: '🐘' },
-    { id: 'supabase', name: 'Supabase', icon: '⚡' },
-    { id: 'mongodb', name: 'MongoDB', icon: '🍃' },
-    { id: 'firebase', name: 'Firebase', icon: '🔥' },
-    { id: 'planetscale', name: 'PlanetScale', icon: '🌍' },
-    { id: 'neon', name: 'Neon', icon: '💫' },
-    { id: 'turso', name: 'Turso', icon: '🚀' },
-    { id: 'redis', name: 'Redis', icon: '🔴' },
-    { id: 'drizzle-orm', name: 'Drizzle ORM', icon: '💎' }
+    { id: 'postgresql', name: 'PostgreSQL', icon: '🐘', difficulty: 'Beginner', description: 'Most popular SQL database - reliable and feature-rich', compatibility: 'Universal' },
+    { id: 'supabase', name: 'Supabase', icon: '⚡', difficulty: 'Beginner', description: 'PostgreSQL with built-in auth, realtime, and APIs', compatibility: 'Perfect for SaaS' },
+    { id: 'mongodb', name: 'MongoDB', icon: '🍃', difficulty: 'Beginner', description: 'NoSQL document database - flexible and scalable', compatibility: 'Great for APIs' },
+    { id: 'firebase', name: 'Firebase', icon: '🔥', difficulty: 'Beginner', description: 'Google\'s backend-as-a-service with realtime features', compatibility: 'Mobile & Web' },
+    { id: 'planetscale', name: 'PlanetScale', icon: '🌍', difficulty: 'Beginner', description: 'Serverless MySQL with branching like Git', compatibility: 'Serverless Apps' },
+    { id: 'neon', name: 'Neon', icon: '💫', difficulty: 'Beginner', description: 'Serverless PostgreSQL with auto-scaling', compatibility: 'Modern Apps' },
+    { id: 'turso', name: 'Turso', icon: '🚀', difficulty: 'Intermediate', description: 'Edge SQLite database for ultra-low latency', compatibility: 'Edge Computing' },
+    { id: 'redis', name: 'Redis', icon: '🔴', difficulty: 'Intermediate', description: 'In-memory cache and session store', compatibility: 'Performance Apps' },
+    { id: 'drizzle-orm', name: 'Drizzle ORM', icon: '💎', difficulty: 'Beginner', description: 'TypeScript-first ORM - type-safe and fast', compatibility: 'TypeScript Projects' }
   ];
 
   const availableFeatures = [
