@@ -64,7 +64,7 @@ class PromptService {
           systemPrompt: systemPrompt,
           temperature: 0.8,
           maxSteps: 20,
-          maxTokens: 20000
+          maxTokens: 64000
         }),
       });
 
@@ -120,7 +120,7 @@ class PromptService {
 
 🎯 MISSION: Generate comprehensive, production-ready master blueprints integrating the complete RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-reasoner technology stack with UNLIMITED scope and detail.
 
-⚡ TOKEN ALLOCATION: You have access to 20,000 tokens for complete blueprint generation. Use the full context window to provide comprehensive, detailed responses including complete code examples, architecture diagrams, and implementation guidance.
+⚡ TOKEN ALLOCATION: You have access to DeepSeek's FULL 64,000 token output capacity for complete blueprint generation. Use the ENTIRE context window to provide comprehensive, detailed responses including complete code examples, architecture diagrams, and implementation guidance. DO NOT truncate or summarize - provide the complete blueprint.
 
 ⚡ UNLIMITED CORE REQUIREMENTS:
 1. **RAG 2.0 Database Integration - COMPREHENSIVE**

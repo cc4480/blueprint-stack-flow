@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             { role: 'user', content: prompt }
           ],
           temperature,
-          max_tokens: 2000,
+          max_tokens: 64000, // Use DeepSeek's full 64K token output capacity
           stream: false
         }),
         signal: controller.signal
@@ -194,7 +194,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: parseFloat(temperature?.toString() || '0.7'),
         maxSteps,
         confidence: 95, // DeepSeek typically has high confidence
-        processingTimeMs: processingTime
+        processingTimeMs: processingTime,
+        maxTokens: 64000
       });
 
       const response = {
