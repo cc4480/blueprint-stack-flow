@@ -28,40 +28,35 @@ class PromptService {
 
   setApiKey(key: string) {
     this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for deepseek-chat streaming integration');
+    console.log('🔑 DeepSeek API key configured for database-enhanced chat');
   }
 
   async streamChatResponse(
     messages: ChatMessage[], 
     onToken: (token: string) => void,
     onComplete?: () => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    includeContext: boolean = true
   ): Promise<void> {
-    if (!this.apiKey) {
-      const error = 'DeepSeek API key not configured. Please set your API key to enable deepseek-chat streaming.';
-      onError?.(error);
-      throw new Error(error);
-    }
-
     try {
-      console.log('🚀 Starting deepseek-chat streaming with messages:', messages);
+      console.log('🚀 Starting database-enhanced DeepSeek streaming...');
 
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
+      // Use the edge function that has database access
+      const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
           messages,
-          temperature: 0.7,
-          stream: true,
+          systemPrompt: messages.find(m => m.role === 'system')?.content || 'You are a helpful AI assistant.',
+          includeContext
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Edge function request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
@@ -82,16 +77,16 @@ class PromptService {
 
           buffer += decoder.decode(value, { stream: true });
           
-          // Process complete lines ending with \n\n
+          // Process complete lines
           const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             const trimmed = line.trim();
             if (!trimmed) continue;
             
             if (trimmed.startsWith('data: ')) {
-              const jsonStr = trimmed.slice(6); // Remove 'data: ' prefix
+              const jsonStr = trimmed.slice(6);
               
               if (jsonStr === '[DONE]') {
                 console.log('✅ Stream completed with [DONE] signal');
@@ -105,11 +100,10 @@ class PromptService {
                 const token = delta?.content;
                 
                 if (token) {
-                  console.log('📨 Received token:', token);
+                  console.log('📨 Received database-enhanced token:', token);
                   onToken(token);
                 }
                 
-                // Check if the stream is finished
                 if (parsed.choices?.[0]?.finish_reason) {
                   console.log('✅ Stream finished with reason:', parsed.choices[0].finish_reason);
                   onComplete?.();
@@ -127,7 +121,7 @@ class PromptService {
 
       onComplete?.();
     } catch (error) {
-      console.error('❌ DeepSeek streaming failed:', error);
+      console.error('❌ Database-enhanced DeepSeek streaming failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
       onError?.(errorMessage);
       throw error;
