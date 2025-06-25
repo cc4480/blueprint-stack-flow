@@ -10,6 +10,7 @@ const InteractiveDemo = () => {
   const [selectedAppType, setSelectedAppType] = useState('');
   const [selectedDataSource, setSelectedDataSource] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -101,7 +102,7 @@ const InteractiveDemo = () => {
         dataSource: selectedDataSource,
         features: selectedFeatures,
         platform: 'web',
-        additionalContext: 'Generate comprehensive NoCodeLos Blueprint Stack with advanced AI integration'
+        additionalContext: description || 'Generate comprehensive NoCodeLos Blueprint Stack with advanced AI integration'
       };
 
       analytics.trackPromptGeneration(selectedAppType, selectedFeatures);
@@ -284,6 +285,31 @@ const InteractiveDemo = () => {
                   </div>
                 </label>
               ))}
+            </div>
+          </div>
+
+          {/* Step 4: Additional Description */}
+          <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+                4
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white">Describe Your Vision</h3>
+                <p className="text-gray-400 mt-1">Provide additional context and requirements for your application</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your application in detail... What specific features, user flows, or integrations do you need? Any special requirements or constraints?"
+                className="w-full h-32 px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 resize-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+              />
+              <p className="text-sm text-gray-500">
+                The more detail you provide, the better your NoCodeLos Blueprint Stack will be. Include user journeys, specific workflows, or any unique requirements.
+              </p>
             </div>
           </div>
 
