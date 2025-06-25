@@ -31,7 +31,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('🚀 DeepSeek Reasoner: Processing RAG 2.0 + MCP + A2A request')
+    console.log('🚀 DeepSeek Reasoner: Processing request with', messages.length, 'messages')
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -43,7 +43,8 @@ serve(async (req) => {
         model: 'deepseek-reasoner',
         messages: messages,
         stream: true,
-        temperature: 0.8,
+        temperature: 0.7,
+        max_tokens: 4000,
       }),
     })
 
@@ -54,7 +55,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
-          error: `DeepSeek API error: ${response.status} - ${response.statusText}. Please check your API key.` 
+          error: `DeepSeek API error: ${response.status} - ${response.statusText}. Details: ${errorText}` 
         }),
         { 
           status: response.status,
@@ -63,37 +64,15 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ DeepSeek API response received, streaming to client')
+    console.log('✅ DeepSeek API response received, setting up stream')
 
-    // Stream the response back to the client
-    const stream = new ReadableStream({
-      start(controller) {
-        const reader = response.body?.getReader()
-        if (!reader) {
-          controller.close()
-          return
-        }
-
-        function pump(): Promise<void> {
-          return reader.read().then(({ done, value }) => {
-            if (done) {
-              console.log('✅ DeepSeek streaming completed')
-              controller.close()
-              return
-            }
-            controller.enqueue(value)
-            return pump()
-          })
-        }
-
-        return pump()
-      }
-    })
-
-    return new Response(stream, {
+    // Return the streaming response directly
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
       },
     })
 

@@ -1,3 +1,4 @@
+
 import type { ConversationMessage, DeepSeekChunk, PromptGenerationResult } from './types';
 
 export class DeepSeekClient {
@@ -10,9 +11,12 @@ export class DeepSeekClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify({ messages }),
     });
+
+    console.log('📡 DeepSeek response status:', response.status);
 
     if (!response.ok) {
       console.error('❌ DeepSeek edge function error:', response.status, response.statusText);
@@ -20,9 +24,11 @@ export class DeepSeekClient {
       // Try to get the error message from the response
       try {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'DeepSeek API request failed. Please check your API key configuration.');
+        console.error('❌ Error details:', errorData);
+        throw new Error(errorData.error || `DeepSeek API request failed with status ${response.status}`);
       } catch (parseError) {
-        throw new Error('DeepSeek API request failed. Please check your API key configuration.');
+        console.error('❌ Failed to parse error response:', parseError);
+        throw new Error(`DeepSeek API request failed with status ${response.status}. Please check your API key configuration.`);
       }
     }
 
@@ -48,7 +54,10 @@ export class DeepSeekClient {
     try {
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('✅ Stream reading completed');
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -57,18 +66,22 @@ export class DeepSeekClient {
         for (const line of lines) {
           if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
             try {
-              const jsonStr = line.slice(6);
-              const chunk = JSON.parse(jsonStr) as DeepSeekChunk;
-              const delta = chunk.choices[0]?.delta;
-              
-              if (delta?.reasoning_content) {
-                reasoningContent += delta.reasoning_content;
-              }
-              if (delta?.content) {
-                finalContent += delta.content;
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr) {
+                const chunk = JSON.parse(jsonStr) as DeepSeekChunk;
+                const delta = chunk.choices?.[0]?.delta;
+                
+                if (delta?.reasoning_content) {
+                  reasoningContent += delta.reasoning_content;
+                  console.log('🧠 Reasoning chunk received:', delta.reasoning_content.length, 'chars');
+                }
+                if (delta?.content) {
+                  finalContent += delta.content;
+                  console.log('💬 Content chunk received:', delta.content.length, 'chars');
+                }
               }
             } catch (e) {
-              // Skip invalid JSON lines
+              console.warn('⚠️ Skipping invalid JSON line:', line.slice(0, 100));
             }
           }
         }
@@ -76,6 +89,8 @@ export class DeepSeekClient {
     } finally {
       reader.releaseLock();
     }
+
+    console.log('📊 Final results - Reasoning:', reasoningContent.length, 'chars, Content:', finalContent.length, 'chars');
 
     if (!finalContent && !reasoningContent) {
       throw new Error('No content received from DeepSeek API. Please check your API key and try again.');
