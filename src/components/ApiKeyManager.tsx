@@ -9,8 +9,6 @@ interface ApiKeyManagerProps {
 }
 
 const ApiKeyManager = ({ onApiKeyChange }: ApiKeyManagerProps) => {
-  const [isConfigured, setIsConfigured] = useState(true); // Always show as configured since we use Supabase secrets
-
   useEffect(() => {
     // Notify that API key is configured via Supabase secrets
     onApiKeyChange('configured-via-supabase-secrets');

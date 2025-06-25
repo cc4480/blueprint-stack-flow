@@ -1,6 +1,6 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import ApiKeyManager from "./ApiKeyManager";
 import { promptService, PromptGenerationRequest } from "../services/promptService";
 import DemoStepNavigation from "./demo/DemoStepNavigation";
 import DemoAppTypeSelection from "./demo/DemoAppTypeSelection";
@@ -12,7 +12,6 @@ import DemoContainer from "./demo/DemoContainer";
 
 const InteractiveDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [showApiKey, setShowApiKey] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     appType: "",
@@ -52,13 +51,6 @@ const InteractiveDemo = () => {
   useEffect(() => {
     console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
   }, []);
-
-  const handleApiKeyChange = (key: string | null) => {
-    if (key) {
-      setShowApiKey(false);
-      console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
-    }
-  };
 
   const handleSelectAppType = (appType: string) => {
     setFormData(prev => ({ ...prev, appType }));
@@ -106,7 +98,7 @@ const InteractiveDemo = () => {
       toast.success('🎉 Your NoCodeLos Blueprint Stack master prompt is ready!');
     } catch (error) {
       console.error('❌ Blueprint Stack prompt generation failed:', error);
-      toast.error('Failed to generate blueprint. Please ensure your DeepSeek API key is configured.');
+      toast.error('Failed to generate blueprint. Please check the edge function configuration.');
     } finally {
       setIsGenerating(false);
     }
@@ -156,22 +148,17 @@ const InteractiveDemo = () => {
         <div className="max-w-4xl mx-auto">
           <DemoStepNavigation 
             currentStep={currentStep}
-            showApiKey={showApiKey}
-            onShowApiKey={() => setShowApiKey(true)}
+            showApiKey={false}
+            onShowApiKey={() => {}}
             getStepTitle={getStepTitle}
           />
 
-          {showApiKey && (
-            <div className="mb-8">
-              <ApiKeyManager onApiKeyChange={handleApiKeyChange} />
-            </div>
-          )}
-
           <DemoContainer
             currentStep={currentStep}
-            showApiKey={showApiKey}
-            onShowApiKey={() => setShowApiKey(true)}
+            showApiKey={false}
+            onShowApiKey={() => {}}
             getStepTitle={getStepTitle}
+            apiKeySet={true}
           >
             {currentStep === 0 && (
               <DemoAppTypeSelection 
