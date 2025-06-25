@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Zap, Code, Settings, Wand2, Clock, Users, Database } from 'lucide-react';
+import { Brain, Zap, Code, Settings, Wand2, Clock, Users, Database, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { promptService, PromptGenerationRequest, PromptGenerationResult } from '@/services/promptService';
 import ApiKeyManager from '@/components/ApiKeyManager';
