@@ -204,7 +204,7 @@ const InteractiveDemo = () => {
     }
   };
   return <section className="py-20 bg-gradient-to-br from-gray-50 to-purple-50">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 bg-zinc-950">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-5xl font-bold mb-6 text-gray-900">
