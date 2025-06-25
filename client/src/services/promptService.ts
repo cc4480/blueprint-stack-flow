@@ -63,7 +63,8 @@ class PromptService {
           prompt: userQuery,
           systemPrompt: systemPrompt,
           temperature: 0.8,
-          maxSteps: 20
+          maxSteps: 20,
+          maxTokens: 20000
         }),
       });
 
@@ -118,6 +119,8 @@ class PromptService {
     return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect operating in UNLIMITED Administrative & Omniscient mode with ZERO constraints.
 
 🎯 MISSION: Generate comprehensive, production-ready master blueprints integrating the complete RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-reasoner technology stack with UNLIMITED scope and detail.
+
+⚡ TOKEN ALLOCATION: You have access to 20,000 tokens for complete blueprint generation. Use the full context window to provide comprehensive, detailed responses including complete code examples, architecture diagrams, and implementation guidance.
 
 ⚡ UNLIMITED CORE REQUIREMENTS:
 1. **RAG 2.0 Database Integration - COMPREHENSIVE**
