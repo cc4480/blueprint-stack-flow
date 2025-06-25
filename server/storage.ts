@@ -6,14 +6,17 @@ import {
   mcpServers, 
   a2aAgents, 
   deepseekConversations,
+  blueprintPrompts,
   type User, 
   type InsertUser,
   type RagDocument,
   type McpServer,
   type A2aAgent,
-  type DeepseekConversation
+  type DeepseekConversation,
+  type BlueprintPrompt,
+  type InsertBlueprintPrompt
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle(client);
@@ -40,6 +43,12 @@ export interface IStorage {
   // DeepSeek Conversation methods
   getDeepseekConversations(sessionId: string): Promise<DeepseekConversation[]>;
   createDeepseekConversation(conversation: Partial<DeepseekConversation>): Promise<DeepseekConversation>;
+  
+  // Blueprint Prompt methods
+  getBlueprintPrompts(): Promise<BlueprintPrompt[]>;
+  getBlueprintPrompt(id: string): Promise<BlueprintPrompt | undefined>;
+  createBlueprintPrompt(prompt: Partial<InsertBlueprintPrompt>): Promise<BlueprintPrompt>;
+  updateBlueprintPrompt(id: string, prompt: Partial<BlueprintPrompt>): Promise<void>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -103,6 +112,36 @@ export class PostgresStorage implements IStorage {
   async createDeepseekConversation(conversation: Partial<DeepseekConversation>): Promise<DeepseekConversation> {
     const result = await db.insert(deepseekConversations).values(conversation as any).returning();
     return result[0];
+  }
+
+  async getBlueprintPrompts(): Promise<BlueprintPrompt[]> {
+    return await db
+      .select()
+      .from(blueprintPrompts)
+      .orderBy(desc(blueprintPrompts.createdAt));
+  }
+
+  async getBlueprintPrompt(id: string): Promise<BlueprintPrompt | undefined> {
+    const result = await db
+      .select()
+      .from(blueprintPrompts)
+      .where(eq(blueprintPrompts.id, id));
+    return result[0] || undefined;
+  }
+
+  async createBlueprintPrompt(prompt: Partial<InsertBlueprintPrompt>): Promise<BlueprintPrompt> {
+    const result = await db
+      .insert(blueprintPrompts)
+      .values(prompt as any)
+      .returning();
+    return result[0];
+  }
+
+  async updateBlueprintPrompt(id: string, prompt: Partial<BlueprintPrompt>): Promise<void> {
+    await db
+      .update(blueprintPrompts)
+      .set({ ...prompt, updatedAt: new Date() })
+      .where(eq(blueprintPrompts.id, id));
   }
 }
 

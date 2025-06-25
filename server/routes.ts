@@ -182,8 +182,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } : null;
       
       // Save conversation to database
+      const sessionId = Array.isArray(req.headers['x-session-id']) 
+        ? req.headers['x-session-id'][0] 
+        : req.headers['x-session-id'] || 'default';
+        
       await storage.createDeepseekConversation({
-        sessionId: req.headers['x-session-id'] || 'default',
+        sessionId,
         messages: JSON.stringify([
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
@@ -194,8 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         temperature: parseFloat(temperature?.toString() || '0.7'),
         maxSteps,
         confidence: 95, // DeepSeek typically has high confidence
-        processingTimeMs: processingTime,
-        maxTokens: 64000
+        processingTimeMs: processingTime
       });
 
       const response = {
@@ -204,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalAnswer: finalAnswer, // Final answer from DeepSeek
         confidence: 95,
         processingTime,
-        steps: reasoningSteps ? reasoningSteps.steps : [
+        steps: reasoningSteps ? (reasoningSteps.steps || []) : [
           { step: 1, thought: "Processing request with DeepSeek Reasoner..." },
           { step: 2, thought: "Analyzing context and generating response..." },
           { step: 3, thought: "Finalizing comprehensive answer..." }
@@ -273,5 +276,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Blueprint Prompts API routes
+  app.get("/api/blueprint-prompts", async (req, res) => {
+    try {
+      const prompts = await storage.getBlueprintPrompts();
+      res.json(prompts);
+    } catch (error) {
+      console.error("Error fetching blueprint prompts:", error);
+      res.status(500).json({ error: "Failed to fetch blueprint prompts" });
+    }
+  });
+
+  app.get("/api/blueprint-prompts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const prompt = await storage.getBlueprintPrompt(id);
+      if (!prompt) {
+        return res.status(404).json({ error: "Blueprint prompt not found" });
+      }
+      res.json(prompt);
+    } catch (error) {
+      console.error("Error fetching blueprint prompt:", error);
+      res.status(500).json({ error: "Failed to fetch blueprint prompt" });
+    }
+  });
+
+  app.post("/api/blueprint-prompts", async (req, res) => {
+    try {
+      const promptData = req.body;
+      const savedPrompt = await storage.createBlueprintPrompt(promptData);
+      res.status(201).json(savedPrompt);
+    } catch (error) {
+      console.error("Error saving blueprint prompt:", error);
+      res.status(500).json({ error: "Failed to save blueprint prompt" });
+    }
+  });
+
+  app.put("/api/blueprint-prompts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      await storage.updateBlueprintPrompt(id, updates);
+      res.json({ message: "Blueprint prompt updated successfully" });
+    } catch (error) {
+      console.error("Error updating blueprint prompt:", error);
+      res.status(500).json({ error: "Failed to update blueprint prompt" });
+    }
+  });
+
   return httpServer;
 }

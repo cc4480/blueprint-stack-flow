@@ -61,6 +61,26 @@ export const deepseekConversations = pgTable("deepseek_conversations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Blueprint Prompts table for automatic saving
+export const blueprintPrompts = pgTable("blueprint_prompts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userPrompt: text("user_prompt").notNull(),
+  generatedBlueprint: text("generated_blueprint").notNull(),
+  reasoningContent: text("reasoning_content"),
+  estimatedBuildTime: text("estimated_build_time"),
+  complexity: text("complexity"),
+  suggestedComponents: json("suggested_components"),
+  mcpEndpoints: json("mcp_endpoints"),
+  a2aProtocols: json("a2a_protocols"),
+  ragPipeline: text("rag_pipeline"),
+  tokensUsed: integer("tokens_used"),
+  modelUsed: text("model_used").default("deepseek-reasoner"),
+  temperature: real("temperature").default(0.7),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -70,6 +90,7 @@ export const insertRagDocumentSchema = createInsertSchema(ragDocuments);
 export const insertMcpServerSchema = createInsertSchema(mcpServers);
 export const insertA2aAgentSchema = createInsertSchema(a2aAgents);
 export const insertDeepseekConversationSchema = createInsertSchema(deepseekConversations);
+export const insertBlueprintPromptSchema = createInsertSchema(blueprintPrompts);
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -77,3 +98,5 @@ export type RagDocument = typeof ragDocuments.$inferSelect;
 export type McpServer = typeof mcpServers.$inferSelect;
 export type A2aAgent = typeof a2aAgents.$inferSelect;
 export type DeepseekConversation = typeof deepseekConversations.$inferSelect;
+export type BlueprintPrompt = typeof blueprintPrompts.$inferSelect;
+export type InsertBlueprintPrompt = z.infer<typeof insertBlueprintPromptSchema>;
