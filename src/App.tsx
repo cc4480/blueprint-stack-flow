@@ -9,6 +9,14 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import RAGHub from "./pages/RAGHub";
 import MCPCenter from "./pages/MCPCenter";
+import PromptStudio from "./pages/PromptStudio";
+import A2AAgents from "./pages/A2AAgents";
+import Analytics from "./pages/Analytics";
+import Documentation from "./pages/Documentation";
+import Projects from "./pages/Projects";
+import Templates from "./pages/Templates";
+import Integrations from "./pages/Integrations";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navigation from "./components/Navigation";
@@ -30,6 +38,7 @@ const App = () => {
     console.log('📊 Analytics and Performance Monitoring Active');
     console.log('🛡️ Error Boundary Protection Enabled');
     console.log('🔍 Real-time Console Logging Active');
+    console.log('🎯 All Blueprint Stack components now available');
     
     // Cleanup on unmount
     return () => {
@@ -50,15 +59,15 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/rag-hub" element={<RAGHub />} />
               <Route path="/mcp-center" element={<MCPCenter />} />
-              {/* PLACEHOLDER ROUTES - TO BE IMPLEMENTED */}
-              <Route path="/prompt-studio" element={<Index />} />
-              <Route path="/a2a-agents" element={<Index />} />
-              <Route path="/analytics" element={<Dashboard />} />
-              <Route path="/docs" element={<Index />} />
-              <Route path="/projects" element={<Index />} />
-              <Route path="/templates" element={<Index />} />
-              <Route path="/integrations" element={<Index />} />
-              <Route path="/settings" element={<Index />} />
+              <Route path="/prompt-studio" element={<PromptStudio />} />
+              <Route path="/a2a-agents" element={<A2AAgents />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/docs" element={<Documentation />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/integrations" element={<Integrations />} />
+              <Route path="/settings" element={<Settings />} />
+              {/* Fallback routes for any authentication or onboarding flows */}
               <Route path="/auth" element={<Index />} />
               <Route path="/get-started" element={<Index />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
