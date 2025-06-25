@@ -6,12 +6,15 @@ export class DeepSeekClient {
 
   async generateWithReasoning(messages: ConversationMessage[]): Promise<{ reasoningContent: string; finalContent: string }> {
     console.log('🔑 Using DeepSeek Reasoner via secure Supabase edge function');
+    console.log('📝 Messages to send:', messages.length);
 
     // Clean messages to remove any reasoning_content field as per DeepSeek docs
     const cleanMessages = messages.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
+
+    console.log('🧹 Cleaned messages:', cleanMessages);
 
     const response = await fetch('/functions/v1/deepseek-chat', {
       method: 'POST',
@@ -23,6 +26,7 @@ export class DeepSeekClient {
     });
 
     console.log('📡 DeepSeek response status:', response.status);
+    console.log('📡 DeepSeek response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       console.error('❌ DeepSeek edge function error:', response.status, response.statusText);
@@ -33,7 +37,9 @@ export class DeepSeekClient {
         throw new Error(errorData.error || `DeepSeek API request failed with status ${response.status}`);
       } catch (parseError) {
         console.error('❌ Failed to parse error response:', parseError);
-        throw new Error(`DeepSeek API request failed with status ${response.status}. Please check your API key configuration.`);
+        const errorText = await response.text();
+        console.error('❌ Raw error response:', errorText);
+        throw new Error(`DeepSeek API request failed with status ${response.status}. Response: ${errorText}`);
       }
     }
 
@@ -42,6 +48,8 @@ export class DeepSeekClient {
 
     // Check if response is JSON (error) or streaming
     const contentType = response.headers.get('content-type');
+    console.log('📄 Response content type:', contentType);
+    
     if (contentType?.includes('application/json')) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'DeepSeek API error');
@@ -57,6 +65,7 @@ export class DeepSeekClient {
     let buffer = '';
 
     try {
+      console.log('🔄 Starting to read stream...');
       while (true) {
         const { done, value } = await reader.read();
         if (done) {

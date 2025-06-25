@@ -17,6 +17,7 @@ serve(async (req) => {
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
     
     console.log('🔍 DeepSeek Reasoner: Checking API key availability:', !!deepseekApiKey)
+    console.log('🔍 DeepSeek Reasoner: Messages received:', messages?.length || 0)
     
     if (!deepseekApiKey) {
       console.error('❌ DEEPSEEK_API_KEY not found in environment variables')
@@ -31,6 +32,17 @@ serve(async (req) => {
       )
     }
 
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      console.error('❌ Invalid messages format')
+      return new Response(
+        JSON.stringify({ error: 'Invalid messages format' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
+    }
+
     console.log('🚀 DeepSeek Reasoner: Processing request with', messages.length, 'messages')
 
     // Ensure messages don't contain reasoning_content field as per DeepSeek docs
@@ -38,6 +50,8 @@ serve(async (req) => {
       role: msg.role,
       content: msg.content
     }))
+
+    console.log('🧹 DeepSeek Reasoner: Cleaned messages:', cleanMessages.length)
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -52,6 +66,8 @@ serve(async (req) => {
         max_tokens: 32000, // Default as per docs
       }),
     })
+
+    console.log('📡 DeepSeek API response status:', response.status, response.statusText)
 
     if (!response.ok) {
       console.error('❌ DeepSeek API error:', response.status, response.statusText)
@@ -71,7 +87,7 @@ serve(async (req) => {
 
     console.log('✅ DeepSeek API response received, setting up stream')
 
-    // Return the streaming response directly
+    // Return the streaming response with proper headers
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
@@ -83,6 +99,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('❌ DeepSeek Edge Function error:', error)
+    console.error('❌ Error stack:', error.stack)
     return new Response(
       JSON.stringify({ 
         error: `Edge Function error: ${error.message}` 
