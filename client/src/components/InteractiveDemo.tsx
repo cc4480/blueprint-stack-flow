@@ -396,7 +396,7 @@ const InteractiveDemo = () => {
                   <div className="bg-black/50 rounded-lg p-6 border border-gray-700">
                     <h4 className="text-lg font-semibold text-white mb-3">Generated NoCodeLos Master Blueprint:</h4>
                     <div className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto">
-                      {result.prompt && result.prompt !== 'No response generated' && result.prompt !== 'Blueprint generation failed' ? (
+                      {result.prompt && result.prompt.length > 50 && result.prompt !== 'No response generated' && result.prompt !== 'Blueprint generation failed' ? (
                         <div className="space-y-4">
                           <div className="prose prose-invert max-w-none">
                             {result.prompt.split('\n').map((line: string, index: number) => {

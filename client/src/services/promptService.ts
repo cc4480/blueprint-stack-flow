@@ -73,9 +73,13 @@ class PromptService {
         throw new Error(data.error || 'Failed to generate prompt');
       }
       
-      // Extract reasoning content from DeepSeek API response
+      // Extract BOTH reasoning content AND final response from DeepSeek API response
       const reasoningContent = data.reasoningContent || data.reasoning || '';
-      const finalPrompt = data.finalAnswer || data.reasoning || 'No response generated';
+      const finalPrompt = data.finalAnswer || data.response || data.content || data.blueprint || reasoningContent || 'No response generated';
+
+      console.log('🔍 Extracted reasoning length:', reasoningContent?.length || 0);
+      console.log('🔍 Extracted final prompt length:', finalPrompt?.length || 0);
+      console.log('🔍 Final prompt preview:', finalPrompt?.substring(0, 200));
 
       // Add assistant response to history for unlimited future multi-turn conversations
       this.conversationHistory.push({
