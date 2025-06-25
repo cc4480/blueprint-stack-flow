@@ -19,9 +19,28 @@ export interface PromptGenerationResult {
   ragPipeline?: string;
 }
 
+// Extended types for DeepSeek Reasoner
+interface DeepSeekDelta {
+  reasoning_content?: string;
+  content?: string;
+}
+
+interface DeepSeekChoice {
+  delta?: DeepSeekDelta;
+}
+
+interface DeepSeekChunk {
+  choices: DeepSeekChoice[];
+}
+
+type ConversationMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
 class PromptService {
   private client: OpenAI | null = null;
-  private conversationHistory: Array<{ role: string; content: string }> = [];
+  private conversationHistory: ConversationMessage[] = [];
 
   setApiKey(key: string) {
     this.client = new OpenAI({
@@ -47,9 +66,9 @@ class PromptService {
       const userQuery = this.buildComprehensiveMasterQuery(request);
 
       // Prepare messages for DeepSeek Reasoner
-      const messages = [
-        { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content: userQuery }
+      const messages: ConversationMessage[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userQuery }
       ];
 
       // Stream response from DeepSeek Reasoner
@@ -63,13 +82,16 @@ class PromptService {
       let reasoningContent = "";
       let finalContent = "";
 
-      // Process streaming response
+      // Process streaming response with proper typing
       for await (const chunk of response) {
-        if (chunk.choices[0]?.delta?.reasoning_content) {
-          reasoningContent += chunk.choices[0].delta.reasoning_content;
+        const deepSeekChunk = chunk as unknown as DeepSeekChunk;
+        const delta = deepSeekChunk.choices[0]?.delta;
+        
+        if (delta?.reasoning_content) {
+          reasoningContent += delta.reasoning_content;
         }
-        if (chunk.choices[0]?.delta?.content) {
-          finalContent += chunk.choices[0].delta.content;
+        if (delta?.content) {
+          finalContent += delta.content;
         }
       }
 
@@ -127,13 +149,16 @@ class PromptService {
       let reasoningContent = "";
       let finalContent = "";
 
-      // Process streaming response
+      // Process streaming response with proper typing
       for await (const chunk of response) {
-        if (chunk.choices[0]?.delta?.reasoning_content) {
-          reasoningContent += chunk.choices[0].delta.reasoning_content;
+        const deepSeekChunk = chunk as unknown as DeepSeekChunk;
+        const delta = deepSeekChunk.choices[0]?.delta;
+        
+        if (delta?.reasoning_content) {
+          reasoningContent += delta.reasoning_content;
         }
-        if (chunk.choices[0]?.delta?.content) {
-          finalContent += chunk.choices[0].delta.content;
+        if (delta?.content) {
+          finalContent += delta.content;
         }
       }
 
