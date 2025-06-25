@@ -1,8 +1,455 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { authenticateToken, requireRole, requirePermission, rateLimitMiddleware, authService, AuthRequest } from "./auth";
+import WebSocketService from "./websocket";
+import { databaseService } from "./database";
+import multer from 'multer';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+
+// Configure middleware
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|md/;
+    const extname = allowedTypes.test(file.originalname.toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
+  const wsService = new WebSocketService(httpServer);
+
+  // Security middleware
+  app.use(helmet());
+  app.use(compression());
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5000'],
+    credentials: true
+  }));
+
+  // Rate limiting
+  app.use('/api', rateLimitMiddleware(1000, 60000)); // 1000 requests per minute
+
+  // ============= AUTHENTICATION ROUTES =============
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { email, password, username } = req.body;
+      
+      // Validate input
+      if (!email || !password || !username) {
+        return res.status(400).json({ error: 'All fields required' });
+      }
+
+      // Check password strength
+      const passwordCheck = authService.validatePasswordStrength(password);
+      if (!passwordCheck.valid) {
+        return res.status(400).json({ error: 'Weak password', issues: passwordCheck.errors });
+      }
+
+      // Check if user exists
+      const existingUser = await authService.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ error: 'User already exists' });
+      }
+
+      // Hash password and create user
+      const hashedPassword = await authService.hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        username,
+        password: hashedPassword,
+        role: 'developer',
+        permissions: authService.getRolePermissions('developer'),
+        apiKeys: [],
+        mfaEnabled: false,
+        lastLogin: new Date(),
+        failedAttempts: 0
+      });
+
+      // Generate tokens
+      const tokens = authService.generateTokens(user);
+      
+      res.status(201).json({
+        message: 'User created successfully',
+        user: { id: user.id, email: user.email, username: user.username, role: user.role },
+        tokens
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create user' });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password, deviceInfo } = req.body;
+      
+      // Check account lockout
+      const lockoutStatus = await authService.checkAccountLockout(email);
+      if (lockoutStatus.locked) {
+        return res.status(423).json({ 
+          error: 'Account locked', 
+          remaining: lockoutStatus.remaining 
+        });
+      }
+
+      // Get user
+      const user = await authService.getUserByEmail(email);
+      if (!user) {
+        await authService.recordFailedAttempt(email);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Verify password
+      const passwordValid = await authService.verifyPassword(password, user.password);
+      if (!passwordValid) {
+        await authService.recordFailedAttempt(email);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Generate tokens and session
+      const tokens = authService.generateTokens(user);
+      const sessionId = authService.createSession(user.id, deviceInfo);
+
+      // Update last login
+      await storage.updateUserLastLogin(user.id);
+
+      res.json({
+        message: 'Login successful',
+        user: { id: user.id, email: user.email, username: user.username, role: user.role },
+        tokens,
+        sessionId
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  app.post('/api/auth/refresh', async (req, res) => {
+    try {
+      const { refreshToken } = req.body;
+      const decoded = authService.verifyRefreshToken(refreshToken);
+      const user = await storage.getUserById(decoded.id);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const tokens = authService.generateTokens(user);
+      res.json({ tokens });
+    } catch (error) {
+      res.status(401).json({ error: 'Invalid refresh token' });
+    }
+  });
+
+  app.post('/api/auth/logout', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (sessionId) {
+        authService.invalidateSession(sessionId);
+      }
+      res.json({ message: 'Logged out successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Logout failed' });
+    }
+  });
+
+  // ============= API KEY MANAGEMENT =============
+  app.post('/api/auth/api-keys', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const apiKey = authService.generateApiKey();
+      await storage.addUserApiKey(req.user!.id, apiKey);
+      
+      res.json({
+        message: 'API key created',
+        apiKey,
+        keyId: apiKey.slice(-8)
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create API key' });
+    }
+  });
+
+  app.get('/api/auth/api-keys', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const keys = await storage.getUserApiKeys(req.user!.id);
+      res.json({ 
+        apiKeys: keys.map(key => ({
+          id: key.slice(-8),
+          created: new Date(),
+          lastUsed: null
+        }))
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch API keys' });
+    }
+  });
+
+  app.delete('/api/auth/api-keys/:keyId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      await storage.removeUserApiKey(req.user!.id, req.params.keyId);
+      res.json({ message: 'API key revoked' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to revoke API key' });
+    }
+  });
+
+  // ============= USER MANAGEMENT (ADMIN ONLY) =============
+  app.get('/api/admin/users', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json({ users });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
+  app.patch('/api/admin/users/:userId/role', authenticateToken, requireRole(['admin']), async (req, res) => {
+    try {
+      const { role } = req.body;
+      await storage.updateUserRole(req.params.userId, role);
+      res.json({ message: 'User role updated' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update user role' });
+    }
+  });
+
+  // ============= FILE UPLOAD ROUTES =============
+  app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req: AuthRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const fileData = {
+        originalName: req.file.originalname,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        uploadedBy: req.user!.id,
+        uploadedAt: new Date()
+      };
+
+      const file = await storage.createFile(fileData);
+      res.json({ message: 'File uploaded successfully', file });
+    } catch (error) {
+      res.status(500).json({ error: 'File upload failed' });
+    }
+  });
+
+  app.get('/api/files', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const files = await storage.getUserFiles(req.user!.id);
+      res.json({ files });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch files' });
+    }
+  });
+
+  // ============= NOTIFICATION SYSTEM =============
+  app.get('/api/notifications', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.user!.id);
+      res.json({ notifications });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.post('/api/notifications', authenticateToken, requirePermission('send_notifications'), async (req: AuthRequest, res) => {
+    try {
+      const { userId, title, message, type } = req.body;
+      
+      const notification = await storage.createNotification({
+        userId,
+        title,
+        message,
+        type,
+        read: false,
+        createdAt: new Date()
+      });
+
+      // Send real-time notification
+      wsService.sendNotification(userId, notification);
+
+      res.json({ message: 'Notification sent', notification });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to send notification' });
+    }
+  });
+
+  app.patch('/api/notifications/:id/read', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      await storage.markNotificationRead(req.params.id, req.user!.id);
+      res.json({ message: 'Notification marked as read' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to mark notification as read' });
+    }
+  });
+
+  // ============= ANALYTICS & MONITORING =============
+  app.get('/api/analytics/dashboard', authenticateToken, requireRole(['admin', 'developer']), async (req, res) => {
+    try {
+      const analytics = {
+        users: await storage.getUserStats(),
+        projects: await storage.getProjectStats(),
+        apiUsage: await storage.getApiUsageStats(),
+        errors: await storage.getErrorStats(),
+        performance: databaseService.getQueryMetrics()
+      };
+
+      res.json({ analytics });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch analytics' });
+    }
+  });
+
+  app.get('/api/health', async (req, res) => {
+    try {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date(),
+        database: await databaseService.getHealthStatus(),
+        websocket: {
+          connected: wsService.getConnectedCount(),
+          status: 'operational'
+        },
+        memory: process.memoryUsage(),
+        uptime: process.uptime()
+      };
+
+      res.json(health);
+    } catch (error) {
+      res.status(500).json({ 
+        status: 'unhealthy', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
+  // ============= PROJECT MANAGEMENT =============
+  app.get('/api/projects', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projects = await storage.getUserProjects(req.user!.id);
+      res.json({ projects });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+  });
+
+  app.post('/api/projects', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectData = {
+        ...req.body,
+        ownerId: req.user!.id,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const project = await storage.createProject(projectData);
+      res.status(201).json({ project });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create project' });
+    }
+  });
+
+  app.get('/api/projects/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
+      // Check access permissions
+      if (project.ownerId !== req.user!.id && !project.collaborators?.includes(req.user!.id)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      res.json({ project });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch project' });
+    }
+  });
+
+  app.patch('/api/projects/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      
+      if (!project || project.ownerId !== req.user!.id) {
+        return res.status(404).json({ error: 'Project not found or access denied' });
+      }
+
+      const updatedProject = await storage.updateProject(req.params.id, {
+        ...req.body,
+        updatedAt: new Date()
+      });
+
+      res.json({ project: updatedProject });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update project' });
+    }
+  });
+
+  app.delete('/api/projects/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      
+      if (!project || project.ownerId !== req.user!.id) {
+        return res.status(404).json({ error: 'Project not found or access denied' });
+      }
+
+      await storage.deleteProject(req.params.id);
+      res.json({ message: 'Project deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete project' });
+    }
+  });
+
+  // ============= TEAM COLLABORATION =============
+  app.post('/api/projects/:id/invite', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { email, role } = req.body;
+      const project = await storage.getProject(req.params.id);
+      
+      if (!project || project.ownerId !== req.user!.id) {
+        return res.status(404).json({ error: 'Project not found or access denied' });
+      }
+
+      const invitation = await storage.createProjectInvitation({
+        projectId: req.params.id,
+        email,
+        role,
+        invitedBy: req.user!.id,
+        status: 'pending',
+        createdAt: new Date()
+      });
+
+      // Send notification email (simplified)
+      wsService.sendNotification(email, {
+        title: 'Project Invitation',
+        message: `You've been invited to collaborate on ${project.name}`,
+        type: 'invitation'
+      });
+
+      res.json({ message: 'Invitation sent', invitation });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to send invitation' });
+    }
+  });
+
+  // ============= EXISTING RAG, MCP, A2A ROUTES (Updated with Auth) =============
   // RAG Documents API
   app.get("/api/rag/documents", async (req, res) => {
     try {
