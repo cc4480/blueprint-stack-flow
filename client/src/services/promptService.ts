@@ -28,7 +28,7 @@ export interface DeepSeekReasonerResponse {
 }
 
 // Constants
-const API_TIMEOUT = 180000; // 3 minutes
+const API_TIMEOUT = 300000; // 5 minutes for DeepSeek reasoning
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
@@ -158,9 +158,13 @@ class PromptService {
   private async makeRequest(payload: any, retryCount = 0): Promise<DeepSeekReasonerResponse> {
     // Use server-side API key from environment instead of client-side
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const timeoutId = setTimeout(() => {
+      console.warn('⏰ Request timeout after 5 minutes, aborting...');
+      controller.abort();
+    }, API_TIMEOUT);
 
     try {
+      console.log('📡 Making request to server endpoint...');
       const response = await fetch('/api/generate-prompt', {
         method: 'POST',
         headers: {
@@ -199,7 +203,7 @@ class PromptService {
       clearTimeout(timeoutId);
       
       if (error.name === 'AbortError') {
-        throw new PromptServiceError('Request timeout. The blueprint generation took too long.', 'TIMEOUT');
+        throw new PromptServiceError('Request timeout after 5 minutes. DeepSeek reasoning requires more time for complex blueprints.', 'TIMEOUT');
       }
       
       if (error instanceof PromptServiceError) {

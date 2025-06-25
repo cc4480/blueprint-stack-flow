@@ -609,7 +609,7 @@ export default function InteractiveDemo() {
               </div>
               <p className="text-blue-200 text-lg">{streamingText}</p>
               <div className="mt-4 text-sm text-blue-300">
-                Generating comprehensive 64K token blueprint with reasoning content...
+                Generating comprehensive 64K token blueprint with DeepSeek reasoning... Please wait up to 5 minutes.
               </div>
             </div>
           )}
