@@ -98,9 +98,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiKey = process.env.DEEPSEEK_API_KEY;
       
       if (!apiKey) {
-        return res.status(400).json({ 
-          error: "DEEPSEEK_API_KEY not configured. Please add your API key to enable reasoning capabilities." 
-        });
+        // Return enhanced simulation when API key is not configured
+        const mockResponse = {
+          reasoning: `# DeepSeek Reasoning Simulation\n\n` +
+                    `**Query:** "${prompt}"\n\n` +
+                    `**System Context:** ${systemPrompt || 'NoCodeLos Blueprint Stack Assistant'}\n\n` +
+                    `## Advanced Reasoning Chain:\n\n` +
+                    `### Step 1: Problem Decomposition\n` +
+                    `- Analyzing the core requirements and constraints\n` +
+                    `- Identifying key architectural patterns needed\n` +
+                    `- Mapping to NoCodeLos Blueprint Stack components\n\n` +
+                    `### Step 2: Solution Architecture\n` +
+                    `- RAG 2.0 integration for knowledge retrieval\n` +
+                    `- MCP protocol implementation for server communication\n` +
+                    `- A2A agent coordination for multi-agent workflows\n\n` +
+                    `### Step 3: Implementation Strategy\n` +
+                    `- Component selection and configuration\n` +
+                    `- Integration patterns and data flow\n` +
+                    `- Performance optimization and scaling considerations\n\n` +
+                    `### Step 4: Validation & Testing\n` +
+                    `- Quality assurance and testing strategies\n` +
+                    `- Monitoring and observability setup\n` +
+                    `- Deployment and maintenance procedures\n\n` +
+                    `**Note:** This is a comprehensive simulation. Configure your DEEPSEEK_API_KEY to enable real DeepSeek reasoning with actual chain-of-thought processing.\n\n` +
+                    `**Configuration:**\n` +
+                    `- Temperature: ${temperature}\n` +
+                    `- Max Steps: ${maxSteps}\n` +
+                    `- Processing Time: ${Date.now() - Date.now()}ms (simulated)`,
+          steps: maxSteps || 10,
+          tokens_used: 350,
+          simulated: true
+        };
+
+        return res.json(mockResponse);
       }
 
       const startTime = Date.now();
