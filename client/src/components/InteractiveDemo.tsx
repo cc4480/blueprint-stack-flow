@@ -128,8 +128,10 @@ const InteractiveDemo = () => {
       'Integrating RAG 2.0 retrieval pipelines...',
       'Configuring MCP protocol implementations...',
       'Setting up A2A agent communication...',
-      'Generating comprehensive blueprint...',
-      'Finalizing master prompt...'
+      'Processing 64K token blueprint generation...',
+      'Building comprehensive architecture diagrams...',
+      'Creating implementation code examples...',
+      'Finalizing complete master blueprint...'
     ];
     
     let messageIndex = 0;
@@ -137,8 +139,10 @@ const InteractiveDemo = () => {
       if (messageIndex < streamingMessages.length) {
         setStreamingText(streamingMessages[messageIndex]);
         messageIndex++;
+      } else {
+        setStreamingText('Generating comprehensive blueprint... This may take up to 3 minutes for complete output.');
       }
-    }, 2000);
+    }, 15000); // Slower updates for longer generation time
     
     try {
       const request: PromptGenerationRequest = {

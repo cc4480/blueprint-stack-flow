@@ -66,6 +66,7 @@ class PromptService {
           maxSteps: 20,
           maxTokens: 64000
         }),
+        signal: AbortSignal.timeout(300000) // 5 minute timeout for complete blueprint generation
       });
 
       const data = await response.json();

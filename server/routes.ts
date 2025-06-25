@@ -137,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Call DeepSeek API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for blueprint generation
       
       const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',

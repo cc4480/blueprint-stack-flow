@@ -57,6 +57,7 @@ Complete NoCodeLos Blueprint Stack application successfully migrated from Lovabl
   - Fixed 64K token output capacity for complete blueprint generation
   - Added user-friendly framework selection with difficulty levels, popularity indicators, and compatibility guides
   - Optimized for vibe-coders and prompt engineers with clear guidance and feasible combinations
+  - Updated timeout configurations to 3-5 minutes to accommodate full blueprint generation time
 
 ## API Integration Status
 - **DeepSeek API**: Fully configured and operational with API key
