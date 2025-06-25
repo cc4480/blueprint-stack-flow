@@ -207,7 +207,7 @@ const InteractiveDemo = () => {
       <div className="container mx-auto px-6 bg-zinc-950">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-5xl font-bold mb-6 text-gray-900">
+            <h2 className="text-5xl font-bold mb-6 text-slate-400">
               Get Your First NoCodeLos Blueprint Stack Master Prompt in{" "}
               <span className="text-purple-600">30 Seconds</span>
             </h2>
