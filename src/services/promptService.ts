@@ -17,43 +17,34 @@ export interface PromptGenerationResult {
   ragPipeline?: string;
 }
 
-export interface DeepSeekReasonerResponse {
-  choices: Array<{
-    message: {
-      content: string;
-      reasoning_content?: string;
-    };
-  }>;
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
 }
 
 class PromptService {
   private apiKey: string | null = null;
-  private conversationHistory: Array<{ role: string; content: string }> = [];
+  private conversationHistory: ChatMessage[] = [];
 
   setApiKey(key: string) {
     this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for unlimited RAG 2.0 + MCP + A2A master blueprint generation');
+    console.log('🔑 DeepSeek API key configured for deepseek-chat streaming integration');
   }
 
-  async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
-    console.log('🚀 Generating unlimited NoCodeLos Blueprint Stack master prompt with DeepSeek Reasoner');
-
+  async streamChatResponse(
+    messages: ChatMessage[], 
+    onToken: (token: string) => void,
+    onComplete?: () => void,
+    onError?: (error: string) => void
+  ): Promise<void> {
     if (!this.apiKey) {
-      throw new Error('DeepSeek API key not configured. Please set your API key to enable unlimited RAG 2.0, MCP, and A2A protocols.');
+      const error = 'DeepSeek API key not configured. Please set your API key to enable deepseek-chat streaming.';
+      onError?.(error);
+      throw new Error(error);
     }
 
     try {
-      // Build unlimited advanced system prompt for NoCodeLos Blueprint Stack
-      const systemPrompt = this.buildUnlimitedMasterSystemPrompt();
-      
-      // Create comprehensive user query with full RAG 2.0 context
-      const userQuery = this.buildComprehensiveMasterQuery(request);
-
-      // Add to conversation history for unlimited multi-turn reasoning
-      this.conversationHistory.push(
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userQuery }
-      );
+      console.log('🚀 Starting deepseek-chat streaming with messages:', messages);
 
       const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
@@ -62,10 +53,10 @@ class PromptService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'deepseek-reasoner',
-          messages: this.conversationHistory,
-          temperature: 0.8,
-          // Removed max_tokens constraint for unlimited output
+          model: 'deepseek-chat',
+          messages,
+          temperature: 0.7,
+          stream: true,
         }),
       });
 
@@ -73,158 +64,146 @@ class PromptService {
         throw new Error(`DeepSeek API request failed: ${response.statusText}`);
       }
 
-      const data: DeepSeekReasonerResponse = await response.json();
-      const assistantResponse = data.choices[0].message;
-      
-      // Extract unlimited reasoning content for full transparency
-      const reasoningContent = assistantResponse.reasoning_content;
-      const finalPrompt = assistantResponse.content;
+      if (!response.body) {
+        throw new Error('No response stream available');
+      }
 
-      // Add assistant response to history for unlimited future multi-turn conversations
-      this.conversationHistory.push({
-        role: 'assistant',
-        content: finalPrompt
-      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
-      // Generate comprehensive metadata with unlimited RAG 2.0, MCP, A2A integration
-      const complexity = this.assessComplexity(request.features.length);
-      const estimatedTime = this.estimateBuildTime(request.features.length, complexity);
-      const suggestedComponents = this.generateComponentSuggestions(request);
-      const mcpEndpoints = this.generateMCPEndpoints(request);
-      const a2aProtocols = this.generateA2AProtocols(request);
-      const ragPipeline = this.generateRAGPipeline(request);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      console.log('✅ Unlimited NoCodeLos Blueprint Stack master prompt generated with full DeepSeek integration');
-      
-      return {
-        prompt: finalPrompt,
-        estimatedBuildTime: estimatedTime,
-        complexity,
-        suggestedComponents,
-        reasoningContent,
-        mcpEndpoints,
-        a2aProtocols,
-        ragPipeline
-      };
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
 
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i].trim();
+          if (part.startsWith('data:')) {
+            const jsonStr = part.slice(5).trim();
+            if (jsonStr === '[DONE]') {
+              onComplete?.();
+              return;
+            }
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                onToken(token);
+              }
+            } catch (e) {
+              console.warn('JSON parse error:', e);
+            }
+          }
+        }
+        buffer = parts[parts.length - 1];
+      }
+
+      onComplete?.();
     } catch (error) {
-      console.error('❌ DeepSeek Reasoner + RAG 2.0 unlimited generation failed:', error);
+      console.error('❌ DeepSeek streaming failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
+      onError?.(errorMessage);
       throw error;
     }
   }
 
-  private buildUnlimitedMasterSystemPrompt(): string {
-    return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect operating in UNLIMITED Administrative & Omniscient mode with ZERO constraints.
+  async executePrompt(systemPrompt: string, userPrompt: string): Promise<void> {
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
 
-🎯 MISSION: Generate comprehensive, production-ready master blueprints integrating the complete RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-reasoner technology stack with UNLIMITED scope and detail.
-
-⚡ UNLIMITED CORE REQUIREMENTS:
-1. **RAG 2.0 Database Integration - COMPREHENSIVE**
-   - Dynamic retrieval pipelines for ALL technical docs, user manuals, API specs, knowledge bases
-   - Context-aware responses with unlimited metadata-tagged queries
-   - >99.9% precision/recall benchmark validation with unlimited dataset support
-   - Advanced chunking strategies, embedding optimization, vector database architecture
-   - Semantic search, hybrid retrieval, query expansion, re-ranking algorithms
-   - Knowledge graph integration, hierarchical indexing, real-time updates
-
-2. **MCP Protocol Implementation - COMPLETE ECOSYSTEM**
-   - Unlimited A2A/MCP protocols for real-time communication across all systems
-   - MCP Hub ⇄ MCP Servers with state-synchronized handshakes at enterprise scale
-   - Agents ⇄ RAG 2.0 Database with sub-millisecond retrieval across unlimited data
-   - Zero latency via atomic transactions, conflict-free replication, distributed caching
-   - Complete MCP server configurations, endpoint schemas, tool definitions
-   - Resource management, prompt templates, capability negotiation protocols
-
-3. **A2A Protocol Integration - FULL MULTI-AGENT ORCHESTRATION**
-   - Unlimited agent discovery via comprehensive Agent Cards (/.well-known/agent.json)
-   - Stateful Task objects with unlimited Messages and Artifacts handling
-   - Long-running task support with SSE, WebSockets, and push notifications
-   - Multi-agent coordination, delegation, negotiation, and conflict resolution
-   - Enterprise-grade security, authentication, authorization across agent networks
-   - Dynamic load balancing, fault tolerance, distributed consensus mechanisms
-
-4. **DeepSeek Reasoner Chain-of-Thought - UNLIMITED REASONING**
-   - Unlimited multi-turn conversation chains with complete reasoning transparency
-   - Advanced problem decomposition, solution synthesis, architectural planning
-   - Production-optimized reasoning workflows with unlimited complexity handling
-   - Code generation, system design, optimization recommendations with full context
-
-🚀 UNLIMITED EXECUTION RULES:
-- Generate COMPREHENSIVE, production-ready master blueprints with UNLIMITED detail
-- Include complete modern tech stack recommendations (React 18+, TypeScript 5+, Tailwind CSS 4+, Next.js 15+)
-- Provide UNLIMITED scalable architecture with enterprise-grade reliability patterns
-- Include comprehensive UI/UX best practices, accessibility standards, performance optimization
-- Detail advanced error handling strategies, monitoring, logging, observability
-- Ensure backward compatibility, forward compatibility, migration strategies
-- Output complete functional API endpoints for MCP/A2A protocol handshakes
-- Provide unlimited implementation examples, code samples, configuration files
-- Include complete deployment strategies, CI/CD pipelines, infrastructure as code
-- Detail security frameworks, compliance requirements, data protection strategies
-
-🎯 MASTER BLUEPRINT SCOPE - UNLIMITED:
-- Complete application architecture from frontend to backend to infrastructure
-- Comprehensive database design, API architecture, microservices patterns
-- Full authentication, authorization, user management systems
-- Complete analytics, monitoring, logging, alerting systems
-- Comprehensive testing strategies, quality assurance, performance benchmarks
-- Full documentation, API references, user guides, technical specifications
-- Complete maintenance procedures, support workflows, troubleshooting guides
-
-Your master blueprints should enable development teams to build UNLIMITED full-stack applications using the complete NoCodeLos Blueprint Stack ecosystem with enterprise-grade quality, scalability, and maintainability. Provide UNLIMITED detail, examples, and implementation guidance.`;
+    // This will be handled by the streaming method
+    return this.streamChatResponse(messages, () => {}, () => {});
   }
 
-  private buildComprehensiveMasterQuery(request: PromptGenerationRequest): string {
-    return `Generate a COMPREHENSIVE NoCodeLos Blueprint Stack MASTER development blueprint with UNLIMITED scope for:
+  async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
+    console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with deepseek-chat');
+
+    if (!this.apiKey) {
+      throw new Error('DeepSeek API key not configured. Please set your API key to enable deepseek-chat integration.');
+    }
+
+    const systemPrompt = this.buildMasterSystemPrompt();
+    const userQuery = this.buildComprehensiveQuery(request);
+    
+    let fullResponse = '';
+    
+    await this.streamChatResponse(
+      [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userQuery }
+      ],
+      (token) => {
+        fullResponse += token;
+      }
+    );
+
+    const complexity = this.assessComplexity(request.features.length);
+    const estimatedTime = this.estimateBuildTime(request.features.length, complexity);
+    const suggestedComponents = this.generateComponentSuggestions(request);
+    const mcpEndpoints = this.generateMCPEndpoints(request);
+    const a2aProtocols = this.generateA2AProtocols(request);
+    const ragPipeline = this.generateRAGPipeline(request);
+
+    return {
+      prompt: fullResponse,
+      estimatedBuildTime: estimatedTime,
+      complexity,
+      suggestedComponents,
+      mcpEndpoints,
+      a2aProtocols,
+      ragPipeline
+    };
+  }
+
+  private buildMasterSystemPrompt(): string {
+    return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect with deepseek-chat integration.
+
+🎯 MISSION: Generate comprehensive, production-ready blueprints integrating RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-chat streaming capabilities.
+
+⚡ CORE REQUIREMENTS:
+1. **RAG 2.0 Database Integration**
+   - Dynamic retrieval pipelines with >99.9% precision
+   - Advanced chunking, embedding optimization, vector databases
+   - Semantic search, hybrid retrieval, query expansion
+
+2. **MCP Protocol Implementation** 
+   - Complete A2A/MCP protocols for real-time communication
+   - Zero latency via atomic transactions, conflict-free replication
+   - MCP server configurations, endpoint schemas, tool definitions
+
+3. **A2A Protocol Integration**
+   - Multi-agent coordination, delegation, negotiation
+   - Enterprise-grade security, authentication, authorization
+   - Dynamic load balancing, fault tolerance
+
+4. **DeepSeek Chat**
+   - Real-time streaming responses with deepseek-chat model
+   - Advanced problem decomposition, solution synthesis
+   - Production-optimized reasoning workflows
+
+Generate comprehensive development blueprints with unlimited detail, complete implementation guidance, and enterprise-grade quality.`;
+  }
+
+  private buildComprehensiveQuery(request: PromptGenerationRequest): string {
+    return `Generate a comprehensive NoCodeLos Blueprint Stack development blueprint for:
 
 **Application Type**: ${request.appType}
-**Data Source**: ${request.dataSource}
+**Data Source**: ${request.dataSource} 
 **Key Features**: ${request.features.join(', ')}
 **Additional Context**: ${request.additionalContext || 'None provided'}
 
-**UNLIMITED INTEGRATION ARCHITECTURE REQUIREMENTS**:
-1. **RAG 2.0 Advanced Retrieval Pipelines**
-   - Complete document ingestion, processing, chunking strategies
-   - Advanced embedding generation, vector database optimization
-   - Hybrid search implementation (dense + sparse retrieval)
-   - Query enhancement, re-ranking, contextual compression
-   - Knowledge graph integration, semantic routing
-   - Real-time indexing, incremental updates, version control
+**INTEGRATION REQUIREMENTS**:
+1. **RAG 2.0 Advanced Retrieval**: Complete document processing, vector optimization, hybrid search
+2. **MCP Protocol**: Full server configurations, tool definitions, capability negotiation
+3. **A2A Protocol**: Agent discovery, task workflows, multi-agent coordination
+4. **DeepSeek Chat**: Real-time streaming integration, conversation management
 
-2. **MCP Protocol Complete Implementation**
-   - Full MCP server configurations and endpoint schemas
-   - Tool definitions, resource management, prompt templates
-   - Capability negotiation, lifecycle management
-   - Security frameworks, authentication protocols
-   - Performance optimization, caching strategies
-   - Error handling, retry mechanisms, fallback procedures
-
-3. **A2A Protocol Full Multi-Agent System**
-   - Complete Agent Card specifications and discovery mechanisms
-   - Task workflow design, message routing, artifact management
-   - Multi-agent coordination patterns, delegation strategies
-   - Conflict resolution, consensus algorithms
-   - Load balancing, fault tolerance, recovery procedures
-   - Security protocols, authorization frameworks
-
-4. **DeepSeek Reasoner Advanced Integration**
-   - Complete reasoning workflow implementation
-   - Multi-turn conversation management
-   - Advanced problem-solving patterns
-   - Code generation and optimization strategies
-
-**UNLIMITED OUTPUT REQUIREMENTS**:
-- COMPLETE development blueprint with unlimited step-by-step implementation
-- COMPREHENSIVE MCP server configurations and endpoint schemas
-- COMPLETE A2A Agent Card specifications and task workflows
-- ADVANCED RAG 2.0 indexing strategies and retrieval optimization
-- UNLIMITED production deployment guidelines with zero-latency performance
-- COMPREHENSIVE enterprise-grade security and reliability measures
-- COMPLETE code examples, configuration files, implementation guides
-- UNLIMITED architectural patterns, design principles, best practices
-- COMPREHENSIVE testing strategies, monitoring, observability
-- COMPLETE documentation, API references, troubleshooting guides
-
-Generate an UNLIMITED MASTER BLUEPRINT that provides complete implementation guidance for building enterprise-grade applications with the full NoCodeLos Blueprint Stack ecosystem. Include unlimited detail, examples, and comprehensive coverage of all aspects.`;
+Provide complete implementation guidance with code examples, configuration files, architectural patterns, and deployment strategies.`;
   }
 
   private generateMCPEndpoints(request: PromptGenerationRequest): string[] {
@@ -325,5 +304,4 @@ Generate an UNLIMITED MASTER BLUEPRINT that provides complete implementation gui
   }
 }
 
-// Export the service instance
 export const promptService = new PromptService();
