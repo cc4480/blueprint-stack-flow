@@ -38,9 +38,7 @@ class PromptService {
   async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
     console.log('🚀 Generating unlimited NoCodeLos Blueprint Stack master prompt with DeepSeek Reasoner');
 
-    if (!this.apiKey) {
-      throw new Error('DeepSeek API key not configured. Please set your API key to enable unlimited RAG 2.0, MCP, and A2A protocols.');
-    }
+    // API key is now handled server-side, no need to check here
 
     try {
       // Build unlimited advanced system prompt for NoCodeLos Blueprint Stack
@@ -55,30 +53,29 @@ class PromptService {
         { role: 'user', content: userQuery }
       );
 
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
+      const response = await fetch('/api/deepseek/reason', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
+          'x-session-id': `prompt-service-${Date.now()}`
         },
         body: JSON.stringify({
-          model: 'deepseek-reasoner',
-          messages: this.conversationHistory,
+          prompt: userQuery,
+          systemPrompt: systemPrompt,
           temperature: 0.8,
-          // Removed max_tokens constraint for unlimited output
+          maxSteps: 20
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`DeepSeek API request failed: ${response.statusText}`);
-      }
-
-      const data: DeepSeekReasonerResponse = await response.json();
-      const assistantResponse = data.choices[0].message;
+      const data = await response.json();
       
-      // Extract unlimited reasoning content for full transparency
-      const reasoningContent = assistantResponse.reasoning_content;
-      const finalPrompt = assistantResponse.content;
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate prompt');
+      }
+      
+      // Extract reasoning content from our API response
+      const reasoningContent = data.steps?.map((step: any) => step.thought).join('\n') || '';
+      const finalPrompt = data.reasoning;
 
       // Add assistant response to history for unlimited future multi-turn conversations
       this.conversationHistory.push({

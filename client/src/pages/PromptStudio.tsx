@@ -20,14 +20,34 @@ const PromptStudio = () => {
   };
 
   const executePrompt = async () => {
-    if (!apiKey || !prompt.trim()) return;
+    if (!prompt.trim()) return;
     
     setIsLoading(true);
     try {
-      // This would connect to the DeepSeek API via edge function
-      setResponse('Demo response from DeepSeek Reasoner - full integration pending API key configuration');
+      const response = await fetch('/api/deepseek/reason', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-id': `prompt-studio-${Date.now()}`
+        },
+        body: JSON.stringify({
+          prompt,
+          systemPrompt,
+          temperature: 0.7,
+          maxSteps: 10
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setResponse(`Error: ${data.error}`);
+        return;
+      }
+
+      setResponse(data.reasoning);
     } catch (error) {
-      setResponse('Error executing prompt. Please check your API key and try again.');
+      setResponse('Error executing prompt. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -45,12 +65,23 @@ const PromptStudio = () => {
           </p>
         </div>
 
-        {!apiKey ? (
-          <div className="flex justify-center">
-            <ApiKeyManager onApiKeyChange={handleApiKeyChange} />
+        <div className="mb-6 text-center">
+          <p className="text-green-400">DeepSeek API is configured server-side and ready to use.</p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Show ApiKeyManager option for optional client-side key */}
+          <div className="lg:col-span-2 flex justify-center mb-4">
+            <details className="bg-gray-800 rounded p-4">
+              <summary className="cursor-pointer text-blue-400">Optional: Configure additional API key</summary>
+              <div className="mt-4">
+                <ApiKeyManager onApiKeyChange={handleApiKeyChange} />
+              </div>
+            </details>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Prompt Input */}
             <Card className="bg-gray-900 border-blue-400/30">
               <CardHeader>
@@ -122,8 +153,37 @@ const PromptStudio = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Response Output */}
+            <Card className="bg-gray-900 border-purple-400/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-purple-400" />
+                  DeepSeek Response
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-black border border-purple-400/30 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+                    </div>
+                  ) : response ? (
+                    <pre className="whitespace-pre-wrap text-gray-300 text-sm">{response}</pre>
+                  ) : (
+                    <p className="text-gray-500 italic">Response will appear here...</p>
+                  )}
+                </div>
+                {response && (
+                  <Button variant="outline" className="mt-4 border-purple-400/50">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Response
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

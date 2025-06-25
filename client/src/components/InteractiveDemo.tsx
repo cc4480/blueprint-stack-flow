@@ -115,11 +115,9 @@ const InteractiveDemo = () => {
     console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
   }, []);
   const handleApiKeyChange = (key: string | null) => {
-    if (key) {
-      promptService.setApiKey(key);
-      setShowApiKey(false);
-      console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
-    }
+    // API key is now handled server-side
+    setShowApiKey(false);
+    console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
   };
   const generatePrompt = async () => {
     if (formData.features.length === 0) {

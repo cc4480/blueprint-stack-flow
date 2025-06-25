@@ -76,10 +76,17 @@ export const api = {
     reason: async (prompt: string, systemPrompt?: string, options?: any) => {
       const response = await fetch(`${API_BASE}/deepseek/reason`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-session-id': `session-${Date.now()}`
+        },
         body: JSON.stringify({ prompt, systemPrompt, ...options }),
       });
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get response from DeepSeek');
+      }
+      return data;
     },
   },
 };
