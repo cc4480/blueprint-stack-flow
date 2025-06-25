@@ -1,469 +1,468 @@
-
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DeepSeekStatus from '@/components/DeepSeekStatus';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import {
-  BarChart3,
   Brain,
-  Database,
-  Network,
-  Users,
   Zap,
+  Database,
+  Globe,
+  Users,
+  TrendingUp,
   Clock,
   CheckCircle,
   AlertTriangle,
-  TrendingUp,
   Activity,
-  Globe,
   Server,
-  Cpu,
-  HardDrive
+  FileText
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 
-const Dashboard = () => {
-  const [systemStats, setSystemStats] = useState({
-    totalProjects: 127,
-    activeAgents: 23,
-    mcpConnections: 45,
-    ragQueries: 1543,
-    responseTime: 0.23,
-    uptime: 99.97
-  });
+// Types
+interface DashboardMetrics {
+  totalProjects: number;
+  activeUsers: number;
+  completedBuilds: number;
+  avgBuildTime: number;
+  successRate: number;
+  ragDocuments: number;
+  mcpConnections: number;
+  a2aAgents: number;
+}
 
-  const [performanceData] = useState([
-    { time: '00:00', rag: 120, mcp: 89, a2a: 67 },
-    { time: '04:00', rag: 145, mcp: 102, a2a: 78 },
-    { time: '08:00', rag: 200, mcp: 134, a2a: 95 },
-    { time: '12:00', rag: 310, mcp: 189, a2a: 134 },
-    { time: '16:00', rag: 280, mcp: 167, a2a: 121 },
-    { time: '20:00', rag: 190, mcp: 123, a2a: 89 },
-  ]);
+interface ProjectActivity {
+  id: string;
+  name: string;
+  type: 'blueprint' | 'build' | 'deploy';
+  status: 'completed' | 'in-progress' | 'failed';
+  timestamp: string;
+  duration?: number;
+}
 
-  const [protocolDistribution] = useState([
-    { name: 'RAG 2.0', value: 45, color: '#3B82F6' },
-    { name: 'MCP', value: 35, color: '#8B5CF6' },
-    { name: 'A2A', value: 20, color: '#EF4444' },
-  ]);
+interface UsageData {
+  date: string;
+  blueprints: number;
+  builds: number;
+  deployments: number;
+}
 
-  const [recentActivities] = useState([
-    { id: 1, type: 'rag', message: 'RAG 2.0 knowledge base updated with 1,200 new documents', time: '2 minutes ago', status: 'success' },
-    { id: 2, type: 'mcp', message: 'MCP server connection established with GitHub integration', time: '5 minutes ago', status: 'success' },
-    { id: 3, type: 'a2a', message: 'Agent collaboration completed for project "EcommercePro"', time: '8 minutes ago', status: 'success' },
-    { id: 4, type: 'system', message: 'DeepSeek Reasoner model updated to latest version', time: '15 minutes ago', status: 'info' },
-    { id: 5, type: 'error', message: 'Temporary connection timeout to external API (auto-resolved)', time: '1 hour ago', status: 'warning' },
-  ]);
+interface SystemHealth {
+  component: string;
+  status: 'healthy' | 'warning' | 'error';
+  uptime: number;
+  responseTime: number;
+}
+
+// Mock data
+const mockMetrics: DashboardMetrics = {
+  totalProjects: 127,
+  activeUsers: 23,
+  completedBuilds: 342,
+  avgBuildTime: 3.2,
+  successRate: 94.7,
+  ragDocuments: 156,
+  mcpConnections: 8,
+  a2aAgents: 12
+};
+
+const mockActivities: ProjectActivity[] = [
+  {
+    id: '1',
+    name: 'E-commerce Platform',
+    type: 'blueprint',
+    status: 'completed',
+    timestamp: '2025-01-25T15:30:00Z',
+    duration: 180
+  },
+  {
+    id: '2', 
+    name: 'AI Chat Application',
+    type: 'build',
+    status: 'in-progress',
+    timestamp: '2025-01-25T15:15:00Z'
+  },
+  {
+    id: '3',
+    name: 'Analytics Dashboard',
+    type: 'deploy',
+    status: 'completed',
+    timestamp: '2025-01-25T14:45:00Z',
+    duration: 45
+  },
+  {
+    id: '4',
+    name: 'Social Media App',
+    type: 'blueprint',
+    status: 'failed',
+    timestamp: '2025-01-25T14:20:00Z'
+  }
+];
+
+const mockUsageData: UsageData[] = [
+  { date: '2025-01-20', blueprints: 12, builds: 8, deployments: 6 },
+  { date: '2025-01-21', blueprints: 15, builds: 12, deployments: 9 },
+  { date: '2025-01-22', blueprints: 18, builds: 15, deployments: 11 },
+  { date: '2025-01-23', blueprints: 22, builds: 18, deployments: 14 },
+  { date: '2025-01-24', blueprints: 25, builds: 20, deployments: 16 },
+  { date: '2025-01-25', blueprints: 28, builds: 23, deployments: 18 }
+];
+
+const mockSystemHealth: SystemHealth[] = [
+  { component: 'DeepSeek API', status: 'healthy', uptime: 99.9, responseTime: 234 },
+  { component: 'RAG Engine', status: 'healthy', uptime: 99.7, responseTime: 156 },
+  { component: 'MCP Gateway', status: 'warning', uptime: 98.2, responseTime: 445 },
+  { component: 'A2A Network', status: 'healthy', uptime: 99.8, responseTime: 89 },
+  { component: 'Database', status: 'healthy', uptime: 99.9, responseTime: 23 }
+];
+
+// Custom hooks
+const useDashboardData = () => {
+  const [metrics, setMetrics] = useState<DashboardMetrics>(mockMetrics);
+  const [activities, setActivities] = useState<ProjectActivity[]>(mockActivities);
+  const [usageData, setUsageData] = useState<UsageData[]>(mockUsageData);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth[]>(mockSystemHealth);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const refreshData = async () => {
+    setIsLoading(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Update metrics with some variation
+    setMetrics(prev => ({
+      ...prev,
+      activeUsers: prev.activeUsers + Math.floor(Math.random() * 5) - 2,
+      avgBuildTime: Number((prev.avgBuildTime + (Math.random() - 0.5) * 0.5).toFixed(1))
+    }));
+    
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    console.log('🚀 NoCodeLos Blueprint Stack Dashboard initialized with full monitoring');
-    
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      setSystemStats(prev => ({
-        ...prev,
-        ragQueries: prev.ragQueries + Math.floor(Math.random() * 5),
-        activeAgents: prev.activeAgents + (Math.random() > 0.5 ? 1 : -1),
-        responseTime: Math.max(0.1, prev.responseTime + (Math.random() - 0.5) * 0.1)
-      }));
-    }, 5000);
-
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const StatCard = ({ title, value, unit, icon: Icon, trend, color }: any) => (
-    <Card className="border-2 border-blue-400/30 shadow-lg hover:shadow-xl transition-all duration-300">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <div className="flex items-baseline space-x-2">
-              <span className="text-2xl font-bold text-gray-900">{value}</span>
-              {unit && <span className="text-sm text-gray-500">{unit}</span>}
-            </div>
-            {trend && (
-              <div className="flex items-center mt-2">
-                <TrendingUp className={`w-4 h-4 mr-1 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`} />
-                <span className={`text-sm ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {Math.abs(trend)}% from last hour
-                </span>
-              </div>
-            )}
-          </div>
-          <div className={`p-3 rounded-xl bg-gradient-to-r ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-        </div>
+  return {
+    metrics,
+    activities,
+    usageData,
+    systemHealth,
+    isLoading,
+    refreshData
+  };
+};
+
+// Components
+const MetricsGrid: React.FC<{ metrics: DashboardMetrics }> = ({ metrics }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+        <Brain className="h-4 w-4 text-blue-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-blue-600">{metrics.totalProjects}</div>
+        <p className="text-xs text-muted-foreground">+12% from last month</p>
       </CardContent>
     </Card>
-  );
+
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+        <Users className="h-4 w-4 text-green-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-green-600">{metrics.activeUsers}</div>
+        <p className="text-xs text-muted-foreground">+3 new today</p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+        <CheckCircle className="h-4 w-4 text-purple-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-purple-600">{metrics.successRate}%</div>
+        <Progress value={metrics.successRate} className="mt-2" />
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Avg Build Time</CardTitle>
+        <Clock className="h-4 w-4 text-orange-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold text-orange-600">{metrics.avgBuildTime}min</div>
+        <p className="text-xs text-muted-foreground">-0.3min improvement</p>
+      </CardContent>
+    </Card>
+  </div>
+);
+
+const ActivityFeed: React.FC<{ activities: ProjectActivity[] }> = ({ activities }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Recent Activity</CardTitle>
+      <CardDescription>Latest project builds and deployments</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {activities.map((activity) => (
+          <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${
+                activity.status === 'completed' ? 'bg-green-500' :
+                activity.status === 'in-progress' ? 'bg-yellow-500' : 'bg-red-500'
+              }`} />
+              <div>
+                <p className="font-medium">{activity.name}</p>
+                <p className="text-sm text-gray-500 capitalize">{activity.type}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <Badge 
+                variant={
+                  activity.status === 'completed' ? 'default' :
+                  activity.status === 'in-progress' ? 'secondary' : 'destructive'
+                }
+              >
+                {activity.status}
+              </Badge>
+              <p className="text-xs text-gray-500 mt-1">
+                {activity.duration ? `${activity.duration}s` : 'Running...'}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const UsageChart: React.FC<{ data: UsageData[] }> = ({ data }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Usage Trends</CardTitle>
+      <CardDescription>Daily blueprint generation and deployment activity</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" tickFormatter={(date) => new Date(date).toLocaleDateString()} />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="blueprints" stroke="#3B82F6" strokeWidth={2} name="Blueprints" />
+          <Line type="monotone" dataKey="builds" stroke="#10B981" strokeWidth={2} name="Builds" />
+          <Line type="monotone" dataKey="deployments" stroke="#F59E0B" strokeWidth={2} name="Deployments" />
+        </LineChart>
+      </ResponsiveContainer>
+    </CardContent>
+  </Card>
+);
+
+const SystemStatus: React.FC<{ health: SystemHealth[] }> = ({ health }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>System Health</CardTitle>
+      <CardDescription>Monitor system components and performance</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        {health.map((component) => (
+          <div key={component.component} className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className={`w-3 h-3 rounded-full ${
+                component.status === 'healthy' ? 'bg-green-500' :
+                component.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+              }`} />
+              <div>
+                <p className="font-medium">{component.component}</p>
+                <p className="text-sm text-gray-500">{component.uptime}% uptime</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium">{component.responseTime}ms</p>
+              <Badge 
+                variant={
+                  component.status === 'healthy' ? 'default' :
+                  component.status === 'warning' ? 'secondary' : 'destructive'
+                }
+              >
+                {component.status}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const QuickActions: React.FC = () => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Quick Actions</CardTitle>
+      <CardDescription>Common tasks and shortcuts</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="grid grid-cols-2 gap-4">
+        <Button className="flex items-center justify-center gap-2 h-16">
+          <Brain className="w-5 h-5" />
+          <span>New Blueprint</span>
+        </Button>
+        <Button variant="outline" className="flex items-center justify-center gap-2 h-16">
+          <Database className="w-5 h-5" />
+          <span>RAG Upload</span>
+        </Button>
+        <Button variant="outline" className="flex items-center justify-center gap-2 h-16">
+          <Server className="w-5 h-5" />
+          <span>MCP Config</span>
+        </Button>
+        <Button variant="outline" className="flex items-center justify-center gap-2 h-16">
+          <Activity className="w-5 h-5" />
+          <span>A2A Monitor</span>
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+export default function Dashboard() {
+  const { metrics, activities, usageData, systemHealth, isLoading, refreshData } = useDashboardData();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 pb-12">
-      <div className="container mx-auto px-6">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold gradient-logo-text mb-2">
-            NoCodeLos Blueprint Stack Dashboard
-          </h1>
-          <p className="text-xl text-gray-600">
-            Real-time monitoring of RAG 2.0, MCP & A2A protocol ecosystem
-          </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              NoCodeLos Blueprint Stack Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              Monitor your AI-powered development workflow and system performance
+            </p>
+          </div>
+          <Button onClick={refreshData} disabled={isLoading}>
+            <TrendingUp className="w-4 h-4 mr-2" />
+            {isLoading ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
         </div>
 
-        {/* System Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-          <StatCard
-            title="Total Projects"
-            value={systemStats.totalProjects}
-            icon={BarChart3}
-            trend={12}
-            color="from-blue-500 to-blue-600"
-          />
-          <StatCard
-            title="Active Agents"
-            value={systemStats.activeAgents}
-            icon={Users}
-            trend={8}
-            color="from-purple-500 to-purple-600"
-          />
-          <StatCard
-            title="MCP Connections"
-            value={systemStats.mcpConnections}
-            icon={Network}
-            trend={-3}
-            color="from-green-500 to-green-600"
-          />
-          <StatCard
-            title="RAG Queries"
-            value={systemStats.ragQueries}
-            icon={Database}
-            trend={25}
-            color="from-orange-500 to-orange-600"
-          />
-          <StatCard
-            title="Response Time"
-            value={systemStats.responseTime.toFixed(2)}
-            unit="sec"
-            icon={Zap}
-            trend={-15}
-            color="from-red-500 to-red-600"
-          />
-          <StatCard
-            title="System Uptime"
-            value={systemStats.uptime}
-            unit="%"
-            icon={CheckCircle}
-            trend={0.02}
-            color="from-indigo-500 to-indigo-600"
-          />
+        <MetricsGrid metrics={metrics} />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <UsageChart data={usageData} />
+          </div>
+          <div>
+            <QuickActions />
+          </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-1/2">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="protocols">Protocols</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+        <Tabs defaultValue="activity" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="activity">Activity Feed</TabsTrigger>
+            <TabsTrigger value="system">System Status</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="activity">
+            <ActivityFeed activities={activities} />
+          </TabsContent>
+
+          <TabsContent value="system">
+            <SystemStatus health={systemHealth} />
+          </TabsContent>
+
+          <TabsContent value="analytics">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Protocol Performance Chart */}
-              <Card className="border-2 border-blue-400/30">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Activity className="w-5 h-5 text-blue-600" />
-                    <span>Protocol Performance (24h)</span>
-                  </CardTitle>
+                  <CardTitle>Component Usage Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={performanceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="rag" stackId="1" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
-                      <Area type="monotone" dataKey="mcp" stackId="1" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
-                      <Area type="monotone" dataKey="a2a" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.6} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{metrics.ragDocuments}</div>
+                      <div className="text-sm text-gray-500">RAG Documents</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{metrics.mcpConnections}</div>
+                      <div className="text-sm text-gray-500">MCP Connections</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">{metrics.a2aAgents}</div>
+                      <div className="text-sm text-gray-500">A2A Agents</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">{metrics.completedBuilds}</div>
+                      <div className="text-sm text-gray-500">Total Builds</div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
-              {/* Protocol Distribution */}
-              <Card className="border-2 border-blue-400/30">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Globe className="w-5 h-5 text-blue-600" />
-                    <span>Protocol Usage Distribution</span>
-                  </CardTitle>
+                  <CardTitle>Performance Metrics</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={protocolDistribution}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        dataKey="value"
-                        label={(entry) => `${entry.name}: ${entry.value}%`}
-                      >
-                        {protocolDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="performance" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="border-2 border-blue-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Server className="w-5 h-5 text-blue-600" />
-                    <span>MCP Server Status</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Auth Provider</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-green-600">Online</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Payment Processor</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-green-600">Online</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">RAG Retriever</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="text-xs text-yellow-600">Busy</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Knowledge Indexer</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-green-600">Online</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 border-blue-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Cpu className="w-5 h-5 text-purple-600" />
-                    <span>System Resources</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">CPU Usage</span>
-                      <span className="text-sm text-gray-600">34%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '34%' }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Memory</span>
-                      <span className="text-sm text-gray-600">67%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: '67%' }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Network I/O</span>
-                      <span className="text-sm text-gray-600">23%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '23%' }}></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-2 border-blue-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <HardDrive className="w-5 h-5 text-orange-600" />
-                    <span>Storage Usage</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold gradient-logo-text mb-2">2.4TB</div>
-                    <div className="text-sm text-gray-600 mb-4">of 5TB used</div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style={{ width: '48%' }}></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="text-blue-600 font-medium">RAG Database</div>
-                        <div className="text-gray-600">1.8TB</div>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>Blueprint Generation</span>
+                        <span>Fast</span>
                       </div>
-                      <div>
-                        <div className="text-purple-600 font-medium">MCP Cache</div>
-                        <div className="text-gray-600">0.6TB</div>
+                      <Progress value={85} className="mt-1" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>RAG Retrieval Speed</span>
+                        <span>Optimal</span>
                       </div>
+                      <Progress value={92} className="mt-1" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>MCP Response Time</span>
+                        <span>Good</span>
+                      </div>
+                      <Progress value={78} className="mt-1" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm">
+                        <span>Overall System Health</span>
+                        <span>Excellent</span>
+                      </div>
+                      <Progress value={94} className="mt-1" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          <TabsContent value="protocols" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* RAG 2.0 Status */}
-              <Card className="border-2 border-blue-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Database className="w-5 h-5 text-blue-600" />
-                    <span>RAG 2.0 Database Status</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-600">Indexed Documents</div>
-                        <div className="text-2xl font-bold text-blue-600">47,392</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Query Accuracy</div>
-                        <div className="text-2xl font-bold text-green-600">99.7%</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Avg Retrieval Time</div>
-                        <div className="text-2xl font-bold text-orange-600">0.12s</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Vector Embeddings</div>
-                        <div className="text-2xl font-bold text-purple-600">2.4M</div>
-                      </div>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
-                    <Database className="w-4 h-4 mr-2" />
-                    Manage RAG Database
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* A2A Agent Network */}
-              <Card className="border-2 border-blue-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-red-600" />
-                    <span>A2A Agent Network</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-sm text-gray-600">Active Agents</div>
-                        <div className="text-2xl font-bold text-red-600">{systemStats.activeAgents}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Completed Tasks</div>
-                        <div className="text-2xl font-bold text-green-600">1,847</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Avg Collaboration Time</div>
-                        <div className="text-2xl font-bold text-blue-600">4.2min</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Success Rate</div>
-                        <div className="text-2xl font-bold text-purple-600">98.3%</div>
-                      </div>
-                    </div>
-                  </div>
-                  <Button className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600">
-                    <Users className="w-4 h-4 mr-2" />
-                    Configure Agent Network
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="activity" className="space-y-6">
-            <Card className="border-2 border-blue-400/30">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  <span>Recent System Activity</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${
-                        activity.status === 'success' ? 'bg-green-500' : 
-                        activity.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                      }`}></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                      </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        activity.status === 'success' ? 'bg-green-100 text-green-800' :
-                        activity.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {activity.type.toUpperCase()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8">
-          <Button className="h-auto p-6 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 flex-col space-y-2">
-            <Brain className="w-8 h-8" />
-            <span className="font-semibold">Create New Prompt</span>
-          </Button>
-          <Button className="h-auto p-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex-col space-y-2">
-            <Database className="w-8 h-8" />
-            <span className="font-semibold">Update RAG Database</span>
-          </Button>
-          <Button className="h-auto p-6 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 flex-col space-y-2">
-            <Network className="w-8 h-8" />
-            <span className="font-semibold">Configure MCP</span>
-          </Button>
-          <Button className="h-auto p-6 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 flex-col space-y-2">
-            <Users className="w-8 h-8" />
-            <span className="font-semibold">Deploy Agent</span>
-          </Button>
-        </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

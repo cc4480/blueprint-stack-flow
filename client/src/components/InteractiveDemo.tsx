@@ -1,194 +1,262 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, Zap, Database, Code, Brain, Rocket } from 'lucide-react';
-import { analytics } from '@/services/analyticsService';
-import { promptService, type PromptGenerationRequest } from '@/services/promptService';
+import { Sparkles, Loader2, Brain } from 'lucide-react';
+import { promptService, type PromptGenerationRequest } from '../services/promptService';
+import { analytics } from '../services/analyticsService';
 
-const InteractiveDemo = () => {
+// Types
+interface FrameworkPreset {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  frontend: string;
+  backend: string;
+  database: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  features: string[];
+}
+
+interface DataSource {
+  id: string;
+  name: string;
+  icon: string;
+  difficulty: string;
+  description: string;
+  compatibility: string;
+}
+
+interface Feature {
+  id: string;
+  name: string;
+}
+
+interface AppCategory {
+  id: string;
+  name: string;
+  types: AppType[];
+}
+
+interface AppType {
+  id: string;
+  name: string;
+  icon: string;
+  difficulty: string;
+  description: string;
+  compatibility: string;
+}
+
+// Hook for managing demo state
+const useDemoState = () => {
   const [selectedAppTypes, setSelectedAppTypes] = useState<{[key: string]: string}>({});
   const [selectedDataSource, setSelectedDataSource] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [selectAllFeatures, setSelectAllFeatures] = useState(false);
-
-  // Framework preset combinations
-  const frameworkPresets = [
-    {
-      id: 'beginner-stack',
-      name: 'Beginner Stack',
-      icon: '🌱',
-      description: 'Perfect for starting out - React + Node.js + PostgreSQL',
-      frontend: 'react-spa',
-      backend: 'node-express',
-      database: 'postgresql',
-      difficulty: 'Beginner',
-      features: ['auth', 'api', 'mobile']
-    },
-    {
-      id: 'modern-fullstack',
-      name: 'Modern Full-Stack',
-      icon: '⚡',
-      description: 'Next.js + FastAPI + Supabase for rapid development',
-      frontend: 'nextjs-app',
-      backend: 'python-fastapi',
-      database: 'supabase',
-      difficulty: 'Beginner',
-      features: ['auth', 'realtime', 'api', 'seo', 'mobile']
-    },
-    {
-      id: 'ai-powerhouse',
-      name: 'AI Powerhouse',
-      icon: '🤖',
-      description: 'React + FastAPI + Vector DB for AI applications',
-      frontend: 'react-spa',
-      backend: 'python-fastapi',
-      database: 'postgresql',
-      difficulty: 'Intermediate',
-      features: ['ai', 'auth', 'api', 'analytics', 'search']
-    },
-    {
-      id: 'performance-beast',
-      name: 'Performance Beast',
-      icon: '🚀',
-      description: 'SvelteKit + Go + PostgreSQL for maximum speed',
-      frontend: 'svelte-kit',
-      backend: 'go-gin',
-      database: 'postgresql',
-      difficulty: 'Intermediate',
-      features: ['api', 'analytics', 'seo', 'mobile']
-    },
-    {
-      id: 'edge-computing',
-      name: 'Edge Computing',
-      icon: '🌐',
-      description: 'Astro + Deno + Turso for global edge deployment',
-      frontend: 'astro-app',
-      backend: 'deno-fresh',
-      database: 'turso',
-      difficulty: 'Intermediate',
-      features: ['seo', 'api', 'mobile', 'analytics']
-    },
-    {
-      id: 'enterprise-grade',
-      name: 'Enterprise Grade',
-      icon: '🏢',
-      description: 'Angular + Microservices + PostgreSQL for large scale',
-      frontend: 'angular-app',
-      backend: 'microservices',
-      database: 'postgresql',
-      difficulty: 'Advanced',
-      features: ['auth', 'api', 'analytics', 'testing', 'notifications']
-    },
-    {
-      id: 'bleeding-edge',
-      name: 'Bleeding Edge',
-      icon: '🔥',
-      description: 'Solid.js + Bun + Neon for cutting-edge performance',
-      frontend: 'solid-js',
-      backend: 'bun-elysia',
-      database: 'neon',
-      difficulty: 'Advanced',
-      features: ['api', 'realtime', 'analytics', 'testing']
-    },
-    {
-      id: 'content-focused',
-      name: 'Content Focused',
-      icon: '📝',
-      description: 'Astro + Node.js + Headless CMS for content sites',
-      frontend: 'astro-app',
-      backend: 'node-express',
-      database: 'mongodb',
-      difficulty: 'Beginner',
-      features: ['seo', 'api', 'mobile', 'social']
-    }
-  ];
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [streamingText, setStreamingText] = useState('');
 
-  const appTypes = {
-    frontend: [
-      { id: 'react-spa', name: 'React SPA', icon: '⚛️', description: 'Single Page Application with modern React hooks and state management', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['All Backends'] },
-      { id: 'nextjs-app', name: 'Next.js App', icon: '▲', description: 'Full-stack React application with SSR and API routes', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['Node.js', 'Vercel', 'All Backends'] },
-      { id: 'vue-nuxt', name: 'Vue + Nuxt', icon: '💚', description: 'Vue 3 with Nuxt for SSR, file-based routing, and performance', difficulty: 'Beginner', popularity: '⭐ Popular', compatibility: ['Node.js', 'All Backends'] },
-      { id: 'svelte-kit', name: 'SvelteKit', icon: '🧡', description: 'Fast, lightweight framework with excellent developer experience', difficulty: 'Beginner', popularity: '⭐ Rising Star', compatibility: ['Node.js', 'Deno', 'All Backends'] },
-      { id: 'angular-app', name: 'Angular', icon: '🅰️', description: 'Enterprise application with Angular and TypeScript', difficulty: 'Intermediate', popularity: '💼 Enterprise', compatibility: ['All Backends'] },
-      { id: 'solid-js', name: 'Solid.js', icon: '🟦', description: 'High-performance reactive framework with fine-grained reactivity', difficulty: 'Intermediate', popularity: '⚡ Performance', compatibility: ['All Backends'] },
-      { id: 'astro-app', name: 'Astro', icon: '🚀', description: 'Modern static site generator with partial hydration', difficulty: 'Beginner', popularity: '🌟 Content Sites', compatibility: ['All Backends', 'Static'] },
-      { id: 'remix-app', name: 'Remix', icon: '💿', description: 'Full-stack web framework with nested routing and data loading', difficulty: 'Intermediate', popularity: '🎯 Modern', compatibility: ['Node.js', 'Edge Runtime'] }
-    ],
-    backend: [
-      { id: 'node-express', name: 'Node.js + Express', icon: '🟢', description: 'RESTful API with Express.js and middleware integration', difficulty: 'Beginner', popularity: '🔥 Most Popular', compatibility: ['All Frontends', 'All Databases'] },
-      { id: 'node-fastify', name: 'Node.js + Fastify', icon: '⚡', description: 'High-performance Node.js framework with TypeScript support', difficulty: 'Beginner', popularity: '⚡ Fast & Easy', compatibility: ['All Frontends', 'All Databases'] },
-      { id: 'bun-elysia', name: 'Bun + Elysia', icon: '🥟', description: 'Ultra-fast runtime with modern TypeScript-first framework', difficulty: 'Beginner', popularity: '🚀 Bleeding Edge', compatibility: ['React', 'Vue', 'Svelte'] },
-      { id: 'deno-fresh', name: 'Deno + Fresh', icon: '🦕', description: 'Secure runtime with island architecture and edge computing', difficulty: 'Intermediate', popularity: '🛡️ Secure', compatibility: ['React', 'Preact', 'Islands'] },
-      { id: 'python-fastapi', name: 'Python + FastAPI', icon: '🐍', description: 'High-performance Python API with automatic documentation', difficulty: 'Beginner', popularity: '🔥 AI/ML Friendly', compatibility: ['All Frontends', 'PostgreSQL', 'Vector DBs'] },
-      { id: 'python-django', name: 'Python + Django', icon: '🎸', description: 'Full-featured web framework with ORM and admin interface', difficulty: 'Intermediate', popularity: '💼 Enterprise', compatibility: ['All Frontends', 'PostgreSQL', 'MySQL'] },
-      { id: 'go-gin', name: 'Go + Gin', icon: '🔵', description: 'High-performance HTTP framework with minimal overhead', difficulty: 'Intermediate', popularity: '⚡ Performance', compatibility: ['All Frontends', 'All Databases'] },
-      { id: 'rust-axum', name: 'Rust + Axum', icon: '🦀', description: 'Memory-safe, extremely fast web framework for Rust', difficulty: 'Advanced', popularity: '🔥 Blazing Fast', compatibility: ['All Frontends', 'PostgreSQL'] },
-      { id: 'graphql-apollo', name: 'GraphQL + Apollo', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers', difficulty: 'Intermediate', popularity: '🎯 Flexible', compatibility: ['React', 'Vue', 'Angular'] },
-      { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh and containers', difficulty: 'Advanced', popularity: '🏢 Enterprise', compatibility: ['All Frontends', 'Distributed DBs'] }
-    ],
-    fullstack: [
-      { id: 'saas-platform', name: 'SaaS Platform', icon: '🏢', description: 'Complete business application with subscriptions, analytics, and user management' },
-      { id: 'ecommerce-app', name: 'E-commerce Store', icon: '🛒', description: 'Full shopping platform with payments, inventory, and order management' },
-      { id: 'social-network', name: 'Social Network', icon: '👥', description: 'Community platform with real-time messaging and user interactions' },
-      { id: 'cms-platform', name: 'CMS Platform', icon: '📝', description: 'Content management system with headless API and admin interface' },
-      { id: 'dashboard-app', name: 'Analytics Dashboard', icon: '📊', description: 'Data visualization platform with charts, KPIs, and reporting' },
-      { id: 'marketplace', name: 'Marketplace', icon: '🏪', description: 'Multi-vendor platform with vendor management and commission tracking' }
-    ],
-    advanced: [
-      { id: 'ai-saas', name: 'AI SaaS Platform', icon: '🤖', description: 'AI-powered application with RAG 2.0, vector embeddings, and LLM integration' },
-      { id: 'realtime-collaboration', name: 'Real-time Collaboration', icon: '📡', description: 'WebSocket-based application with live updates, presence, and co-editing' },
-      { id: 'blockchain-dapp', name: 'Web3 dApp', icon: '⛓️', description: 'Decentralized application with smart contracts and wallet integration' },
-      { id: 'iot-platform', name: 'IoT Platform', icon: '🌐', description: 'Internet of Things monitoring with device management and edge computing' },
-      { id: 'api-gateway', name: 'API Gateway', icon: '🚪', description: 'Centralized API management with rate limiting, auth, and monitoring' },
-      { id: 'edge-computing', name: 'Edge Computing', icon: '⚡', description: 'Distributed application with CDN, edge functions, and global deployment' }
-    ]
+  return {
+    selectedAppTypes,
+    setSelectedAppTypes,
+    selectedDataSource,
+    setSelectedDataSource,
+    selectedFeatures,
+    setSelectedFeatures,
+    selectAllFeatures,
+    setSelectAllFeatures,
+    description,
+    setDescription,
+    isGenerating,
+    setIsGenerating,
+    result,
+    setResult,
+    streamingText,
+    setStreamingText
   };
+};
 
-  const dataSources = [
-    { id: 'postgresql', name: 'PostgreSQL', icon: '🐘', difficulty: 'Beginner', description: 'Most popular SQL database - reliable and feature-rich', compatibility: 'Universal' },
-    { id: 'supabase', name: 'Supabase', icon: '⚡', difficulty: 'Beginner', description: 'PostgreSQL with built-in auth, realtime, and APIs', compatibility: 'Perfect for SaaS' },
-    { id: 'mongodb', name: 'MongoDB', icon: '🍃', difficulty: 'Beginner', description: 'NoSQL document database - flexible and scalable', compatibility: 'Great for APIs' },
-    { id: 'firebase', name: 'Firebase', icon: '🔥', difficulty: 'Beginner', description: 'Google\'s backend-as-a-service with realtime features', compatibility: 'Mobile & Web' },
-    { id: 'planetscale', name: 'PlanetScale', icon: '🌍', difficulty: 'Beginner', description: 'Serverless MySQL with branching like Git', compatibility: 'Serverless Apps' },
-    { id: 'neon', name: 'Neon', icon: '💫', difficulty: 'Beginner', description: 'Serverless PostgreSQL with auto-scaling', compatibility: 'Modern Apps' },
-    { id: 'turso', name: 'Turso', icon: '🚀', difficulty: 'Intermediate', description: 'Edge SQLite database for ultra-low latency', compatibility: 'Edge Computing' },
-    { id: 'redis', name: 'Redis', icon: '🔴', difficulty: 'Intermediate', description: 'In-memory cache and session store', compatibility: 'Performance Apps' },
-    { id: 'drizzle-orm', name: 'Drizzle ORM', icon: '💎', difficulty: 'Beginner', description: 'TypeScript-first ORM - type-safe and fast', compatibility: 'TypeScript Projects' }
-  ];
+// Data constants
+const FRAMEWORK_PRESETS: FrameworkPreset[] = [
+  {
+    id: 'beginner-stack',
+    name: 'Beginner Stack',
+    icon: '🌱',
+    description: 'Perfect for starting out - React + Node.js + PostgreSQL',
+    frontend: 'react-spa',
+    backend: 'node-express',
+    database: 'postgresql',
+    difficulty: 'Beginner',
+    features: ['auth', 'api', 'mobile']
+  },
+  {
+    id: 'modern-fullstack',
+    name: 'Modern Full-Stack',
+    icon: '⚡',
+    description: 'Next.js + FastAPI + Supabase for rapid development',
+    frontend: 'nextjs-app',
+    backend: 'python-fastapi',
+    database: 'supabase',
+    difficulty: 'Beginner',
+    features: ['auth', 'realtime', 'api', 'seo', 'mobile']
+  },
+  {
+    id: 'ai-powerhouse',
+    name: 'AI Powerhouse',
+    icon: '🤖',
+    description: 'React + FastAPI + Vector DB for AI applications',
+    frontend: 'react-spa',
+    backend: 'python-fastapi',
+    database: 'postgresql',
+    difficulty: 'Intermediate',
+    features: ['ai', 'auth', 'api', 'analytics', 'search']
+  },
+  {
+    id: 'performance-beast',
+    name: 'Performance Beast',
+    icon: '🚀',
+    description: 'SvelteKit + Go + PostgreSQL for maximum speed',
+    frontend: 'svelte-kit',
+    backend: 'go-gin',
+    database: 'postgresql',
+    difficulty: 'Intermediate',
+    features: ['api', 'analytics', 'seo', 'mobile']
+  },
+  {
+    id: 'edge-computing',
+    name: 'Edge Computing',
+    icon: '🌐',
+    description: 'Astro + Deno + Turso for global edge deployment',
+    frontend: 'astro-app',
+    backend: 'deno-fresh',
+    database: 'turso',
+    difficulty: 'Intermediate',
+    features: ['seo', 'api', 'mobile', 'analytics']
+  },
+  {
+    id: 'enterprise-grade',
+    name: 'Enterprise Grade',
+    icon: '🏢',
+    description: 'Angular + Microservices + PostgreSQL for large scale',
+    frontend: 'angular-app',
+    backend: 'microservices',
+    database: 'postgresql',
+    difficulty: 'Advanced',
+    features: ['auth', 'api', 'analytics', 'testing', 'notifications']
+  },
+  {
+    id: 'bleeding-edge',
+    name: 'Bleeding Edge',
+    icon: '🔥',
+    description: 'Solid.js + Bun + Neon for cutting-edge performance',
+    frontend: 'solid-js',
+    backend: 'bun-elysia',
+    database: 'neon',
+    difficulty: 'Advanced',
+    features: ['api', 'realtime', 'analytics', 'testing']
+  },
+  {
+    id: 'content-focused',
+    name: 'Content Focused',
+    icon: '📝',
+    description: 'Astro + Node.js + Headless CMS for content sites',
+    frontend: 'astro-app',
+    backend: 'node-express',
+    database: 'mongodb',
+    difficulty: 'Beginner',
+    features: ['seo', 'api', 'mobile', 'social']
+  }
+];
 
-  const availableFeatures = [
-    { id: 'auth', name: 'Authentication' },
-    { id: 'notifications', name: 'Push Notifications' },
-    { id: 'realtime', name: 'Real-time Updates' },
-    { id: 'search', name: 'Advanced Search' },
-    { id: 'ai', name: 'AI Integration' },
-    { id: 'analytics', name: 'Analytics Dashboard' },
-    { id: 'payments', name: 'Payment Processing' },
-    { id: 'social', name: 'Social Features' },
-    { id: 'api', name: 'REST API' },
-    { id: 'mobile', name: 'Mobile Responsive' },
-    { id: 'seo', name: 'SEO Optimization' },
-    { id: 'testing', name: 'Unit Testing' }
-  ];
+const DATA_SOURCES: DataSource[] = [
+  { id: 'postgresql', name: 'PostgreSQL', icon: '🐘', difficulty: 'Beginner', description: 'Most popular SQL database - reliable and feature-rich', compatibility: 'Universal' },
+  { id: 'supabase', name: 'Supabase', icon: '⚡', difficulty: 'Beginner', description: 'PostgreSQL with built-in auth, realtime, and APIs', compatibility: 'Perfect for SaaS' },
+  { id: 'mongodb', name: 'MongoDB', icon: '🍃', difficulty: 'Beginner', description: 'NoSQL document database - flexible and scalable', compatibility: 'Great for APIs' },
+  { id: 'firebase', name: 'Firebase', icon: '🔥', difficulty: 'Beginner', description: 'Google\'s backend-as-a-service with realtime features', compatibility: 'Mobile & Web' },
+  { id: 'planetscale', name: 'PlanetScale', icon: '🌍', difficulty: 'Beginner', description: 'Serverless MySQL with branching like Git', compatibility: 'Serverless Apps' },
+  { id: 'neon', name: 'Neon', icon: '💫', difficulty: 'Beginner', description: 'Serverless PostgreSQL with auto-scaling', compatibility: 'Modern Apps' },
+  { id: 'turso', name: 'Turso', icon: '🚀', difficulty: 'Intermediate', description: 'Edge SQLite database for ultra-low latency', compatibility: 'Edge Computing' },
+  { id: 'redis', name: 'Redis', icon: '🔴', difficulty: 'Intermediate', description: 'In-memory cache and session store', compatibility: 'Performance Apps' },
+  { id: 'drizzle-orm', name: 'Drizzle ORM', icon: '💎', difficulty: 'Beginner', description: 'TypeScript-first ORM - type-safe and fast', compatibility: 'TypeScript Projects' }
+];
 
+const AVAILABLE_FEATURES: Feature[] = [
+  { id: 'auth', name: 'Authentication' },
+  { id: 'notifications', name: 'Push Notifications' },
+  { id: 'realtime', name: 'Real-time Updates' },
+  { id: 'search', name: 'Advanced Search' },
+  { id: 'ai', name: 'AI Integration' },
+  { id: 'analytics', name: 'Analytics Dashboard' },
+  { id: 'payments', name: 'Payment Processing' },
+  { id: 'social', name: 'Social Features' },
+  { id: 'api', name: 'REST API' },
+  { id: 'mobile', name: 'Mobile Responsive' },
+  { id: 'seo', name: 'SEO Optimization' },
+  { id: 'testing', name: 'Unit Testing' }
+];
+
+const APP_CATEGORIES: AppCategory[] = [
+  {
+    id: 'frontend',
+    name: 'Frontend Frameworks',
+    types: [
+      { id: 'react-spa', name: 'React SPA', icon: '⚛️', difficulty: 'Beginner', description: 'Most popular - component-based with hooks', compatibility: 'Universal' },
+      { id: 'nextjs-app', name: 'Next.js 14', icon: '🔼', difficulty: 'Beginner', description: 'Full-stack React with SSR, SSG, and App Router', compatibility: 'Production Ready' },
+      { id: 'vue-spa', name: 'Vue 3', icon: '💚', difficulty: 'Beginner', description: 'Progressive framework with composition API', compatibility: 'Developer Friendly' },
+      { id: 'svelte-kit', name: 'SvelteKit', icon: '🧡', difficulty: 'Intermediate', description: 'Compile-time optimized with great DX', compatibility: 'High Performance' },
+      { id: 'angular-app', name: 'Angular 17', icon: '🅰️', difficulty: 'Advanced', description: 'Enterprise framework with TypeScript', compatibility: 'Large Scale' },
+      { id: 'solid-js', name: 'Solid.js', icon: '💎', difficulty: 'Advanced', description: 'Fine-grained reactivity, fastest performance', compatibility: 'Cutting Edge' },
+      { id: 'astro-app', name: 'Astro', icon: '🚀', difficulty: 'Intermediate', description: 'Content-focused with island architecture', compatibility: 'Static Sites' }
+    ]
+  },
+  {
+    id: 'backend',
+    name: 'Backend Frameworks',
+    types: [
+      { id: 'node-express', name: 'Node.js + Express', icon: '🟢', difficulty: 'Beginner', description: 'JavaScript everywhere - simple and flexible', compatibility: 'Universal' },
+      { id: 'python-fastapi', name: 'FastAPI', icon: '🐍', difficulty: 'Beginner', description: 'Modern Python with automatic API docs', compatibility: 'AI/ML Ready' },
+      { id: 'go-gin', name: 'Go + Gin', icon: '🐹', difficulty: 'Intermediate', description: 'Ultra-fast compiled language', compatibility: 'High Performance' },
+      { id: 'rust-axum', name: 'Rust + Axum', icon: '🦀', difficulty: 'Advanced', description: 'Memory-safe systems programming', compatibility: 'Maximum Performance' },
+      { id: 'bun-elysia', name: 'Bun + Elysia', icon: '🧈', difficulty: 'Advanced', description: 'All-in-one JavaScript runtime', compatibility: 'Cutting Edge' },
+      { id: 'deno-fresh', name: 'Deno + Fresh', icon: '🦕', difficulty: 'Intermediate', description: 'Secure TypeScript runtime', compatibility: 'Edge Computing' },
+      { id: 'microservices', name: 'Microservices', icon: '🏗️', difficulty: 'Advanced', description: 'Distributed architecture pattern', compatibility: 'Enterprise Scale' }
+    ]
+  }
+];
+
+export default function InteractiveDemo() {
+  const {
+    selectedAppTypes,
+    setSelectedAppTypes,
+    selectedDataSource,
+    setSelectedDataSource,
+    selectedFeatures,
+    setSelectedFeatures,
+    selectAllFeatures,
+    setSelectAllFeatures,
+    description,
+    setDescription,
+    isGenerating,
+    setIsGenerating,
+    result,
+    setResult,
+    streamingText,
+    setStreamingText
+  } = useDemoState();
+
+  // Event handlers
   const handleAppTypeSelect = (appType: string, category: string) => {
     setSelectedAppTypes(prev => ({
       ...prev,
       [category]: appType
     }));
     analytics.trackButtonClick(`app-type-${appType}`, 'interactive-demo');
-    console.log('📱 App type selected:', appType, 'in category:', category);
   };
 
   const handleDataSourceSelect = (dataSource: string) => {
     setSelectedDataSource(dataSource);
     analytics.trackButtonClick(`data-source-${dataSource}`, 'interactive-demo');
-    console.log('💾 Data source selected:', dataSource);
   };
 
   const handleFeatureToggle = (feature: string) => {
@@ -196,9 +264,29 @@ const InteractiveDemo = () => {
       const updated = prev.includes(feature) 
         ? prev.filter(f => f !== feature)
         : [...prev, feature];
-      console.log('🔄 NoCodeLos Blueprint Stack features updated:', updated);
       return updated;
     });
+  };
+
+  const handleSelectAllFeatures = () => {
+    if (selectAllFeatures) {
+      setSelectedFeatures([]);
+      setSelectAllFeatures(false);
+    } else {
+      const allFeatures = AVAILABLE_FEATURES.map(f => f.id);
+      setSelectedFeatures(allFeatures);
+      setSelectAllFeatures(true);
+    }
+  };
+
+  const handlePresetSelect = (preset: FrameworkPreset) => {
+    setSelectedAppTypes({
+      frontend: preset.frontend,
+      backend: preset.backend
+    });
+    setSelectedDataSource(preset.database);
+    setSelectedFeatures(preset.features);
+    analytics.trackButtonClick(`preset-${preset.id}`, 'interactive-demo');
   };
 
   const handleGeneratePrompt = async () => {
@@ -211,9 +299,7 @@ const InteractiveDemo = () => {
     setIsGenerating(true);
     setStreamingText('');
     setResult(null);
-    console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
     
-    // Simulate streaming text effect
     const streamingMessages = [
       'Initializing DeepSeek Reasoner...',
       'Loading NoCodeLos Blueprint Stack templates...',
@@ -235,11 +321,11 @@ const InteractiveDemo = () => {
       } else {
         setStreamingText('Generating comprehensive blueprint... This may take up to 3 minutes for complete output.');
       }
-    }, 15000); // Slower updates for longer generation time
+    }, 15000);
     
     try {
       const request: PromptGenerationRequest = {
-        appType: selectedTypes.join(' + '), // Combine selected types
+        appType: selectedTypes.join(' + '),
         dataSource: selectedDataSource,
         features: selectedFeatures,
         platform: 'web',
@@ -250,9 +336,8 @@ const InteractiveDemo = () => {
       const result = await promptService.generatePrompt(request);
       
       clearInterval(streamInterval);
-      setStreamingText('');
       setResult(result);
-      console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration:', result);
+      setStreamingText('');
     } catch (error) {
       clearInterval(streamInterval);
       setStreamingText('');
@@ -263,6 +348,12 @@ const InteractiveDemo = () => {
     }
   };
 
+  // Update selectAll state when individual features change
+  React.useEffect(() => {
+    const allSelected = AVAILABLE_FEATURES.length > 0 && AVAILABLE_FEATURES.every(f => selectedFeatures.includes(f.id));
+    setSelectAllFeatures(allSelected);
+  }, [selectedFeatures]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -271,7 +362,7 @@ const InteractiveDemo = () => {
             Get Your First NoCodeLos Blueprint Stack Master Prompt in 3 Minutes
           </h2>
           <p className="text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed mb-8">
-            Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols
+            Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols - Complete blueprints generated in 3 minutes
           </p>
 
           {/* Framework Preset Selector */}
@@ -286,7 +377,7 @@ const InteractiveDemo = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {frameworkPresets.map((preset) => (
+              {FRAMEWORK_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
@@ -323,81 +414,51 @@ const InteractiveDemo = () => {
               </p>
             </div>
           </div>
-          <div className="flex justify-center items-center gap-6 flex-wrap">
-            <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-green-300 text-sm font-medium">DeepSeek Reasoner</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full">
-              <Database className="w-4 h-4 text-blue-400" />
-              <span className="text-blue-300 text-sm font-medium">RAG 2.0</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full">
-              <Brain className="w-4 h-4 text-purple-400" />
-              <span className="text-purple-300 text-sm font-medium">MCP + A2A</span>
-            </div>
-          </div>
         </div>
 
-        <div className="space-y-12">
-          {/* Step 1: Choose App Type */}
+        <div className="space-y-8">
+          {/* Step 1: Choose App Types */}
           <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
                 1
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">Choose Your Application Components</h3>
-                <p className="text-gray-400 mt-1">Select one or more components from each category to build your complete application</p>
+                <h3 className="text-2xl font-bold text-white">Choose Your Tech Stack</h3>
+                <p className="text-gray-400 mt-1">Select frontend and backend frameworks that match your needs</p>
               </div>
             </div>
 
-            <div className="space-y-8">
-              {Object.entries(appTypes).map(([category, types]) => (
-                <div key={category} className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      {category === 'frontend' && <Code className="w-5 h-5 text-blue-400" />}
-                      {category === 'backend' && <Zap className="w-5 h-5 text-green-400" />}
-                      {category === 'fullstack' && <Database className="w-5 h-5 text-purple-400" />}
-                      {category === 'advanced' && <Brain className="w-5 h-5 text-red-400" />}
-                      <h4 className="text-xl font-bold text-white capitalize">
-                        {category === 'fullstack' ? 'Full-Stack' : category} Applications
-                      </h4>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {types.length} options
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {types.map((type) => (
-                      <button
-                        key={type.id}
-                        onClick={() => handleAppTypeSelect(type.id, category)}
-                        className={`group relative p-6 rounded-xl border text-left transition-all duration-300 hover:scale-105 ${
-                          selectedAppTypes[category] === type.id
-                            ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-lg shadow-blue-500/20'
-                            : 'border-gray-700 bg-gray-900/50 backdrop-blur-sm hover:border-blue-400 hover:bg-gray-800/80'
-                        }`}
-                      >
-                        <div className="text-3xl mb-3 transform group-hover:scale-110 transition-transform duration-200">
-                          {type.icon}
-                        </div>
-                        <h5 className="font-semibold text-white mb-2 text-lg">{type.name}</h5>
-                        <p className="text-sm text-gray-300 leading-relaxed">{type.description}</p>
-                        {selectedAppTypes[category] === type.id && (
-                          <div className="absolute top-2 right-2">
-                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                              <span className="text-white text-xs">✓</span>
-                            </div>
+            {APP_CATEGORIES.map((category) => (
+              <div key={category.id} className="mb-8">
+                <h4 className="text-xl font-semibold text-white mb-4">{category.name}</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {category.types.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => handleAppTypeSelect(type.id, category.id)}
+                      className={`group relative p-6 rounded-xl border text-center transition-all duration-300 hover:scale-105 ${
+                        selectedAppTypes[category.id] === type.id
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-lg shadow-blue-500/20'
+                          : 'border-gray-700 bg-gray-900/50 backdrop-blur-sm hover:border-blue-400 hover:bg-gray-800/80'
+                      }`}
+                    >
+                      <div className="text-3xl mb-3 transform group-hover:scale-110 transition-transform duration-200">
+                        {type.icon}
+                      </div>
+                      <span className="text-sm font-medium text-white">{type.name}</span>
+                      {selectedAppTypes[category.id] === type.id && (
+                        <div className="absolute top-2 right-2">
+                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs">✓</span>
                           </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
           {/* Step 2: Choose Data Source */}
@@ -413,7 +474,7 @@ const InteractiveDemo = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {dataSources.map((source) => (
+              {DATA_SOURCES.map((source) => (
                 <button
                   key={source.id}
                   onClick={() => handleDataSourceSelect(source.id)}
@@ -451,38 +512,39 @@ const InteractiveDemo = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {availableFeatures.map((feature) => (
-                <label
-                  key={feature.id}
-                  className={`group flex items-center p-4 rounded-xl border cursor-pointer transition-all duration-200 hover:scale-105 ${
-                    selectedFeatures.includes(feature.id)
-                      ? 'border-pink-500 bg-gradient-to-r from-pink-500/20 to-red-500/20 shadow-lg shadow-pink-500/20'
-                      : 'border-gray-700 bg-gray-900/50 backdrop-blur-sm hover:border-pink-400 hover:bg-gray-800/80'
-                  }`}
-                >
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg font-medium text-white">Available Features ({AVAILABLE_FEATURES.length})</span>
+                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={selectedFeatures.includes(feature.id)}
-                    onChange={() => handleFeatureToggle(feature.id)}
-                    className="sr-only"
+                    checked={selectAllFeatures}
+                    onChange={handleSelectAllFeatures}
+                    className="w-5 h-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                   />
-                  <div className="flex items-center gap-3 w-full">
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                      selectedFeatures.includes(feature.id)
-                        ? 'border-pink-500 bg-pink-500'
-                        : 'border-gray-600 group-hover:border-pink-400'
-                    }`}>
-                      {selectedFeatures.includes(feature.id) && (
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-sm font-medium text-white">{feature.name}</span>
-                  </div>
+                  <span className="text-white font-medium">Select All</span>
                 </label>
-              ))}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {AVAILABLE_FEATURES.map((feature) => (
+                  <label key={feature.id} className="cursor-pointer group">
+                    <div className="p-4 rounded-xl border border-gray-700 bg-gray-900/50 hover:border-pink-500 hover:bg-gray-800/80 transition-all duration-300 flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                        selectedFeatures.includes(feature.id)
+                          ? 'border-pink-500 bg-pink-500'
+                          : 'border-gray-600 group-hover:border-pink-400'
+                      }`}>
+                        {selectedFeatures.includes(feature.id) && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-white">{feature.name}</span>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -520,116 +582,106 @@ const InteractiveDemo = () => {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                  {streamingText || 'Generating with DeepSeek Reasoner...'}
+                  <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+                  Generating Blueprint...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 mr-3" />
-                  Generate NoCodeLos Blueprint Stack Master Prompt
+                  <Brain className="w-6 h-6 mr-3" />
+                  Generate NoCodeLos Blueprint Stack
                 </>
               )}
             </Button>
           </div>
 
+          {/* Streaming Status */}
+          {isGenerating && streamingText && (
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-xl border border-blue-500/30 rounded-xl p-6 text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Sparkles className="w-6 h-6 text-blue-400 animate-pulse" />
+                <span className="text-xl font-bold text-blue-300">DeepSeek Reasoner Processing</span>
+                <Sparkles className="w-6 h-6 text-blue-400 animate-pulse" />
+              </div>
+              <p className="text-blue-200 text-lg">{streamingText}</p>
+              <div className="mt-4 text-sm text-blue-300">
+                Generating comprehensive 64K token blueprint with reasoning content...
+              </div>
+            </div>
+          )}
+
           {/* Results */}
           {result && (
-            <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-              <CardContent className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <Rocket className="w-8 h-8 text-green-400" />
-                  <h3 className="text-2xl font-bold text-white">Your NoCodeLos Blueprint Stack Master Prompt</h3>
+            <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <Brain className="w-8 h-8 text-purple-400" />
+                Your NoCodeLos Blueprint Stack is Ready!
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-400">{result.estimatedBuildTime}</div>
+                    <div className="text-sm text-gray-400">Estimated Build Time</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-400">{result.complexity}</div>
+                    <div className="text-sm text-gray-400">Complexity Level</div>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-green-400">{result.suggestedComponents?.length || 0}</div>
+                    <div className="text-sm text-gray-400">Components</div>
+                  </div>
                 </div>
-                
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-400">{result.estimatedBuildTime}</div>
-                      <div className="text-sm text-gray-400">Estimated Build Time</div>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-purple-400">{result.complexity}</div>
-                      <div className="text-sm text-gray-400">Complexity Level</div>
-                    </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-green-400">{result.suggestedComponents?.length || 0}</div>
-                      <div className="text-sm text-gray-400">Components</div>
+
+                <div className="bg-black/50 rounded-lg p-6 border border-gray-700">
+                  <h4 className="text-lg font-semibold text-white mb-3">Generated NoCodeLos Master Blueprint:</h4>
+                  <div className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto">
+                    {result.prompt && result.prompt.length > 50 && result.prompt !== 'No response generated' && result.prompt !== 'Blueprint generation failed' ? (
+                      <div className="space-y-4">
+                        <div className="prose prose-invert max-w-none">
+                          {result.prompt.split('\n').map((line: string, index: number) => {
+                            if (line.startsWith('# ')) {
+                              return <h1 key={index} className="text-xl font-bold text-blue-400 mb-2">{line.replace('# ', '')}</h1>;
+                            } else if (line.startsWith('## ')) {
+                              return <h2 key={index} className="text-lg font-semibold text-purple-400 mb-2 mt-4">{line.replace('## ', '')}</h2>;
+                            } else if (line.startsWith('- ')) {
+                              return <div key={index} className="text-gray-300 ml-4">{line}</div>;
+                            } else if (line.trim()) {
+                              return <div key={index} className="text-gray-300">{line}</div>;
+                            } else {
+                              return <div key={index} className="h-2"></div>;
+                            }
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-orange-900/20 border border-orange-500/30 rounded p-4">
+                        <div className="text-orange-300 font-semibold mb-2">Blueprint Processing Complete (3 Minutes)</div>
+                        <div className="text-orange-200 text-sm">
+                          Your comprehensive NoCodeLos Master Blueprint has been generated using DeepSeek's full 64K token capacity and is available in the reasoning section below. 
+                          The complete blueprint contains all technical specifications, architecture details, and implementation guidance you requested.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {result.reasoningContent && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold text-blue-300 mb-3 flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      DeepSeek Reasoning Process:
+                    </h4>
+                    <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto">
+                      {result.reasoningContent}
                     </div>
                   </div>
-
-                  <div className="bg-black/50 rounded-lg p-6 border border-gray-700">
-                    <h4 className="text-lg font-semibold text-white mb-3">Generated NoCodeLos Master Blueprint:</h4>
-                    <div className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto">
-                      {result.prompt && result.prompt.length > 50 && result.prompt !== 'No response generated' && result.prompt !== 'Blueprint generation failed' ? (
-                        <div className="space-y-4">
-                          <div className="prose prose-invert max-w-none">
-                            {result.prompt.split('\n').map((line: string, index: number) => {
-                              if (line.startsWith('# ')) {
-                                return <h1 key={index} className="text-xl font-bold text-blue-400 mb-2">{line.replace('# ', '')}</h1>;
-                              } else if (line.startsWith('## ')) {
-                                return <h2 key={index} className="text-lg font-semibold text-purple-400 mb-2 mt-4">{line.replace('## ', '')}</h2>;
-                              } else if (line.startsWith('- ')) {
-                                return <div key={index} className="text-gray-300 ml-4">{line}</div>;
-                              } else if (line.trim()) {
-                                return <div key={index} className="text-gray-300">{line}</div>;
-                              } else {
-                                return <div key={index} className="h-2"></div>;
-                              }
-                            })}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-orange-900/20 border border-orange-500/30 rounded p-4">
-                          <div className="text-orange-300 font-semibold mb-2">Blueprint Processing Complete (3 Minutes)</div>
-                          <div className="text-orange-200 text-sm">
-                            Your comprehensive NoCodeLos Master Blueprint has been generated using DeepSeek's full 64K token capacity and is available in the reasoning section below. 
-                            The complete blueprint contains all technical specifications, architecture details, and implementation guidance you requested.
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {result.reasoningContent && (
-                    <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-700/50">
-                      <h4 className="text-lg font-semibold text-blue-300 mb-3 flex items-center gap-2">
-                        <Brain className="w-5 h-5" />
-                        DeepSeek Reasoning Process & Blueprint Content:
-                      </h4>
-                      <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto bg-blue-950/30 rounded p-4">
-                        {result.reasoningContent.split('\n').map((line: string, index: number) => {
-                          if (line.includes('## ') || line.includes('# ')) {
-                            return <div key={index} className="font-semibold text-blue-200 mt-3 mb-1">{line}</div>;
-                          } else if (line.includes('- ') || line.includes('✅')) {
-                            return <div key={index} className="text-blue-100 ml-2">{line}</div>;
-                          } else {
-                            return <div key={index} className="text-blue-100">{line}</div>;
-                          }
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {result.suggestedComponents && result.suggestedComponents.length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold text-white mb-3">Suggested Components:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {result.suggestedComponents.map((component: string, index: number) => (
-                          <Badge key={index} variant="outline" className="bg-gray-800/50">
-                            {component}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
     </div>
   );
-};
-
-export default InteractiveDemo;
+}
