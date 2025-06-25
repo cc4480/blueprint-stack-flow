@@ -18,37 +18,54 @@ const InteractiveDemo = () => {
   const appTypes = {
     frontend: [
       { id: 'react-spa', name: 'React SPA', icon: '⚛️', description: 'Single Page Application with modern React hooks and state management' },
-      { id: 'vue-dashboard', name: 'Vue Dashboard', icon: '💚', description: 'Admin dashboard with Vue 3 composition API and charts' },
-      { id: 'angular-app', name: 'Angular App', icon: '🅰️', description: 'Enterprise application with Angular and TypeScript' },
-      { id: 'nextjs-app', name: 'Next.js App', icon: '▲', description: 'Full-stack React application with SSR and API routes' }
+      { id: 'nextjs-app', name: 'Next.js App', icon: '▲', description: 'Full-stack React application with SSR and API routes' },
+      { id: 'vue-nuxt', name: 'Vue + Nuxt', icon: '💚', description: 'Vue 3 with Nuxt for SSR, file-based routing, and performance' },
+      { id: 'svelte-kit', name: 'SvelteKit', icon: '🧡', description: 'Fast, lightweight framework with excellent developer experience' },
+      { id: 'angular-app', name: 'Angular', icon: '🅰️', description: 'Enterprise application with Angular and TypeScript' },
+      { id: 'solid-js', name: 'Solid.js', icon: '🟦', description: 'High-performance reactive framework with fine-grained reactivity' },
+      { id: 'astro-app', name: 'Astro', icon: '🚀', description: 'Modern static site generator with partial hydration' },
+      { id: 'remix-app', name: 'Remix', icon: '💿', description: 'Full-stack web framework with nested routing and data loading' }
     ],
     backend: [
-      { id: 'node-api', name: 'Node.js API', icon: '🟢', description: 'RESTful API with Express.js and middleware integration' },
-      { id: 'fastapi', name: 'FastAPI', icon: '⚡', description: 'High-performance Python API with automatic documentation' },
-      { id: 'graphql', name: 'GraphQL API', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers' },
-      { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh' }
+      { id: 'node-express', name: 'Node.js + Express', icon: '🟢', description: 'RESTful API with Express.js and middleware integration' },
+      { id: 'node-fastify', name: 'Node.js + Fastify', icon: '⚡', description: 'High-performance Node.js framework with TypeScript support' },
+      { id: 'bun-elysia', name: 'Bun + Elysia', icon: '🥟', description: 'Ultra-fast runtime with modern TypeScript-first framework' },
+      { id: 'deno-fresh', name: 'Deno + Fresh', icon: '🦕', description: 'Secure runtime with island architecture and edge computing' },
+      { id: 'python-fastapi', name: 'Python + FastAPI', icon: '🐍', description: 'High-performance Python API with automatic documentation' },
+      { id: 'python-django', name: 'Python + Django', icon: '🎸', description: 'Full-featured web framework with ORM and admin interface' },
+      { id: 'go-gin', name: 'Go + Gin', icon: '🔵', description: 'High-performance HTTP framework with minimal overhead' },
+      { id: 'rust-axum', name: 'Rust + Axum', icon: '🦀', description: 'Memory-safe, extremely fast web framework for Rust' },
+      { id: 'graphql-apollo', name: 'GraphQL + Apollo', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers' },
+      { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh and containers' }
     ],
     fullstack: [
-      { id: 'saas-platform', name: 'SaaS Platform', icon: '🏢', description: 'Complete business application with frontend, backend, and database' },
-      { id: 'ecommerce-app', name: 'E-commerce App', icon: '🛒', description: 'Full shopping platform with payments, inventory, and user management' },
+      { id: 'saas-platform', name: 'SaaS Platform', icon: '🏢', description: 'Complete business application with subscriptions, analytics, and user management' },
+      { id: 'ecommerce-app', name: 'E-commerce Store', icon: '🛒', description: 'Full shopping platform with payments, inventory, and order management' },
       { id: 'social-network', name: 'Social Network', icon: '👥', description: 'Community platform with real-time messaging and user interactions' },
-      { id: 'cms-platform', name: 'CMS Platform', icon: '📝', description: 'Content management system with admin panel and public interface' }
+      { id: 'cms-platform', name: 'CMS Platform', icon: '📝', description: 'Content management system with headless API and admin interface' },
+      { id: 'dashboard-app', name: 'Analytics Dashboard', icon: '📊', description: 'Data visualization platform with charts, KPIs, and reporting' },
+      { id: 'marketplace', name: 'Marketplace', icon: '🏪', description: 'Multi-vendor platform with vendor management and commission tracking' }
     ],
     advanced: [
-      { id: 'ai-saas', name: 'AI SaaS Platform', icon: '🤖', description: 'AI-powered application with RAG 2.0 and vector embeddings' },
-      { id: 'realtime-app', name: 'Real-time App', icon: '📡', description: 'WebSocket-based application with live updates and collaboration' },
-      { id: 'blockchain', name: 'Web3 dApp', icon: '⛓️', description: 'Decentralized application with smart contracts' },
-      { id: 'iot-dashboard', name: 'IoT Dashboard', icon: '📊', description: 'Internet of Things monitoring and control system' }
+      { id: 'ai-saas', name: 'AI SaaS Platform', icon: '🤖', description: 'AI-powered application with RAG 2.0, vector embeddings, and LLM integration' },
+      { id: 'realtime-collaboration', name: 'Real-time Collaboration', icon: '📡', description: 'WebSocket-based application with live updates, presence, and co-editing' },
+      { id: 'blockchain-dapp', name: 'Web3 dApp', icon: '⛓️', description: 'Decentralized application with smart contracts and wallet integration' },
+      { id: 'iot-platform', name: 'IoT Platform', icon: '🌐', description: 'Internet of Things monitoring with device management and edge computing' },
+      { id: 'api-gateway', name: 'API Gateway', icon: '🚪', description: 'Centralized API management with rate limiting, auth, and monitoring' },
+      { id: 'edge-computing', name: 'Edge Computing', icon: '⚡', description: 'Distributed application with CDN, edge functions, and global deployment' }
     ]
   };
 
   const dataSources = [
     { id: 'postgresql', name: 'PostgreSQL', icon: '🐘' },
-    { id: 'mongodb', name: 'MongoDB', icon: '🍃' },
     { id: 'supabase', name: 'Supabase', icon: '⚡' },
+    { id: 'mongodb', name: 'MongoDB', icon: '🍃' },
     { id: 'firebase', name: 'Firebase', icon: '🔥' },
-    { id: 'mysql', name: 'MySQL', icon: '🗄️' },
-    { id: 'sqlite', name: 'SQLite', icon: '📦' }
+    { id: 'planetscale', name: 'PlanetScale', icon: '🌍' },
+    { id: 'neon', name: 'Neon', icon: '💫' },
+    { id: 'turso', name: 'Turso', icon: '🚀' },
+    { id: 'redis', name: 'Redis', icon: '🔴' },
+    { id: 'drizzle-orm', name: 'Drizzle ORM', icon: '💎' }
   ];
 
   const availableFeatures = [
