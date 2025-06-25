@@ -1,14 +1,15 @@
+
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import ApiKeyManager from "./ApiKeyManager";
 import { promptService, PromptGenerationRequest } from "../services/promptService";
 import DemoStepNavigation from "./demo/DemoStepNavigation";
 import DemoAppTypeSelection from "./demo/DemoAppTypeSelection";
+import DemoDataSourceSelection from "./demo/DemoDataSourceSelection";
 import DemoFeatureSelection from "./demo/DemoFeatureSelection";
+import DemoFinalStep from "./demo/DemoFinalStep";
 import DemoResultDisplay from "./demo/DemoResultDisplay";
-import { Button } from "@/components/ui/button";
-import { Brain } from "lucide-react";
+import DemoContainer from "./demo/DemoContainer";
 
 const InteractiveDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -65,6 +66,12 @@ const InteractiveDemo = () => {
     setFormData(prev => ({ ...prev, appType }));
     setCurrentStep(1);
     console.log('📱 App type selected:', appType);
+  };
+
+  const handleSelectDataSource = (dataSource: string) => {
+    setFormData(prev => ({ ...prev, dataSource }));
+    setCurrentStep(2);
+    console.log('💾 Data source selected:', dataSource);
   };
 
   const handleFeatureToggle = (featureId: string) => {
@@ -162,125 +169,56 @@ const InteractiveDemo = () => {
             </div>
           )}
 
-          <Card className="shadow-2xl border-0 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-              <CardTitle className="text-2xl flex items-center justify-between">
-                <span>Step {currentStep + 1}: {getStepTitle()}</span>
-                {!showApiKey && currentStep < 4 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowApiKey(true)}
-                    className="text-white hover:bg-white/20"
-                  >
-                    <Brain className="w-4 h-4 mr-2" />
-                    Setup DeepSeek AI
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-8">
-              {currentStep === 0 && (
-                <DemoAppTypeSelection 
-                  appTypes={appTypes}
-                  onSelectAppType={handleSelectAppType}
-                />
-              )}
+          <DemoContainer
+            currentStep={currentStep}
+            showApiKey={showApiKey}
+            onShowApiKey={() => setShowApiKey(true)}
+            getStepTitle={getStepTitle}
+          >
+            {currentStep === 0 && (
+              <DemoAppTypeSelection 
+                appTypes={appTypes}
+                onSelectAppType={handleSelectAppType}
+              />
+            )}
 
-              {currentStep === 2 && (
-                <DemoFeatureSelection
-                  features={features}
-                  selectedFeatures={formData.features}
-                  onFeatureToggle={handleFeatureToggle}
-                  onContinue={() => setCurrentStep(3)}
-                  appType={formData.appType}
-                  dataSource={formData.dataSource}
-                />
-              )}
+            {currentStep === 1 && (
+              <DemoDataSourceSelection
+                dataSources={dataSources}
+                selectedAppType={formData.appType}
+                onSelectDataSource={handleSelectDataSource}
+              />
+            )}
 
-              {currentStep === 4 && generatedResult && (
-                <DemoResultDisplay
-                  result={generatedResult}
-                  onCopyToClipboard={copyToClipboard}
-                  onDownloadPrompt={downloadPrompt}
-                  onResetDemo={resetDemo}
-                />
-              )}
+            {currentStep === 2 && (
+              <DemoFeatureSelection
+                features={features}
+                selectedFeatures={formData.features}
+                onFeatureToggle={handleFeatureToggle}
+                onContinue={() => setCurrentStep(3)}
+                appType={formData.appType}
+                dataSource={formData.dataSource}
+              />
+            )}
 
-              {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <p className="text-lg text-gray-600">
-                      Building: <span className="font-semibold text-purple-600">{formData.appType}</span>
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dataSources.map(source => (
-                      <button
-                        key={source.id}
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, dataSource: source.label }));
-                          setCurrentStep(2);
-                          console.log('💾 Data source selected:', source.label);
-                        }}
-                        className="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all duration-300 text-center group"
-                      >
-                        <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
-                          {source.icon}
-                        </div>
-                        <div className="font-semibold text-gray-800 mb-2">{source.label}</div>
-                        <div className="text-sm text-gray-600">{source.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            {currentStep === 3 && (
+              <DemoFinalStep
+                formData={formData}
+                isGenerating={isGenerating}
+                onRequirementsChange={(value) => setFormData(prev => ({ ...prev, additionalRequirements: value }))}
+                onGenerate={generatePrompt}
+              />
+            )}
 
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-6">
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-4">
-                      <p className="text-lg text-gray-800 font-medium">
-                        {formData.appType} • {formData.dataSource} • {formData.features.length} features
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <label className="block">
-                      <span className="text-gray-700 font-medium">Additional Requirements (Optional)</span>
-                      <textarea
-                        value={formData.additionalRequirements}
-                        onChange={e => setFormData(prev => ({ ...prev, additionalRequirements: e.target.value }))}
-                        placeholder="Any specific design preferences, integrations, or custom functionality..."
-                        className="mt-2 w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-32 resize-none bg-zinc-950"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="text-center">
-                    <Button
-                      onClick={generatePrompt}
-                      disabled={isGenerating}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]"
-                    >
-                      {isGenerating ? (
-                        <div className="flex items-center space-x-2">
-                          <Brain className="w-5 h-5 animate-spin" />
-                          <span>Generating Blueprint...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <Brain className="w-5 h-5" />
-                          <span>Generate NoCodeLos Blueprint</span>
-                        </div>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {currentStep === 4 && generatedResult && (
+              <DemoResultDisplay
+                result={generatedResult}
+                onCopyToClipboard={copyToClipboard}
+                onDownloadPrompt={downloadPrompt}
+                onResetDemo={resetDemo}
+              />
+            )}
+          </DemoContainer>
         </div>
       </div>
     </section>
