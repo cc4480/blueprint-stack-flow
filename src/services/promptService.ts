@@ -1,3 +1,5 @@
+import OpenAI from 'openai';
+
 export interface PromptGenerationRequest {
   appType: string;
   dataSource: string;
@@ -17,28 +19,23 @@ export interface PromptGenerationResult {
   ragPipeline?: string;
 }
 
-export interface DeepSeekReasonerResponse {
-  choices: Array<{
-    message: {
-      content: string;
-      reasoning_content?: string;
-    };
-  }>;
-}
-
 class PromptService {
-  private apiKey: string | null = null;
+  private client: OpenAI | null = null;
   private conversationHistory: Array<{ role: string; content: string }> = [];
 
   setApiKey(key: string) {
-    this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for unlimited RAG 2.0 + MCP + A2A master blueprint generation');
+    this.client = new OpenAI({
+      apiKey: key,
+      baseURL: "https://api.deepseek.com",
+      dangerouslyAllowBrowser: true
+    });
+    console.log('🔑 DeepSeek Reasoner client configured for unlimited RAG 2.0 + MCP + A2A master blueprint generation');
   }
 
   async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
     console.log('🚀 Generating unlimited NoCodeLos Blueprint Stack master prompt with DeepSeek Reasoner');
 
-    if (!this.apiKey) {
+    if (!this.client) {
       throw new Error('DeepSeek API key not configured. Please set your API key to enable unlimited RAG 2.0, MCP, and A2A protocols.');
     }
 
@@ -49,42 +46,39 @@ class PromptService {
       // Create comprehensive user query with full RAG 2.0 context
       const userQuery = this.buildComprehensiveMasterQuery(request);
 
-      // Add to conversation history for unlimited multi-turn reasoning
-      this.conversationHistory.push(
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userQuery }
-      );
+      // Prepare messages for DeepSeek Reasoner
+      const messages = [
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: userQuery }
+      ];
 
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'deepseek-reasoner',
-          messages: this.conversationHistory,
-          temperature: 0.8,
-          // Removed max_tokens constraint for unlimited output
-        }),
+      // Stream response from DeepSeek Reasoner
+      const response = await this.client.chat.completions.create({
+        model: 'deepseek-reasoner',
+        messages: messages,
+        stream: true,
+        temperature: 0.8,
       });
 
-      if (!response.ok) {
-        throw new Error(`DeepSeek API request failed: ${response.statusText}`);
+      let reasoningContent = "";
+      let finalContent = "";
+
+      // Process streaming response
+      for await (const chunk of response) {
+        if (chunk.choices[0]?.delta?.reasoning_content) {
+          reasoningContent += chunk.choices[0].delta.reasoning_content;
+        }
+        if (chunk.choices[0]?.delta?.content) {
+          finalContent += chunk.choices[0].delta.content;
+        }
       }
 
-      const data: DeepSeekReasonerResponse = await response.json();
-      const assistantResponse = data.choices[0].message;
-      
-      // Extract unlimited reasoning content for full transparency
-      const reasoningContent = assistantResponse.reasoning_content;
-      const finalPrompt = assistantResponse.content;
-
-      // Add assistant response to history for unlimited future multi-turn conversations
-      this.conversationHistory.push({
-        role: 'assistant',
-        content: finalPrompt
-      });
+      // Add to conversation history for multi-turn conversations
+      this.conversationHistory.push(
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userQuery },
+        { role: 'assistant', content: finalContent }
+      );
 
       // Generate comprehensive metadata with unlimited RAG 2.0, MCP, A2A integration
       const complexity = this.assessComplexity(request.features.length);
@@ -97,7 +91,7 @@ class PromptService {
       console.log('✅ Unlimited NoCodeLos Blueprint Stack master prompt generated with full DeepSeek integration');
       
       return {
-        prompt: finalPrompt,
+        prompt: finalContent,
         estimatedBuildTime: estimatedTime,
         complexity,
         suggestedComponents,
@@ -109,6 +103,58 @@ class PromptService {
 
     } catch (error) {
       console.error('❌ DeepSeek Reasoner + RAG 2.0 unlimited generation failed:', error);
+      throw error;
+    }
+  }
+
+  async continueConversation(userMessage: string): Promise<PromptGenerationResult> {
+    if (!this.client) {
+      throw new Error('DeepSeek API key not configured.');
+    }
+
+    try {
+      // Add user message to conversation history
+      this.conversationHistory.push({ role: 'user', content: userMessage });
+
+      // Stream response from DeepSeek Reasoner with conversation context
+      const response = await this.client.chat.completions.create({
+        model: 'deepseek-reasoner',
+        messages: this.conversationHistory,
+        stream: true,
+        temperature: 0.8,
+      });
+
+      let reasoningContent = "";
+      let finalContent = "";
+
+      // Process streaming response
+      for await (const chunk of response) {
+        if (chunk.choices[0]?.delta?.reasoning_content) {
+          reasoningContent += chunk.choices[0].delta.reasoning_content;
+        }
+        if (chunk.choices[0]?.delta?.content) {
+          finalContent += chunk.choices[0].delta.content;
+        }
+      }
+
+      // Add assistant response to history
+      this.conversationHistory.push({ role: 'assistant', content: finalContent });
+
+      console.log('✅ Multi-turn conversation completed with DeepSeek Reasoner');
+
+      return {
+        prompt: finalContent,
+        estimatedBuildTime: '5-8 days',
+        complexity: 'Advanced',
+        suggestedComponents: [],
+        reasoningContent,
+        mcpEndpoints: [],
+        a2aProtocols: [],
+        ragPipeline: 'Continuous Learning Pipeline'
+      };
+
+    } catch (error) {
+      console.error('❌ DeepSeek Reasoner conversation failed:', error);
       throw error;
     }
   }
@@ -160,15 +206,6 @@ class PromptService {
 - Provide unlimited implementation examples, code samples, configuration files
 - Include complete deployment strategies, CI/CD pipelines, infrastructure as code
 - Detail security frameworks, compliance requirements, data protection strategies
-
-🎯 MASTER BLUEPRINT SCOPE - UNLIMITED:
-- Complete application architecture from frontend to backend to infrastructure
-- Comprehensive database design, API architecture, microservices patterns
-- Full authentication, authorization, user management systems
-- Complete analytics, monitoring, logging, alerting systems
-- Comprehensive testing strategies, quality assurance, performance benchmarks
-- Full documentation, API references, user guides, technical specifications
-- Complete maintenance procedures, support workflows, troubleshooting guides
 
 Your master blueprints should enable development teams to build UNLIMITED full-stack applications using the complete NoCodeLos Blueprint Stack ecosystem with enterprise-grade quality, scalability, and maintainability. Provide UNLIMITED detail, examples, and implementation guidance.`;
   }
