@@ -13,6 +13,7 @@ const InteractiveDemo = () => {
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [streamingText, setStreamingText] = useState('');
 
   const appTypes = {
     frontend: [
@@ -98,7 +99,29 @@ const InteractiveDemo = () => {
     }
 
     setIsGenerating(true);
+    setStreamingText('');
+    setResult(null);
     console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
+    
+    // Simulate streaming text effect
+    const streamingMessages = [
+      'Initializing DeepSeek Reasoner...',
+      'Loading NoCodeLos Blueprint Stack templates...',
+      'Analyzing application architecture requirements...',
+      'Integrating RAG 2.0 retrieval pipelines...',
+      'Configuring MCP protocol implementations...',
+      'Setting up A2A agent communication...',
+      'Generating comprehensive blueprint...',
+      'Finalizing master prompt...'
+    ];
+    
+    let messageIndex = 0;
+    const streamInterval = setInterval(() => {
+      if (messageIndex < streamingMessages.length) {
+        setStreamingText(streamingMessages[messageIndex]);
+        messageIndex++;
+      }
+    }, 2000);
     
     try {
       const request: PromptGenerationRequest = {
@@ -111,9 +134,14 @@ const InteractiveDemo = () => {
 
       analytics.trackPromptGeneration(Object.values(selectedAppTypes).join('+'), selectedFeatures);
       const result = await promptService.generatePrompt(request);
+      
+      clearInterval(streamInterval);
+      setStreamingText('');
       setResult(result);
       console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration:', result);
     } catch (error) {
+      clearInterval(streamInterval);
+      setStreamingText('');
       console.error('Error generating prompt:', error);
       alert('Failed to generate prompt. Please try again.');
     } finally {
@@ -329,7 +357,7 @@ const InteractiveDemo = () => {
               {isGenerating ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                  Generating with DeepSeek Reasoner...
+                  {streamingText || 'Generating with DeepSeek Reasoner...'}
                 </>
               ) : (
                 <>
@@ -366,14 +394,51 @@ const InteractiveDemo = () => {
                   </div>
 
                   <div className="bg-black/50 rounded-lg p-6 border border-gray-700">
-                    <h4 className="text-lg font-semibold text-white mb-3">Generated Prompt:</h4>
-                    <pre className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{result.prompt}</pre>
+                    <h4 className="text-lg font-semibold text-white mb-3">Generated NoCodeLos Master Blueprint:</h4>
+                    <div className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto">
+                      {result.prompt && result.prompt !== 'No response generated' && result.prompt !== 'Blueprint generation failed' ? (
+                        <div className="space-y-4">
+                          <div className="prose prose-invert max-w-none">
+                            {result.prompt.split('\n').map((line: string, index: number) => {
+                              if (line.startsWith('# ')) {
+                                return <h1 key={index} className="text-xl font-bold text-blue-400 mb-2">{line.replace('# ', '')}</h1>;
+                              } else if (line.startsWith('## ')) {
+                                return <h2 key={index} className="text-lg font-semibold text-purple-400 mb-2 mt-4">{line.replace('## ', '')}</h2>;
+                              } else if (line.startsWith('- ')) {
+                                return <div key={index} className="text-gray-300 ml-4">{line}</div>;
+                              } else if (line.trim()) {
+                                return <div key={index} className="text-gray-300">{line}</div>;
+                              } else {
+                                return <div key={index} className="h-2"></div>;
+                              }
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-yellow-400">
+                          Blueprint content is available in the reasoning section below. The structured output is being refined.
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {result.reasoningContent && (
                     <div className="bg-blue-900/20 rounded-lg p-6 border border-blue-700/50">
-                      <h4 className="text-lg font-semibold text-blue-300 mb-3">DeepSeek Reasoning Process:</h4>
-                      <pre className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed">{result.reasoningContent}</pre>
+                      <h4 className="text-lg font-semibold text-blue-300 mb-3 flex items-center gap-2">
+                        <Brain className="w-5 h-5" />
+                        DeepSeek Reasoning Process & Blueprint Content:
+                      </h4>
+                      <div className="text-blue-100 whitespace-pre-wrap text-sm leading-relaxed max-h-96 overflow-y-auto bg-blue-950/30 rounded p-4">
+                        {result.reasoningContent.split('\n').map((line: string, index: number) => {
+                          if (line.includes('## ') || line.includes('# ')) {
+                            return <div key={index} className="font-semibold text-blue-200 mt-3 mb-1">{line}</div>;
+                          } else if (line.includes('- ') || line.includes('✅')) {
+                            return <div key={index} className="text-blue-100 ml-2">{line}</div>;
+                          } else {
+                            return <div key={index} className="text-blue-100">{line}</div>;
+                          }
+                        })}
+                      </div>
                     </div>
                   )}
 
