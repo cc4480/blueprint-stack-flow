@@ -262,7 +262,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await response.json();
-      console.log('✅ DeepSeek API response received');
+      console.log('✅ DeepSeek API response received successfully');
+      console.log('📊 Response tokens:', data.usage?.total_tokens || 'unknown');
       
       res.json(data);
     } catch (error) {

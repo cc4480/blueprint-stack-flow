@@ -157,12 +157,7 @@ class PromptService {
 
   private async makeRequest(payload: any, retryCount = 0): Promise<DeepSeekReasonerResponse> {
     // Use server-side API key from environment instead of client-side
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.warn('⏰ Request timeout after 5 minutes, aborting...');
-      controller.abort();
-    }, API_TIMEOUT);
-
+    // Remove client-side timeout - let server handle the timeout
     try {
       console.log('📡 Making request to server endpoint...');
       const response = await fetch('/api/generate-prompt', {
@@ -170,11 +165,8 @@ class PromptService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
-        signal: controller.signal
+        body: JSON.stringify(payload)
       });
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
