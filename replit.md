@@ -58,6 +58,8 @@ Complete NoCodeLos Blueprint Stack application successfully migrated from Lovabl
   - Added user-friendly framework selection with difficulty levels, popularity indicators, and compatibility guides
   - Optimized for vibe-coders and prompt engineers with clear guidance and feasible combinations
   - Updated timeout configurations to 3-5 minutes to accommodate full blueprint generation time
+  - Added "Select All" checkbox for Advanced Features section
+  - Implemented One-Click Framework Combination Preset Selector with 8 proven stack combinations
 
 ## API Integration Status
 - **DeepSeek API**: Fully configured and operational with API key

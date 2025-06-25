@@ -11,6 +11,98 @@ const InteractiveDemo = () => {
   const [selectedDataSource, setSelectedDataSource] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [selectAllFeatures, setSelectAllFeatures] = useState(false);
+
+  // Framework preset combinations
+  const frameworkPresets = [
+    {
+      id: 'beginner-stack',
+      name: 'Beginner Stack',
+      icon: '🌱',
+      description: 'Perfect for starting out - React + Node.js + PostgreSQL',
+      frontend: 'react-spa',
+      backend: 'node-express',
+      database: 'postgresql',
+      difficulty: 'Beginner',
+      features: ['auth', 'api', 'mobile']
+    },
+    {
+      id: 'modern-fullstack',
+      name: 'Modern Full-Stack',
+      icon: '⚡',
+      description: 'Next.js + FastAPI + Supabase for rapid development',
+      frontend: 'nextjs-app',
+      backend: 'python-fastapi',
+      database: 'supabase',
+      difficulty: 'Beginner',
+      features: ['auth', 'realtime', 'api', 'seo', 'mobile']
+    },
+    {
+      id: 'ai-powerhouse',
+      name: 'AI Powerhouse',
+      icon: '🤖',
+      description: 'React + FastAPI + Vector DB for AI applications',
+      frontend: 'react-spa',
+      backend: 'python-fastapi',
+      database: 'postgresql',
+      difficulty: 'Intermediate',
+      features: ['ai', 'auth', 'api', 'analytics', 'search']
+    },
+    {
+      id: 'performance-beast',
+      name: 'Performance Beast',
+      icon: '🚀',
+      description: 'SvelteKit + Go + PostgreSQL for maximum speed',
+      frontend: 'svelte-kit',
+      backend: 'go-gin',
+      database: 'postgresql',
+      difficulty: 'Intermediate',
+      features: ['api', 'analytics', 'seo', 'mobile']
+    },
+    {
+      id: 'edge-computing',
+      name: 'Edge Computing',
+      icon: '🌐',
+      description: 'Astro + Deno + Turso for global edge deployment',
+      frontend: 'astro-app',
+      backend: 'deno-fresh',
+      database: 'turso',
+      difficulty: 'Intermediate',
+      features: ['seo', 'api', 'mobile', 'analytics']
+    },
+    {
+      id: 'enterprise-grade',
+      name: 'Enterprise Grade',
+      icon: '🏢',
+      description: 'Angular + Microservices + PostgreSQL for large scale',
+      frontend: 'angular-app',
+      backend: 'microservices',
+      database: 'postgresql',
+      difficulty: 'Advanced',
+      features: ['auth', 'api', 'analytics', 'testing', 'notifications']
+    },
+    {
+      id: 'bleeding-edge',
+      name: 'Bleeding Edge',
+      icon: '🔥',
+      description: 'Solid.js + Bun + Neon for cutting-edge performance',
+      frontend: 'solid-js',
+      backend: 'bun-elysia',
+      database: 'neon',
+      difficulty: 'Advanced',
+      features: ['api', 'realtime', 'analytics', 'testing']
+    },
+    {
+      id: 'content-focused',
+      name: 'Content Focused',
+      icon: '📝',
+      description: 'Astro + Node.js + Headless CMS for content sites',
+      frontend: 'astro-app',
+      backend: 'node-express',
+      database: 'mongodb',
+      difficulty: 'Beginner',
+      features: ['seo', 'api', 'mobile', 'social']
+    }
+  ];
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -181,6 +273,56 @@ const InteractiveDemo = () => {
           <p className="text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed mb-8">
             Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols
           </p>
+
+          {/* Framework Preset Selector */}
+          <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50 shadow-2xl mb-8">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-4">
+                🎯 One-Click Framework Presets
+              </h3>
+              <p className="text-gray-300 text-lg">
+                Skip the setup - choose a proven stack combination and get started immediately
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {frameworkPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handlePresetSelect(preset)}
+                  className="group p-6 rounded-xl border border-gray-600 bg-gray-800/50 hover:border-green-500 hover:bg-gray-700/50 transition-all duration-300 text-left"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-3xl">{preset.icon}</span>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-white group-hover:text-green-300 transition-colors">
+                        {preset.name}
+                      </h4>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        preset.difficulty === 'Beginner' ? 'bg-green-500/20 text-green-300' :
+                        preset.difficulty === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-300' :
+                        'bg-red-500/20 text-red-300'
+                      }`}>
+                        {preset.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-3 leading-relaxed">
+                    {preset.description}
+                  </p>
+                  <div className="text-xs text-blue-300">
+                    {preset.features.length} features included
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="text-center mt-6">
+              <p className="text-sm text-gray-400">
+                💡 Select a preset to auto-configure your stack, or manually choose components below
+              </p>
+            </div>
+          </div>
           <div className="flex justify-center items-center gap-6 flex-wrap">
             <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
