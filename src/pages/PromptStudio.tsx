@@ -31,7 +31,7 @@ const PromptStudio = () => {
       toast.success('🎉 Blueprint generated successfully!');
     } catch (error) {
       console.error('❌ Blueprint generation failed:', error);
-      toast.error('Failed to generate blueprint. Please check the edge function configuration.');
+      toast.error('Failed to generate blueprint. Please check the DeepSeek API key configuration.');
     } finally {
       setIsGenerating(false);
     }

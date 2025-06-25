@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import RAGHub from "./pages/RAGHub";
 import MCPCenter from "./pages/MCPCenter";
+import PromptStudio from "./pages/PromptStudio";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navigation from "./components/Navigation";
@@ -50,8 +51,8 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/rag-hub" element={<RAGHub />} />
               <Route path="/mcp-center" element={<MCPCenter />} />
+              <Route path="/prompt-studio" element={<PromptStudio />} />
               {/* PLACEHOLDER ROUTES - TO BE IMPLEMENTED */}
-              <Route path="/prompt-studio" element={<Index />} />
               <Route path="/a2a-agents" element={<Index />} />
               <Route path="/analytics" element={<Dashboard />} />
               <Route path="/docs" element={<Index />} />
