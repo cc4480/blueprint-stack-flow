@@ -83,13 +83,11 @@ export const useAuth = () => {
     elementId: 'database',
     code: `🗄️ Configuring Database Connection...
 
-// supabase.ts
-import { createClient } from '@supabase/supabase-js'
+// api.ts
+import { api } from '@/lib/api'
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// Now using our server-side PostgreSQL API
+// with secure database connections
 
 // Database schema
 CREATE TABLE users (

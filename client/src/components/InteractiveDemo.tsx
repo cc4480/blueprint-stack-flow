@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Copy, Download, Zap, CheckCircle, Clock, Brain, Network, Database, GitBranch } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 import ApiKeyManager from "./ApiKeyManager";
 import { promptService, PromptGenerationRequest } from "../services/promptService";
 const InteractiveDemo = () => {
