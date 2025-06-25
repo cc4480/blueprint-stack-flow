@@ -192,8 +192,6 @@ class PromptService {
 
       return data;
     } catch (error) {
-      clearTimeout(timeoutId);
-      
       if (error.name === 'AbortError') {
         throw new PromptServiceError('Request timeout after 5 minutes. DeepSeek reasoning requires more time for complex blueprints.', 'TIMEOUT');
       }

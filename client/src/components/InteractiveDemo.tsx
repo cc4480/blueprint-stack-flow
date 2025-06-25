@@ -290,9 +290,15 @@ export default function InteractiveDemo() {
   };
 
   const handleGeneratePrompt = async () => {
-    const selectedTypes = Object.values(selectedAppTypes);
+    const selectedTypes = Object.values(selectedAppTypes).filter(Boolean);
     if (selectedTypes.length === 0 || !selectedDataSource) {
-      alert('Please select at least one app type and a data source');
+      setResult({
+        prompt: 'Validation Error: Please select at least one app type and a data source',
+        estimatedBuildTime: 'N/A',
+        complexity: 'Invalid',
+        suggestedComponents: [],
+        reasoningContent: 'Please complete your selections before generating a blueprint.'
+      });
       return;
     }
 
@@ -347,7 +353,16 @@ export default function InteractiveDemo() {
       
       // Show user-friendly error message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to generate prompt: ${errorMessage}\n\nPlease check that the DeepSeek API key is properly configured.`);
+      console.error('❌ Blueprint generation failed:', error);
+      
+      // Better error handling instead of alert
+      setResult({
+        prompt: `Error: ${errorMessage}`,
+        estimatedBuildTime: 'N/A',
+        complexity: 'Error',
+        suggestedComponents: [],
+        reasoningContent: `Blueprint generation failed: ${errorMessage}. Please try again.`
+      });
     } finally {
       setIsGenerating(false);
     }
