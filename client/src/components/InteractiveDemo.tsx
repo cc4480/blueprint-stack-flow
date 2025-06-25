@@ -175,7 +175,7 @@ const InteractiveDemo = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 bg-clip-text text-transparent mb-6">
-            Get Your First NoCodeLos Blueprint Stack Master Prompt in 30 Seconds
+            Get Your First NoCodeLos Blueprint Stack Master Prompt in 3 Minutes
           </h2>
           <p className="text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed mb-8">
             Experience the power of DeepSeek Reasoner with RAG 2.0, MCP & A2A protocols
@@ -437,10 +437,10 @@ const InteractiveDemo = () => {
                         </div>
                       ) : (
                         <div className="bg-orange-900/20 border border-orange-500/30 rounded p-4">
-                          <div className="text-orange-300 font-semibold mb-2">Blueprint Processing Complete</div>
+                          <div className="text-orange-300 font-semibold mb-2">Blueprint Processing Complete (3 Minutes)</div>
                           <div className="text-orange-200 text-sm">
-                            Your comprehensive NoCodeLos Master Blueprint has been generated and is available in the reasoning section below. 
-                            The structured blueprint contains all the technical specifications, architecture details, and implementation guidance you requested.
+                            Your comprehensive NoCodeLos Master Blueprint has been generated using DeepSeek's full 64K token capacity and is available in the reasoning section below. 
+                            The complete blueprint contains all technical specifications, architecture details, and implementation guidance you requested.
                           </div>
                         </div>
                       )}
