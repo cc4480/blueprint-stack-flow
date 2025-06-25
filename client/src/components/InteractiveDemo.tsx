@@ -415,8 +415,12 @@ const InteractiveDemo = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-yellow-400">
-                          Blueprint content is available in the reasoning section below. The structured output is being refined.
+                        <div className="bg-orange-900/20 border border-orange-500/30 rounded p-4">
+                          <div className="text-orange-300 font-semibold mb-2">Blueprint Processing Complete</div>
+                          <div className="text-orange-200 text-sm">
+                            Your comprehensive NoCodeLos Master Blueprint has been generated and is available in the reasoning section below. 
+                            The structured blueprint contains all the technical specifications, architecture details, and implementation guidance you requested.
+                          </div>
                         </div>
                       )}
                     </div>
