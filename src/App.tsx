@@ -25,7 +25,7 @@ import { performanceService } from "./services/performanceService";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const App: React.FC = () => {
   useEffect(() => {
     // Initialize services
     performanceService.initialize();
