@@ -10,6 +10,7 @@ const InteractiveDemo = () => {
   const [selectedAppTypes, setSelectedAppTypes] = useState<{[key: string]: string}>({});
   const [selectedDataSource, setSelectedDataSource] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [selectAllFeatures, setSelectAllFeatures] = useState(false);
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
