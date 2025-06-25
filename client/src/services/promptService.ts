@@ -73,9 +73,9 @@ class PromptService {
         throw new Error(data.error || 'Failed to generate prompt');
       }
       
-      // Extract reasoning content from our API response
-      const reasoningContent = data.steps?.map((step: any) => step.thought).join('\n') || '';
-      const finalPrompt = data.reasoning;
+      // Extract reasoning content from DeepSeek API response
+      const reasoningContent = data.reasoningContent || data.reasoning || '';
+      const finalPrompt = data.finalAnswer || data.reasoning || 'No response generated';
 
       // Add assistant response to history for unlimited future multi-turn conversations
       this.conversationHistory.push({

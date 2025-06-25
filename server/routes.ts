@@ -170,9 +170,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await deepseekResponse.json();
       const processingTime = Date.now() - startTime;
       
-      // Extract reasoning steps if available
-      const reasoning = data.choices?.[0]?.message?.content || 'No response generated';
-      const reasoningSteps = data.choices?.[0]?.message?.reasoning_content || null;
+      // DeepSeek-reasoner provides reasoning_content (CoT) and content (final answer)
+      const finalAnswer = data.choices?.[0]?.message?.content || 'No response generated';
+      const reasoningContent = data.choices?.[0]?.message?.reasoning_content || null;
+      
+      // Use reasoning content as the primary response, with final answer as fallback
+      const reasoning = reasoningContent || finalAnswer;
+      const reasoningSteps = reasoningContent ? { 
+        reasoning: reasoningContent, 
+        finalAnswer: finalAnswer 
+      } : null;
       
       // Save conversation to database
       await storage.createDeepseekConversation({
@@ -192,6 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const response = {
         reasoning,
+        reasoningContent: reasoningContent, // Chain of Thought from DeepSeek
+        finalAnswer: finalAnswer, // Final answer from DeepSeek
         confidence: 95,
         processingTime,
         steps: reasoningSteps ? reasoningSteps.steps : [
