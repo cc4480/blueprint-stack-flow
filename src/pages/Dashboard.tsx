@@ -1,9 +1,27 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, Brain, Database, Network, Users, Zap, Clock, CheckCircle, AlertTriangle, TrendingUp, Activity, Globe, Server, Cpu, HardDrive } from 'lucide-react';
+import {
+  BarChart3,
+  Brain,
+  Database,
+  Network,
+  Users,
+  Zap,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  TrendingUp,
+  Activity,
+  Globe,
+  Server,
+  Cpu,
+  HardDrive
+} from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+
 const Dashboard = () => {
   const [systemStats, setSystemStats] = useState({
     totalProjects: 127,
@@ -13,84 +31,33 @@ const Dashboard = () => {
     responseTime: 0.23,
     uptime: 99.97
   });
-  const [performanceData] = useState([{
-    time: '00:00',
-    rag: 120,
-    mcp: 89,
-    a2a: 67
-  }, {
-    time: '04:00',
-    rag: 145,
-    mcp: 102,
-    a2a: 78
-  }, {
-    time: '08:00',
-    rag: 200,
-    mcp: 134,
-    a2a: 95
-  }, {
-    time: '12:00',
-    rag: 310,
-    mcp: 189,
-    a2a: 134
-  }, {
-    time: '16:00',
-    rag: 280,
-    mcp: 167,
-    a2a: 121
-  }, {
-    time: '20:00',
-    rag: 190,
-    mcp: 123,
-    a2a: 89
-  }]);
-  const [protocolDistribution] = useState([{
-    name: 'RAG 2.0',
-    value: 45,
-    color: '#3B82F6'
-  }, {
-    name: 'MCP',
-    value: 35,
-    color: '#8B5CF6'
-  }, {
-    name: 'A2A',
-    value: 20,
-    color: '#EF4444'
-  }]);
-  const [recentActivities] = useState([{
-    id: 1,
-    type: 'rag',
-    message: 'RAG 2.0 knowledge base updated with 1,200 new documents',
-    time: '2 minutes ago',
-    status: 'success'
-  }, {
-    id: 2,
-    type: 'mcp',
-    message: 'MCP server connection established with GitHub integration',
-    time: '5 minutes ago',
-    status: 'success'
-  }, {
-    id: 3,
-    type: 'a2a',
-    message: 'Agent collaboration completed for project "EcommercePro"',
-    time: '8 minutes ago',
-    status: 'success'
-  }, {
-    id: 4,
-    type: 'system',
-    message: 'DeepSeek Reasoner model updated to latest version',
-    time: '15 minutes ago',
-    status: 'info'
-  }, {
-    id: 5,
-    type: 'error',
-    message: 'Temporary connection timeout to external API (auto-resolved)',
-    time: '1 hour ago',
-    status: 'warning'
-  }]);
+
+  const [performanceData] = useState([
+    { time: '00:00', rag: 120, mcp: 89, a2a: 67 },
+    { time: '04:00', rag: 145, mcp: 102, a2a: 78 },
+    { time: '08:00', rag: 200, mcp: 134, a2a: 95 },
+    { time: '12:00', rag: 310, mcp: 189, a2a: 134 },
+    { time: '16:00', rag: 280, mcp: 167, a2a: 121 },
+    { time: '20:00', rag: 190, mcp: 123, a2a: 89 },
+  ]);
+
+  const [protocolDistribution] = useState([
+    { name: 'RAG 2.0', value: 45, color: '#3B82F6' },
+    { name: 'MCP', value: 35, color: '#8B5CF6' },
+    { name: 'A2A', value: 20, color: '#EF4444' },
+  ]);
+
+  const [recentActivities] = useState([
+    { id: 1, type: 'rag', message: 'RAG 2.0 knowledge base updated with 1,200 new documents', time: '2 minutes ago', status: 'success' },
+    { id: 2, type: 'mcp', message: 'MCP server connection established with GitHub integration', time: '5 minutes ago', status: 'success' },
+    { id: 3, type: 'a2a', message: 'Agent collaboration completed for project "EcommercePro"', time: '8 minutes ago', status: 'success' },
+    { id: 4, type: 'system', message: 'DeepSeek Reasoner model updated to latest version', time: '15 minutes ago', status: 'info' },
+    { id: 5, type: 'error', message: 'Temporary connection timeout to external API (auto-resolved)', time: '1 hour ago', status: 'warning' },
+  ]);
+
   useEffect(() => {
     console.log('🚀 NoCodeLos Blueprint Stack Dashboard initialized with full monitoring');
-
+    
     // Simulate real-time updates
     const interval = setInterval(() => {
       setSystemStats(prev => ({
@@ -100,16 +67,12 @@ const Dashboard = () => {
         responseTime: Math.max(0.1, prev.responseTime + (Math.random() - 0.5) * 0.1)
       }));
     }, 5000);
+
     return () => clearInterval(interval);
   }, []);
-  const StatCard = ({
-    title,
-    value,
-    unit,
-    icon: Icon,
-    trend,
-    color
-  }: any) => <Card className="border-2 border-blue-400/30 shadow-lg hover:shadow-xl transition-all duration-300">
+
+  const StatCard = ({ title, value, unit, icon: Icon, trend, color }: any) => (
+    <Card className="border-2 border-blue-400/30 shadow-lg hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
@@ -118,21 +81,26 @@ const Dashboard = () => {
               <span className="text-2xl font-bold text-gray-900">{value}</span>
               {unit && <span className="text-sm text-gray-500">{unit}</span>}
             </div>
-            {trend && <div className="flex items-center mt-2">
+            {trend && (
+              <div className="flex items-center mt-2">
                 <TrendingUp className={`w-4 h-4 mr-1 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`} />
                 <span className={`text-sm ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {Math.abs(trend)}% from last hour
                 </span>
-              </div>}
+              </div>
+            )}
           </div>
           <div className={`p-3 rounded-xl bg-gradient-to-r ${color}`}>
             <Icon className="w-6 h-6 text-white" />
           </div>
         </div>
       </CardContent>
-    </Card>;
-  return <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 pb-12">
-      <div className="container mx-auto px-6 bg-zinc-950">
+    </Card>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-20 pb-12">
+      <div className="container mx-auto px-6">
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-logo-text mb-2">
             NoCodeLos Blueprint Stack Dashboard
@@ -144,12 +112,50 @@ const Dashboard = () => {
 
         {/* System Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-          <StatCard title="Total Projects" value={systemStats.totalProjects} icon={BarChart3} trend={12} color="from-blue-500 to-blue-600" />
-          <StatCard title="Active Agents" value={systemStats.activeAgents} icon={Users} trend={8} color="from-purple-500 to-purple-600" />
-          <StatCard title="MCP Connections" value={systemStats.mcpConnections} icon={Network} trend={-3} color="from-green-500 to-green-600" />
-          <StatCard title="RAG Queries" value={systemStats.ragQueries} icon={Database} trend={25} color="from-orange-500 to-orange-600" />
-          <StatCard title="Response Time" value={systemStats.responseTime.toFixed(2)} unit="sec" icon={Zap} trend={-15} color="from-red-500 to-red-600" />
-          <StatCard title="System Uptime" value={systemStats.uptime} unit="%" icon={CheckCircle} trend={0.02} color="from-indigo-500 to-indigo-600" />
+          <StatCard
+            title="Total Projects"
+            value={systemStats.totalProjects}
+            icon={BarChart3}
+            trend={12}
+            color="from-blue-500 to-blue-600"
+          />
+          <StatCard
+            title="Active Agents"
+            value={systemStats.activeAgents}
+            icon={Users}
+            trend={8}
+            color="from-purple-500 to-purple-600"
+          />
+          <StatCard
+            title="MCP Connections"
+            value={systemStats.mcpConnections}
+            icon={Network}
+            trend={-3}
+            color="from-green-500 to-green-600"
+          />
+          <StatCard
+            title="RAG Queries"
+            value={systemStats.ragQueries}
+            icon={Database}
+            trend={25}
+            color="from-orange-500 to-orange-600"
+          />
+          <StatCard
+            title="Response Time"
+            value={systemStats.responseTime.toFixed(2)}
+            unit="sec"
+            icon={Zap}
+            trend={-15}
+            color="from-red-500 to-red-600"
+          />
+          <StatCard
+            title="System Uptime"
+            value={systemStats.uptime}
+            unit="%"
+            icon={CheckCircle}
+            trend={0.02}
+            color="from-indigo-500 to-indigo-600"
+          />
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -196,8 +202,17 @@ const Dashboard = () => {
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                      <Pie data={protocolDistribution} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={entry => `${entry.name}: ${entry.value}%`}>
-                        {protocolDistribution.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                      <Pie
+                        data={protocolDistribution}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                        label={(entry) => `${entry.name}: ${entry.value}%`}
+                      >
+                        {protocolDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
                       </Pie>
                       <Tooltip />
                     </PieChart>
@@ -262,9 +277,7 @@ const Dashboard = () => {
                       <span className="text-sm text-gray-600">34%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{
-                      width: '34%'
-                    }}></div>
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '34%' }}></div>
                     </div>
                   </div>
                   <div>
@@ -273,9 +286,7 @@ const Dashboard = () => {
                       <span className="text-sm text-gray-600">67%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-purple-500 h-2 rounded-full" style={{
-                      width: '67%'
-                    }}></div>
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: '67%' }}></div>
                     </div>
                   </div>
                   <div>
@@ -284,9 +295,7 @@ const Dashboard = () => {
                       <span className="text-sm text-gray-600">23%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{
-                      width: '23%'
-                    }}></div>
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '23%' }}></div>
                     </div>
                   </div>
                 </CardContent>
@@ -304,9 +313,7 @@ const Dashboard = () => {
                     <div className="text-3xl font-bold gradient-logo-text mb-2">2.4TB</div>
                     <div className="text-sm text-gray-600 mb-4">of 5TB used</div>
                     <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style={{
-                      width: '48%'
-                    }}></div>
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full" style={{ width: '48%' }}></div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
@@ -410,16 +417,24 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivities.map(activity => <div key={activity.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                      <div className={`w-2 h-2 rounded-full mt-2 ${activity.status === 'success' ? 'bg-green-500' : activity.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                  {recentActivities.map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                      <div className={`w-2 h-2 rounded-full mt-2 ${
+                        activity.status === 'success' ? 'bg-green-500' : 
+                        activity.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                      }`}></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">{activity.message}</p>
                         <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                       </div>
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${activity.status === 'success' ? 'bg-green-100 text-green-800' : activity.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        activity.status === 'success' ? 'bg-green-100 text-green-800' :
+                        activity.status === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
                         {activity.type.toUpperCase()}
                       </div>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -446,6 +461,8 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Dashboard;
