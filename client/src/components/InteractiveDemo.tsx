@@ -7,7 +7,7 @@ import { analytics } from '@/services/analyticsService';
 import { promptService, type PromptGenerationRequest } from '@/services/promptService';
 
 const InteractiveDemo = () => {
-  const [selectedAppType, setSelectedAppType] = useState('');
+  const [selectedAppTypes, setSelectedAppTypes] = useState<{[key: string]: string}>({});
   const [selectedDataSource, setSelectedDataSource] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [description, setDescription] = useState('');
@@ -65,10 +65,13 @@ const InteractiveDemo = () => {
     { id: 'testing', name: 'Unit Testing' }
   ];
 
-  const handleAppTypeSelect = (appType: string) => {
-    setSelectedAppType(appType);
+  const handleAppTypeSelect = (appType: string, category: string) => {
+    setSelectedAppTypes(prev => ({
+      ...prev,
+      [category]: appType
+    }));
     analytics.trackButtonClick(`app-type-${appType}`, 'interactive-demo');
-    console.log('📱 App type selected:', appType);
+    console.log('📱 App type selected:', appType, 'in category:', category);
   };
 
   const handleDataSourceSelect = (dataSource: string) => {
@@ -88,8 +91,9 @@ const InteractiveDemo = () => {
   };
 
   const handleGeneratePrompt = async () => {
-    if (!selectedAppType || !selectedDataSource) {
-      alert('Please select an app type and data source');
+    const selectedTypes = Object.values(selectedAppTypes);
+    if (selectedTypes.length === 0 || !selectedDataSource) {
+      alert('Please select at least one app type and a data source');
       return;
     }
 
@@ -98,14 +102,14 @@ const InteractiveDemo = () => {
     
     try {
       const request: PromptGenerationRequest = {
-        appType: selectedAppType,
+        appType: selectedTypes.join(' + '), // Combine selected types
         dataSource: selectedDataSource,
         features: selectedFeatures,
         platform: 'web',
         additionalContext: description || 'Generate comprehensive NoCodeLos Blueprint Stack with advanced AI integration'
       };
 
-      analytics.trackPromptGeneration(selectedAppType, selectedFeatures);
+      analytics.trackPromptGeneration(Object.values(selectedAppTypes).join('+'), selectedFeatures);
       const result = await promptService.generatePrompt(request);
       setResult(result);
       console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration:', result);
@@ -151,8 +155,8 @@ const InteractiveDemo = () => {
                 1
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">Choose Your Application Type</h3>
-                <p className="text-gray-400 mt-1">Select from Frontend, Backend, Full-Stack, or Advanced applications</p>
+                <h3 className="text-2xl font-bold text-white">Choose Your Application Components</h3>
+                <p className="text-gray-400 mt-1">Select one or more components from each category to build your complete application</p>
               </div>
             </div>
 
@@ -177,9 +181,9 @@ const InteractiveDemo = () => {
                     {types.map((type) => (
                       <button
                         key={type.id}
-                        onClick={() => handleAppTypeSelect(type.id)}
+                        onClick={() => handleAppTypeSelect(type.id, category)}
                         className={`group relative p-6 rounded-xl border text-left transition-all duration-300 hover:scale-105 ${
-                          selectedAppType === type.id
+                          selectedAppTypes[category] === type.id
                             ? 'border-blue-500 bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-lg shadow-blue-500/20'
                             : 'border-gray-700 bg-gray-900/50 backdrop-blur-sm hover:border-blue-400 hover:bg-gray-800/80'
                         }`}
@@ -189,7 +193,7 @@ const InteractiveDemo = () => {
                         </div>
                         <h5 className="font-semibold text-white mb-2 text-lg">{type.name}</h5>
                         <p className="text-sm text-gray-300 leading-relaxed">{type.description}</p>
-                        {selectedAppType === type.id && (
+                        {selectedAppTypes[category] === type.id && (
                           <div className="absolute top-2 right-2">
                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                               <span className="text-white text-xs">✓</span>
@@ -319,7 +323,7 @@ const InteractiveDemo = () => {
           <div className="text-center">
             <Button
               onClick={handleGeneratePrompt}
-              disabled={!selectedAppType || !selectedDataSource || isGenerating}
+              disabled={Object.keys(selectedAppTypes).length === 0 || !selectedDataSource || isGenerating}
               className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600 text-white px-12 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
             >
               {isGenerating ? (
