@@ -27,17 +27,17 @@ const InteractiveDemo = () => {
       { id: 'graphql', name: 'GraphQL API', icon: '🔗', description: 'Flexible API with GraphQL schema and resolvers' },
       { id: 'microservices', name: 'Microservices', icon: '🔄', description: 'Distributed architecture with service mesh' }
     ],
-    database: [
-      { id: 'postgres-app', name: 'PostgreSQL App', icon: '🐘', description: 'Full-stack app with PostgreSQL and advanced queries' },
-      { id: 'mongodb-app', name: 'MongoDB App', icon: '🍃', description: 'NoSQL application with document-based storage' },
-      { id: 'redis-cache', name: 'Redis Cache', icon: '🔴', description: 'High-performance caching and session management' },
-      { id: 'prisma-orm', name: 'Prisma ORM', icon: '💎', description: 'Type-safe database access with modern ORM' }
+    fullstack: [
+      { id: 'saas-platform', name: 'SaaS Platform', icon: '🏢', description: 'Complete business application with frontend, backend, and database' },
+      { id: 'ecommerce-app', name: 'E-commerce App', icon: '🛒', description: 'Full shopping platform with payments, inventory, and user management' },
+      { id: 'social-network', name: 'Social Network', icon: '👥', description: 'Community platform with real-time messaging and user interactions' },
+      { id: 'cms-platform', name: 'CMS Platform', icon: '📝', description: 'Content management system with admin panel and public interface' }
     ],
     advanced: [
       { id: 'ai-saas', name: 'AI SaaS Platform', icon: '🤖', description: 'AI-powered application with RAG 2.0 and vector embeddings' },
-      { id: 'realtime-app', name: 'Real-time App', icon: '⚡', description: 'WebSocket-based application with live updates' },
+      { id: 'realtime-app', name: 'Real-time App', icon: '📡', description: 'WebSocket-based application with live updates and collaboration' },
       { id: 'blockchain', name: 'Web3 dApp', icon: '⛓️', description: 'Decentralized application with smart contracts' },
-      { id: 'iot-dashboard', name: 'IoT Dashboard', icon: '📡', description: 'Internet of Things monitoring and control system' }
+      { id: 'iot-dashboard', name: 'IoT Dashboard', icon: '📊', description: 'Internet of Things monitoring and control system' }
     ]
   };
 
@@ -46,8 +46,8 @@ const InteractiveDemo = () => {
     { id: 'mongodb', name: 'MongoDB', icon: '🍃' },
     { id: 'supabase', name: 'Supabase', icon: '⚡' },
     { id: 'firebase', name: 'Firebase', icon: '🔥' },
-    { id: 'redis', name: 'Redis', icon: '🔴' },
-    { id: 'prisma', name: 'Prisma', icon: '💎' }
+    { id: 'mysql', name: 'MySQL', icon: '🗄️' },
+    { id: 'sqlite', name: 'SQLite', icon: '📦' }
   ];
 
   const availableFeatures = [
@@ -152,7 +152,7 @@ const InteractiveDemo = () => {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white">Choose Your Application Type</h3>
-                <p className="text-gray-400 mt-1">Select from Frontend, Backend, Database, or Advanced applications</p>
+                <p className="text-gray-400 mt-1">Select from Frontend, Backend, Full-Stack, or Advanced applications</p>
               </div>
             </div>
 
@@ -163,9 +163,11 @@ const InteractiveDemo = () => {
                     <div className="flex items-center gap-2">
                       {category === 'frontend' && <Code className="w-5 h-5 text-blue-400" />}
                       {category === 'backend' && <Zap className="w-5 h-5 text-green-400" />}
-                      {category === 'database' && <Database className="w-5 h-5 text-purple-400" />}
+                      {category === 'fullstack' && <Database className="w-5 h-5 text-purple-400" />}
                       {category === 'advanced' && <Brain className="w-5 h-5 text-red-400" />}
-                      <h4 className="text-xl font-bold text-white capitalize">{category} Applications</h4>
+                      <h4 className="text-xl font-bold text-white capitalize">
+                        {category === 'fullstack' ? 'Full-Stack' : category} Applications
+                      </h4>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       {types.length} options
@@ -214,12 +216,12 @@ const InteractiveDemo = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {dataSources.map((source) => (
                 <button
                   key={source.id}
                   onClick={() => handleDataSourceSelect(source.id)}
-                  className={`group p-6 rounded-xl border text-center transition-all duration-300 hover:scale-105 ${
+                  className={`group relative p-6 rounded-xl border text-center transition-all duration-300 hover:scale-105 ${
                     selectedDataSource === source.id
                       ? 'border-purple-500 bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-lg shadow-purple-500/20'
                       : 'border-gray-700 bg-gray-900/50 backdrop-blur-sm hover:border-purple-400 hover:bg-gray-800/80'
