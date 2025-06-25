@@ -86,17 +86,29 @@ const PromptStudio = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-logo-text mb-4">
-            Prompt Engineering Studio
+            Prompt Engineering Studio v4.0
           </h1>
           <p className="text-purple-300 text-lg">
-            Advanced prompt crafting with DeepSeek Reasoner integration
+            AI Master Blueprint generation with DeepSeek reasoning and real-time streaming
           </p>
         </div>
 
-        <div className="mb-6 text-center">
+        <div className="mb-6 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-400/30 rounded-lg">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <p className="text-green-400">DeepSeek API configured and ready</p>
+            <p className="text-green-400">DeepSeek API configured with AI Master Blueprint Template v4.0</p>
+          </div>
+          
+          <div className="max-w-2xl mx-auto p-4 bg-blue-900/20 border border-blue-400/30 rounded-lg">
+            <h3 className="text-blue-300 font-medium mb-2">AI Master Blueprint Template v4.0 Features:</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm text-blue-200">
+              <div>✓ AI-native architecture patterns</div>
+              <div>✓ Production-ready code examples</div>
+              <div>✓ RAG 2.0 integration guides</div>
+              <div>✓ MCP protocol implementations</div>
+              <div>✓ A2A agent coordination</div>
+              <div>✓ Complete deployment strategies</div>
+            </div>
           </div>
         </div>
         
@@ -125,7 +137,7 @@ const PromptStudio = () => {
                   id="user-prompt"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Enter your prompt here..."
+                  placeholder="Example: Create a comprehensive e-commerce platform with AI-powered product recommendations, real-time inventory management, secure payment processing, and advanced analytics dashboard. Include user authentication, order tracking, and responsive design for mobile and desktop."
                   className="mt-2 bg-black border-purple-400/30"
                   rows={8}
                 />
