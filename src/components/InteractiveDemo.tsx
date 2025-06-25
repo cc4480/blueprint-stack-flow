@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import ApiKeyManager from "./ApiKeyManager";
@@ -56,7 +55,6 @@ const InteractiveDemo = () => {
 
   const handleApiKeyChange = (key: string | null) => {
     if (key) {
-      promptService.setApiKey(key);
       setShowApiKey(false);
       console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
     }

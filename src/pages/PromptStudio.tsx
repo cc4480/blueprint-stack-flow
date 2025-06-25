@@ -11,14 +11,13 @@ import { toast } from 'sonner';
 const PromptStudio = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showApiKeyManager, setShowApiKeyManager] = useState(false);
-  const [apiKeySet, setApiKeySet] = useState(false);
+  const [apiKeySet, setApiKeySet] = useState(true); // Always true since we use Supabase secrets
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState(null);
 
   const handleApiKeyChange = (key: string | null) => {
     setApiKeySet(!!key);
     if (key) {
-      promptService.setApiKey(key);
       setShowApiKeyManager(false); // Close the API key manager when key is set
       console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
     } else {

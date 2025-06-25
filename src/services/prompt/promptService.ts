@@ -11,10 +11,6 @@ class PromptService {
     this.deepSeekClient = new DeepSeekClient();
   }
 
-  setApiKey(key: string) {
-    this.deepSeekClient.setApiKey(key);
-  }
-
   async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
     console.log('🚀 Generating unlimited NoCodeLos Blueprint Stack master prompt with DeepSeek Reasoner');
 
