@@ -1,4 +1,3 @@
-
 import type { ConversationMessage, DeepSeekChunk, PromptGenerationResult } from './types';
 
 export class DeepSeekClient {
@@ -16,11 +15,26 @@ export class DeepSeekClient {
     });
 
     if (!response.ok) {
-      throw new Error('DeepSeek API request failed. Please check your API key configuration.');
+      console.error('❌ DeepSeek edge function error:', response.status, response.statusText);
+      
+      // Try to get the error message from the response
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'DeepSeek API request failed. Please check your API key configuration.');
+      } catch (parseError) {
+        throw new Error('DeepSeek API request failed. Please check your API key configuration.');
+      }
     }
 
     let reasoningContent = "";
     let finalContent = "";
+
+    // Check if response is JSON (error) or streaming
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'DeepSeek API error');
+    }
 
     // Process streaming response
     const reader = response.body?.getReader();
@@ -61,6 +75,10 @@ export class DeepSeekClient {
       }
     } finally {
       reader.releaseLock();
+    }
+
+    if (!finalContent && !reasoningContent) {
+      throw new Error('No content received from DeepSeek API. Please check your API key and try again.');
     }
 
     return { reasoningContent, finalContent };

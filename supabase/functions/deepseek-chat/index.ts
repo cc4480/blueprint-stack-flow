@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,8 +15,20 @@ serve(async (req) => {
     const { messages } = await req.json()
     
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
+    
+    console.log('🔍 Checking DeepSeek API key availability:', !!deepseekApiKey)
+    
     if (!deepseekApiKey) {
-      throw new Error('DEEPSEEK_API_KEY not configured')
+      console.error('❌ DEEPSEEK_API_KEY not found in environment variables')
+      return new Response(
+        JSON.stringify({ 
+          error: 'DEEPSEEK_API_KEY not configured in Supabase secrets. Please add it in the Edge Function Secrets.' 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     console.log('🚀 DeepSeek Reasoner: Processing RAG 2.0 + MCP + A2A request')
@@ -37,8 +48,22 @@ serve(async (req) => {
     })
 
     if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.status}`)
+      console.error('❌ DeepSeek API error:', response.status, response.statusText)
+      const errorText = await response.text()
+      console.error('❌ DeepSeek API error details:', errorText)
+      
+      return new Response(
+        JSON.stringify({ 
+          error: `DeepSeek API error: ${response.status} - ${response.statusText}. Please check your API key.` 
+        }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      )
     }
+
+    console.log('✅ DeepSeek API response received, streaming to client')
 
     // Stream the response back to the client
     const stream = new ReadableStream({
@@ -52,6 +77,7 @@ serve(async (req) => {
         function pump(): Promise<void> {
           return reader.read().then(({ done, value }) => {
             if (done) {
+              console.log('✅ DeepSeek streaming completed')
               controller.close()
               return
             }
@@ -72,9 +98,11 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('❌ DeepSeek API error:', error)
+    console.error('❌ DeepSeek Edge Function error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: `Edge Function error: ${error.message}` 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
