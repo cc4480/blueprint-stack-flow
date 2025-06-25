@@ -148,18 +148,15 @@ RAG Pipeline Configuration:
 
 // Main service class
 class PromptService {
-  private apiKey: string | null = null;
   private conversationHistory: Array<{ role: string; content: string }> = [];
 
-  setApiKey(key: string): void {
-    this.apiKey = key;
-  }
+  // Remove setApiKey since we use server-side API key
+  // setApiKey(key: string): void {
+  //   this.apiKey = key;
+  // }
 
   private async makeRequest(payload: any, retryCount = 0): Promise<DeepSeekReasonerResponse> {
-    if (!this.apiKey) {
-      throw new PromptServiceError('API key not configured. Please set your DeepSeek API key.', 'NO_API_KEY');
-    }
-
+    // Use server-side API key from environment instead of client-side
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
@@ -169,18 +166,18 @@ class PromptService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          apiKey: this.apiKey,
-          ...payload
-        }),
+        body: JSON.stringify(payload),
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API request failed:', response.status, errorText);
+        
         if (response.status === 401) {
-          throw new PromptServiceError('Invalid API key. Please check your DeepSeek API key.', 'INVALID_API_KEY');
+          throw new PromptServiceError('Invalid API key. Please check your DeepSeek API key configuration.', 'INVALID_API_KEY');
         }
         if (response.status === 429) {
           throw new PromptServiceError('Rate limit exceeded. Please try again later.', 'RATE_LIMIT');
@@ -188,7 +185,7 @@ class PromptService {
         if (response.status >= 500) {
           throw new PromptServiceError('Server error. Please try again later.', 'SERVER_ERROR');
         }
-        throw new PromptServiceError(`Request failed with status ${response.status}`, 'REQUEST_FAILED');
+        throw new PromptServiceError(`Request failed with status ${response.status}: ${errorText}`, 'REQUEST_FAILED');
       }
 
       const data = await response.json();

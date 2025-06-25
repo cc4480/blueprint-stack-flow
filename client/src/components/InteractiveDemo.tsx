@@ -333,6 +333,8 @@ export default function InteractiveDemo() {
       };
 
       analytics.trackPromptGeneration(Object.values(selectedAppTypes).join('+'), selectedFeatures);
+      
+      console.log('🚀 Sending request to generate prompt...', request);
       const result = await promptService.generatePrompt(request);
       
       clearInterval(streamInterval);
@@ -341,8 +343,11 @@ export default function InteractiveDemo() {
     } catch (error) {
       clearInterval(streamInterval);
       setStreamingText('');
-      console.error('Error generating prompt:', error);
-      alert('Failed to generate prompt. Please try again.');
+      console.error('❌ Error generating prompt:', error);
+      
+      // Show user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to generate prompt: ${errorMessage}\n\nPlease check that the DeepSeek API key is properly configured.`);
     } finally {
       setIsGenerating(false);
     }

@@ -219,6 +219,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DeepSeek prompt generation endpoint
+  app.post('/api/generate-prompt', async (req, res) => {
+    try {
+      const { model, messages, max_tokens, temperature, top_p, stream } = req.body;
+      
+      // Use server-side API key from environment
+      const apiKey = process.env.DEEPSEEK_API_KEY;
+      
+      if (!apiKey) {
+        console.error('❌ DEEPSEEK_API_KEY not found in environment variables');
+        return res.status(500).json({ error: 'DeepSeek API key not configured on server' });
+      }
+
+      console.log('🤖 Making request to DeepSeek API...');
+      
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: model || 'deepseek-reasoner',
+          messages,
+          max_tokens: max_tokens || 64000,
+          temperature: temperature || 0.7,
+          top_p: top_p || 0.9,
+          stream: stream || false
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ DeepSeek API error:', response.status, errorData);
+        return res.status(response.status).json({ 
+          error: `DeepSeek API error: ${errorData.error?.message || 'Unknown error'}` 
+        });
+      }
+
+      const data = await response.json();
+      console.log('✅ DeepSeek API response received');
+      
+      res.json(data);
+    } catch (error) {
+      console.error('❌ Server error in generate-prompt:', error);
+      res.status(500).json({ error: 'Failed to process DeepSeek request' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
