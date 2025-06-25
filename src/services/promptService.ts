@@ -61,7 +61,7 @@ class PromptService {
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API request failed: ${response.statusText}`);
+        throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
@@ -72,33 +72,57 @@ class PromptService {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            console.log('✅ Stream reading completed');
+            break;
+          }
 
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('\n\n');
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines ending with \n\n
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
-        for (let i = 0; i < parts.length - 1; i++) {
-          const part = parts[i].trim();
-          if (part.startsWith('data:')) {
-            const jsonStr = part.slice(5).trim();
-            if (jsonStr === '[DONE]') {
-              onComplete?.();
-              return;
-            }
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const token = parsed.choices?.[0]?.delta?.content;
-              if (token) {
-                onToken(token);
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            
+            if (trimmed.startsWith('data: ')) {
+              const jsonStr = trimmed.slice(6); // Remove 'data: ' prefix
+              
+              if (jsonStr === '[DONE]') {
+                console.log('✅ Stream completed with [DONE] signal');
+                onComplete?.();
+                return;
               }
-            } catch (e) {
-              console.warn('JSON parse error:', e);
+              
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta;
+                const token = delta?.content;
+                
+                if (token) {
+                  console.log('📨 Received token:', token);
+                  onToken(token);
+                }
+                
+                // Check if the stream is finished
+                if (parsed.choices?.[0]?.finish_reason) {
+                  console.log('✅ Stream finished with reason:', parsed.choices[0].finish_reason);
+                  onComplete?.();
+                  return;
+                }
+              } catch (parseError) {
+                console.warn('⚠️ JSON parse error for line:', jsonStr, parseError);
+              }
             }
           }
         }
-        buffer = parts[parts.length - 1];
+      } finally {
+        reader.releaseLock();
       }
 
       onComplete?.();
