@@ -82,7 +82,7 @@ const PromptStudio = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Prompt Input */}
+          {/* Prompt Input */}
             <Card className="bg-gray-900 border-blue-400/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
