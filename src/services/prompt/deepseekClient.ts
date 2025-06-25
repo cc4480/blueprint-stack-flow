@@ -1,56 +1,72 @@
 
-import OpenAI from 'openai';
 import type { ConversationMessage, DeepSeekChunk, PromptGenerationResult } from './types';
 
 export class DeepSeekClient {
-  private client: OpenAI | null = null;
   private conversationHistory: ConversationMessage[] = [];
 
-  setApiKey(key: string) {
-    this.client = new OpenAI({
-      apiKey: key,
-      baseURL: "https://api.deepseek.com",
-      dangerouslyAllowBrowser: true
-    });
-    console.log('🔑 DeepSeek Reasoner client configured for unlimited RAG 2.0 + MCP + A2A master blueprint generation');
-  }
-
   async generateWithReasoning(messages: ConversationMessage[]): Promise<{ reasoningContent: string; finalContent: string }> {
-    if (!this.client) {
-      throw new Error('DeepSeek API key not configured. Please set your API key to enable unlimited RAG 2.0, MCP, and A2A protocols.');
-    }
+    console.log('🔑 Using DeepSeek Reasoner via secure Supabase edge function');
 
-    const response = await this.client.chat.completions.create({
-      model: 'deepseek-reasoner',
-      messages: messages,
-      stream: true,
-      temperature: 0.8,
+    const response = await fetch('/functions/v1/deepseek-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messages }),
     });
+
+    if (!response.ok) {
+      throw new Error('DeepSeek API request failed. Please check your API key configuration.');
+    }
 
     let reasoningContent = "";
     let finalContent = "";
 
-    // Process streaming response with proper typing
-    for await (const chunk of response) {
-      const deepSeekChunk = chunk as unknown as DeepSeekChunk;
-      const delta = deepSeekChunk.choices[0]?.delta;
-      
-      if (delta?.reasoning_content) {
-        reasoningContent += delta.reasoning_content;
+    // Process streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to read response stream');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+            try {
+              const jsonStr = line.slice(6);
+              const chunk = JSON.parse(jsonStr) as DeepSeekChunk;
+              const delta = chunk.choices[0]?.delta;
+              
+              if (delta?.reasoning_content) {
+                reasoningContent += delta.reasoning_content;
+              }
+              if (delta?.content) {
+                finalContent += delta.content;
+              }
+            } catch (e) {
+              // Skip invalid JSON lines
+            }
+          }
+        }
       }
-      if (delta?.content) {
-        finalContent += delta.content;
-      }
+    } finally {
+      reader.releaseLock();
     }
 
     return { reasoningContent, finalContent };
   }
 
   async continueConversation(userMessage: string): Promise<PromptGenerationResult> {
-    if (!this.client) {
-      throw new Error('DeepSeek API key not configured.');
-    }
-
     // Add user message to conversation history
     this.conversationHistory.push({ role: 'user', content: userMessage });
 
