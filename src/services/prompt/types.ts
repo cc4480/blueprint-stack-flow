@@ -18,7 +18,7 @@ export interface PromptGenerationResult {
   ragPipeline?: string;
 }
 
-// Extended types for DeepSeek Reasoner
+// Extended types for DeepSeek Reasoner - Updated according to official docs
 export interface DeepSeekDelta {
   reasoning_content?: string;
   content?: string;
@@ -26,13 +26,19 @@ export interface DeepSeekDelta {
 
 export interface DeepSeekChoice {
   delta?: DeepSeekDelta;
+  finish_reason?: string;
 }
 
 export interface DeepSeekChunk {
   choices: DeepSeekChoice[];
+  id?: string;
+  object?: string;
+  created?: number;
+  model?: string;
 }
 
 export type ConversationMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
+  // Note: reasoning_content should NOT be included in conversation history
 };

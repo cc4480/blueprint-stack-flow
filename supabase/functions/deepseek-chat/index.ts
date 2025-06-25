@@ -16,7 +16,7 @@ serve(async (req) => {
     
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
     
-    console.log('🔍 Checking DeepSeek API key availability:', !!deepseekApiKey)
+    console.log('🔍 DeepSeek Reasoner: Checking API key availability:', !!deepseekApiKey)
     
     if (!deepseekApiKey) {
       console.error('❌ DEEPSEEK_API_KEY not found in environment variables')
@@ -33,6 +33,12 @@ serve(async (req) => {
 
     console.log('🚀 DeepSeek Reasoner: Processing request with', messages.length, 'messages')
 
+    // Ensure messages don't contain reasoning_content field as per DeepSeek docs
+    const cleanMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -41,10 +47,9 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'deepseek-reasoner',
-        messages: messages,
+        messages: cleanMessages,
         stream: true,
-        temperature: 0.7,
-        max_tokens: 4000,
+        max_tokens: 32000, // Default as per docs
       }),
     })
 

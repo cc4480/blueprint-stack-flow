@@ -7,13 +7,19 @@ export class DeepSeekClient {
   async generateWithReasoning(messages: ConversationMessage[]): Promise<{ reasoningContent: string; finalContent: string }> {
     console.log('🔑 Using DeepSeek Reasoner via secure Supabase edge function');
 
+    // Clean messages to remove any reasoning_content field as per DeepSeek docs
+    const cleanMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
     const response = await fetch('/functions/v1/deepseek-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages: cleanMessages }),
     });
 
     console.log('📡 DeepSeek response status:', response.status);
@@ -21,7 +27,6 @@ export class DeepSeekClient {
     if (!response.ok) {
       console.error('❌ DeepSeek edge function error:', response.status, response.statusText);
       
-      // Try to get the error message from the response
       try {
         const errorData = await response.json();
         console.error('❌ Error details:', errorData);
@@ -42,7 +47,7 @@ export class DeepSeekClient {
       throw new Error(errorData.error || 'DeepSeek API error');
     }
 
-    // Process streaming response
+    // Process streaming response according to DeepSeek docs
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error('Failed to read response stream');
@@ -71,6 +76,7 @@ export class DeepSeekClient {
                 const chunk = JSON.parse(jsonStr) as DeepSeekChunk;
                 const delta = chunk.choices?.[0]?.delta;
                 
+                // Handle reasoning_content and content as per DeepSeek docs
                 if (delta?.reasoning_content) {
                   reasoningContent += delta.reasoning_content;
                   console.log('🧠 Reasoning chunk received:', delta.reasoning_content.length, 'chars');
@@ -105,7 +111,7 @@ export class DeepSeekClient {
 
     const { reasoningContent, finalContent } = await this.generateWithReasoning(this.conversationHistory);
 
-    // Add assistant response to history
+    // Add ONLY the final content to history, NOT the reasoning_content as per DeepSeek docs
     this.conversationHistory.push({ role: 'assistant', content: finalContent });
 
     console.log('✅ Multi-turn conversation completed with DeepSeek Reasoner');
@@ -123,6 +129,11 @@ export class DeepSeekClient {
   }
 
   addToConversationHistory(messages: ConversationMessage[]) {
-    this.conversationHistory.push(...messages);
+    // Clean messages to ensure no reasoning_content is included
+    const cleanMessages = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    this.conversationHistory.push(...cleanMessages);
   }
 }
