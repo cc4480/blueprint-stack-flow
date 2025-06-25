@@ -5,41 +5,95 @@ export class DeepSeekClient {
   private conversationHistory: ConversationMessage[] = [];
 
   async generateWithReasoning(messages: ConversationMessage[]): Promise<{ reasoningContent: string; finalContent: string }> {
-    console.log('🔑 Using DeepSeek Reasoner via secure Supabase edge function');
-    console.log('📝 Messages to send:', messages.length);
-
-    // Clean messages to remove any reasoning_content field as per DeepSeek docs
-    const cleanMessages = messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
-
-    console.log('🧹 Cleaned messages:', cleanMessages);
-
-    const response = await fetch('/functions/v1/deepseek-chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ messages: cleanMessages }),
+    console.log('🔑 DeepSeekClient: Starting generation', {
+      messagesCount: messages.length,
+      messageRoles: messages.map(m => m.role),
+      firstMessagePreview: messages[0]?.content?.substring(0, 100) + '...'
     });
 
-    console.log('📡 DeepSeek response status:', response.status);
-    console.log('📡 DeepSeek response headers:', Object.fromEntries(response.headers.entries()));
+    // Clean messages to remove any reasoning_content field as per DeepSeek docs
+    const cleanMessages = messages.map((msg, index) => {
+      const cleaned = {
+        role: msg.role,
+        content: msg.content
+      };
+      console.log(`🧹 DeepSeekClient: Cleaned message ${index}`, {
+        role: cleaned.role,
+        contentLength: cleaned.content?.length || 0,
+        originalKeys: Object.keys(msg),
+        cleanedKeys: Object.keys(cleaned)
+      });
+      return cleaned;
+    });
+
+    console.log('📤 DeepSeekClient: Making request to edge function', {
+      url: '/functions/v1/deepseek-chat',
+      method: 'POST',
+      hasAuth: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+      authPrefix: import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 8) + '...',
+      payloadSize: JSON.stringify({ messages: cleanMessages }).length
+    });
+
+    let response;
+    try {
+      response = await fetch('/functions/v1/deepseek-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ messages: cleanMessages }),
+      });
+    } catch (fetchError) {
+      console.error('❌ DeepSeekClient: Network error during fetch', {
+        error: fetchError.message,
+        stack: fetchError.stack,
+        name: fetchError.name
+      });
+      throw new Error(`Network error: ${fetchError.message}. Check your internet connection and Supabase configuration.`);
+    }
+
+    console.log('📡 DeepSeekClient: Response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries()),
+      url: response.url
+    });
 
     if (!response.ok) {
-      console.error('❌ DeepSeek edge function error:', response.status, response.statusText);
+      console.error('❌ DeepSeekClient: Edge function error', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url
+      });
       
+      let errorData;
       try {
-        const errorData = await response.json();
-        console.error('❌ Error details:', errorData);
-        throw new Error(errorData.error || `DeepSeek API request failed with status ${response.status}`);
-      } catch (parseError) {
-        console.error('❌ Failed to parse error response:', parseError);
-        const errorText = await response.text();
-        console.error('❌ Raw error response:', errorText);
-        throw new Error(`DeepSeek API request failed with status ${response.status}. Response: ${errorText}`);
+        const responseText = await response.text();
+        console.log('📄 DeepSeekClient: Raw error response', {
+          responseText,
+          responseLength: responseText.length
+        });
+        
+        try {
+          errorData = JSON.parse(responseText);
+          console.log('📋 DeepSeekClient: Parsed error data', errorData);
+        } catch (jsonError) {
+          console.warn('⚠️ DeepSeekClient: Failed to parse error as JSON', {
+            jsonError: jsonError.message,
+            responseText: responseText.substring(0, 500)
+          });
+          errorData = { error: responseText, raw: true };
+        }
+        
+        throw new Error(errorData.error || `DeepSeek API request failed with status ${response.status}. Raw response: ${responseText}`);
+      } catch (readError) {
+        console.error('❌ DeepSeekClient: Failed to read error response', {
+          readError: readError.message,
+          originalStatus: response.status
+        });
+        throw new Error(`DeepSeek API request failed with status ${response.status}. Could not read error details: ${readError.message}`);
       }
     }
 
@@ -48,32 +102,65 @@ export class DeepSeekClient {
 
     // Check if response is JSON (error) or streaming
     const contentType = response.headers.get('content-type');
-    console.log('📄 Response content type:', contentType);
+    console.log('📄 DeepSeekClient: Processing response', {
+      contentType,
+      hasBody: !!response.body,
+      bodyLocked: response.bodyUsed
+    });
     
     if (contentType?.includes('application/json')) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'DeepSeek API error');
+      try {
+        const errorData = await response.json();
+        console.error('❌ DeepSeekClient: JSON error response', errorData);
+        throw new Error(errorData.error || 'DeepSeek API returned JSON error');
+      } catch (jsonError) {
+        console.error('❌ DeepSeekClient: Failed to parse JSON error', jsonError);
+        throw new Error('DeepSeek API returned JSON response but failed to parse it');
+      }
     }
 
     // Process streaming response according to DeepSeek docs
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('Failed to read response stream');
+      console.error('❌ DeepSeekClient: No response body reader available');
+      throw new Error('Failed to read response stream - no reader available');
     }
 
     const decoder = new TextDecoder();
     let buffer = '';
+    let chunkCount = 0;
+    let totalBytesRead = 0;
 
     try {
-      console.log('🔄 Starting to read stream...');
+      console.log('🔄 DeepSeekClient: Starting to read stream...');
+      
       while (true) {
         const { done, value } = await reader.read();
+        
         if (done) {
-          console.log('✅ Stream reading completed');
+          console.log('✅ DeepSeekClient: Stream reading completed', {
+            chunkCount,
+            totalBytesRead,
+            reasoningLength: reasoningContent.length,
+            finalLength: finalContent.length,
+            bufferLength: buffer.length
+          });
           break;
         }
 
-        buffer += decoder.decode(value, { stream: true });
+        chunkCount++;
+        totalBytesRead += value.length;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+        
+        console.log(`📦 DeepSeekClient: Chunk ${chunkCount}`, {
+          chunkSize: value.length,
+          decodedLength: chunk.length,
+          bufferLength: buffer.length,
+          totalBytesRead
+        });
+
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
@@ -82,33 +169,74 @@ export class DeepSeekClient {
             try {
               const jsonStr = line.slice(6).trim();
               if (jsonStr) {
-                const chunk = JSON.parse(jsonStr) as DeepSeekChunk;
-                const delta = chunk.choices?.[0]?.delta;
+                const parsedChunk = JSON.parse(jsonStr) as DeepSeekChunk;
+                const delta = parsedChunk.choices?.[0]?.delta;
+                
+                console.log('🔍 DeepSeekClient: Processing delta', {
+                  hasReasoningContent: !!delta?.reasoning_content,
+                  hasContent: !!delta?.content,
+                  reasoningLength: delta?.reasoning_content?.length || 0,
+                  contentLength: delta?.content?.length || 0,
+                  finishReason: parsedChunk.choices?.[0]?.finish_reason
+                });
                 
                 // Handle reasoning_content and content as per DeepSeek docs
                 if (delta?.reasoning_content) {
                   reasoningContent += delta.reasoning_content;
-                  console.log('🧠 Reasoning chunk received:', delta.reasoning_content.length, 'chars');
+                  console.log('🧠 DeepSeekClient: Reasoning chunk added', {
+                    chunkLength: delta.reasoning_content.length,
+                    totalReasoningLength: reasoningContent.length
+                  });
                 }
                 if (delta?.content) {
                   finalContent += delta.content;
-                  console.log('💬 Content chunk received:', delta.content.length, 'chars');
+                  console.log('💬 DeepSeekClient: Content chunk added', {
+                    chunkLength: delta.content.length,
+                    totalContentLength: finalContent.length
+                  });
                 }
               }
-            } catch (e) {
-              console.warn('⚠️ Skipping invalid JSON line:', line.slice(0, 100));
+            } catch (parseError) {
+              console.warn('⚠️ DeepSeekClient: Skipping invalid JSON line', {
+                line: line.slice(0, 100) + '...',
+                error: parseError.message
+              });
             }
+          } else if (line.trim() === 'data: [DONE]') {
+            console.log('🏁 DeepSeekClient: Received DONE signal');
+          } else if (line.trim() && !line.startsWith('data: ')) {
+            console.log('ℹ️ DeepSeekClient: Non-data line', {
+              line: line.substring(0, 100)
+            });
           }
         }
       }
+    } catch (streamError) {
+      console.error('❌ DeepSeekClient: Stream reading error', {
+        error: streamError.message,
+        stack: streamError.stack,
+        chunkCount,
+        totalBytesRead,
+        bufferLength: buffer.length
+      });
+      throw new Error(`Stream reading failed: ${streamError.message}`);
     } finally {
       reader.releaseLock();
+      console.log('🔓 DeepSeekClient: Reader lock released');
     }
 
-    console.log('📊 Final results - Reasoning:', reasoningContent.length, 'chars, Content:', finalContent.length, 'chars');
+    console.log('📊 DeepSeekClient: Final results', {
+      reasoningLength: reasoningContent.length,
+      finalLength: finalContent.length,
+      hasReasoning: !!reasoningContent,
+      hasFinal: !!finalContent,
+      chunkCount,
+      totalBytesRead
+    });
 
     if (!finalContent && !reasoningContent) {
-      throw new Error('No content received from DeepSeek API. Please check your API key and try again.');
+      console.error('❌ DeepSeekClient: No content received from DeepSeek API');
+      throw new Error('No content received from DeepSeek API. The stream may have been empty or invalid.');
     }
 
     return { reasoningContent, finalContent };
