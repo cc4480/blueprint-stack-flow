@@ -135,7 +135,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const startTime = Date.now();
       
-      // Call DeepSeek API
+      // Call DeepSeek API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      
       const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -149,10 +152,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             { role: 'user', content: prompt }
           ],
           temperature,
-          max_tokens: 4000,
+          max_tokens: 2000,
           stream: false
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!deepseekResponse.ok) {
         const errorData = await deepseekResponse.json().catch(() => ({}));
@@ -178,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]),
         reasoningSteps: reasoningSteps ? JSON.stringify(reasoningSteps) : null,
         model: 'deepseek-reasoner',
-        temperature,
+        temperature: parseFloat(temperature?.toString() || '0.7'),
         maxSteps,
         confidence: 95, // DeepSeek typically has high confidence
         processingTimeMs: processingTime

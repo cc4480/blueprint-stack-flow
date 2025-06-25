@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, uuid, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, uuid, json, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -53,7 +53,7 @@ export const deepseekConversations = pgTable("deepseek_conversations", {
   messages: json("messages").notNull(),
   reasoningSteps: json("reasoning_steps"),
   model: text("model"),
-  temperature: integer("temperature"),
+  temperature: real("temperature"),
   maxSteps: integer("max_steps"),
   confidence: integer("confidence"),
   processingTimeMs: integer("processing_time_ms"),
