@@ -39,7 +39,7 @@ class PromptService {
     includeContext: boolean = true
   ): Promise<void> {
     try {
-      console.log('🚀 Starting database-enhanced DeepSeek streaming...');
+      console.log('🚀 Starting RAG-enhanced DeepSeek streaming...');
 
       // Use the edge function that has database access
       const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
@@ -50,7 +50,6 @@ class PromptService {
         },
         body: JSON.stringify({
           messages,
-          systemPrompt: messages.find(m => m.role === 'system')?.content || 'You are a helpful AI assistant.',
           includeContext
         }),
       });
@@ -77,12 +76,12 @@ class PromptService {
 
           buffer += decoder.decode(value, { stream: true });
           
-          // Process complete lines
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
+          // Process complete parts separated by double newlines
+          const parts = buffer.split('\n\n');
+          buffer = parts.pop() || ''; // Keep the incomplete part in buffer
 
-          for (const line of lines) {
-            const trimmed = line.trim();
+          for (const part of parts) {
+            const trimmed = part.trim();
             if (!trimmed) continue;
             
             if (trimmed.startsWith('data: ')) {
@@ -100,7 +99,7 @@ class PromptService {
                 const token = delta?.content;
                 
                 if (token) {
-                  console.log('📨 Received database-enhanced token:', token);
+                  console.log('📨 Received RAG-enhanced token:', token);
                   onToken(token);
                 }
                 
@@ -121,7 +120,7 @@ class PromptService {
 
       onComplete?.();
     } catch (error) {
-      console.error('❌ Database-enhanced DeepSeek streaming failed:', error);
+      console.error('❌ RAG-enhanced DeepSeek streaming failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
       onError?.(errorMessage);
       throw error;

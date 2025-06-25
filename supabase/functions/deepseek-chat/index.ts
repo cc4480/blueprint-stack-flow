@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, systemPrompt, includeContext = true } = await req.json();
+    const { messages, includeContext = true } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(
@@ -25,6 +25,8 @@ serve(async (req) => {
     let contextData = '';
     
     if (includeContext) {
+      console.log('🔍 Fetching RAG 2.0, MCP, and A2A context...');
+      
       // Fetch RAG 2.0 documents
       const { data: ragDocs } = await supabase
         .from('rag_documents')
@@ -87,28 +89,26 @@ ${toolExecutions?.map(exec => `- ${exec.tool_name}: ${exec.status} (${exec.execu
 
 === END SYSTEM CONTEXT ===
 `;
+
+      console.log('✅ Context data prepared, length:', contextData.length);
     }
 
     // Enhanced system prompt with database context
-    const enhancedSystemPrompt = `${systemPrompt}
+    const enhancedMessages = [...messages];
+    if (includeContext && contextData) {
+      // Add context to the system message or create one
+      const systemMessageIndex = enhancedMessages.findIndex(m => m.role === 'system');
+      if (systemMessageIndex >= 0) {
+        enhancedMessages[systemMessageIndex].content += `\n\n${contextData}`;
+      } else {
+        enhancedMessages.unshift({
+          role: 'system',
+          content: `You are a helpful AI assistant with access to real-time system data.\n\n${contextData}`
+        });
+      }
+    }
 
-${contextData}
-
-You now have access to real-time data from the NoCodeLos Blueprint Stack system including:
-- RAG 2.0 knowledge base documents and query analytics
-- MCP (Model Context Protocol) server configurations and tool executions  
-- A2A (Agent-to-Agent) protocol network and task coordination
-- System performance metrics and integration status
-
-Use this context to provide accurate, up-to-date responses about the system state, capabilities, and recent activities. Reference specific data points when relevant.`;
-
-    // Prepare messages for DeepSeek
-    const deepseekMessages = [
-      { role: 'system', content: enhancedSystemPrompt },
-      ...messages
-    ];
-
-    console.log('🚀 Starting DeepSeek chat with database context');
+    console.log('🚀 Starting DeepSeek streaming with database context');
 
     // Stream response from DeepSeek
     const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -119,7 +119,7 @@ Use this context to provide accurate, up-to-date responses about the system stat
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: deepseekMessages,
+        messages: enhancedMessages,
         temperature: 0.7,
         stream: true,
       }),
@@ -129,7 +129,7 @@ Use this context to provide accurate, up-to-date responses about the system stat
       throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
     }
 
-    // Return streaming response
+    // Return streaming response with proper headers
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
