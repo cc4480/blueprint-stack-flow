@@ -7,14 +7,14 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('🎯 DeepSeek Edge Function: Request received', {
+  console.log('🎯 DeepSeek Reasoner Edge Function: Request received', {
     method: req.method,
     url: req.url,
     headers: Object.fromEntries(req.headers.entries())
   })
 
   if (req.method === 'OPTIONS') {
-    console.log('✅ DeepSeek Edge Function: Handling CORS preflight')
+    console.log('✅ DeepSeek Reasoner Edge Function: Handling CORS preflight')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -25,13 +25,13 @@ serve(async (req) => {
     try {
       requestBody = await req.json()
       messages = requestBody.messages
-      console.log('📥 DeepSeek Edge Function: Request body parsed successfully', {
+      console.log('📥 DeepSeek Reasoner Edge Function: Request body parsed successfully', {
         hasMessages: !!messages,
         messagesLength: messages?.length || 0,
         requestBodyKeys: Object.keys(requestBody || {})
       })
     } catch (parseError) {
-      console.error('❌ DeepSeek Edge Function: Failed to parse request body', {
+      console.error('❌ DeepSeek Reasoner Edge Function: Failed to parse request body', {
         error: parseError.message,
         stack: parseError.stack
       })
@@ -46,14 +46,14 @@ serve(async (req) => {
     
     const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
     
-    console.log('🔍 DeepSeek Edge Function: Environment check', {
+    console.log('🔍 DeepSeek Reasoner Edge Function: Environment check', {
       hasApiKey: !!deepseekApiKey,
       apiKeyLength: deepseekApiKey?.length || 0,
       apiKeyPrefix: deepseekApiKey ? deepseekApiKey.substring(0, 8) + '...' : 'none'
     })
     
     if (!deepseekApiKey) {
-      console.error('❌ DeepSeek Edge Function: DEEPSEEK_API_KEY not found in environment variables')
+      console.error('❌ DeepSeek Reasoner Edge Function: DEEPSEEK_API_KEY not found in environment variables')
       return new Response(
         JSON.stringify({ 
           error: 'DEEPSEEK_API_KEY not configured in Supabase secrets. Please add it in the Edge Function Secrets.',
@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      console.error('❌ DeepSeek Edge Function: Invalid messages format', {
+      console.error('❌ DeepSeek Reasoner Edge Function: Invalid messages format', {
         messages,
         isArray: Array.isArray(messages),
         length: messages?.length
@@ -86,19 +86,19 @@ serve(async (req) => {
       )
     }
 
-    console.log('🚀 DeepSeek Edge Function: Processing request', {
+    console.log('🚀 DeepSeek Reasoner Edge Function: Processing request', {
       messagesCount: messages.length,
       messageRoles: messages.map(m => m.role),
       firstMessagePreview: messages[0]?.content?.substring(0, 100) + '...'
     })
 
-    // Clean messages to remove any reasoning_content field as per DeepSeek docs
+    // Clean messages to remove any reasoning_content field as per DeepSeek Reasoner docs
     const cleanMessages = messages.map((msg, index) => {
       const cleaned = {
         role: msg.role,
         content: msg.content
       }
-      console.log(`🧹 DeepSeek Edge Function: Message ${index}`, {
+      console.log(`🧹 DeepSeek Reasoner Edge Function: Message ${index}`, {
         originalKeys: Object.keys(msg),
         cleanedKeys: Object.keys(cleaned),
         role: cleaned.role,
@@ -114,7 +114,7 @@ serve(async (req) => {
       max_tokens: 32000,
     }
 
-    console.log('📤 DeepSeek Edge Function: Making API request', {
+    console.log('📤 DeepSeek Reasoner Edge Function: Making API request', {
       url: 'https://api.deepseek.com/chat/completions',
       payload: {
         ...requestPayload,
@@ -135,7 +135,7 @@ serve(async (req) => {
       body: JSON.stringify(requestPayload),
     })
 
-    console.log('📡 DeepSeek Edge Function: API response received', {
+    console.log('📡 DeepSeek Reasoner Edge Function: API response received', {
       status: response.status,
       statusText: response.statusText,
       headers: Object.fromEntries(response.headers.entries()),
@@ -146,14 +146,14 @@ serve(async (req) => {
       let errorDetails;
       try {
         errorDetails = await response.text()
-        console.error('❌ DeepSeek Edge Function: API error details', {
+        console.error('❌ DeepSeek Reasoner Edge Function: API error details', {
           status: response.status,
           statusText: response.statusText,
           body: errorDetails,
           headers: Object.fromEntries(response.headers.entries())
         })
       } catch (readError) {
-        console.error('❌ DeepSeek Edge Function: Failed to read error response', {
+        console.error('❌ DeepSeek Reasoner Edge Function: Failed to read error response', {
           readError: readError.message,
           originalStatus: response.status
         })
@@ -162,7 +162,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
-          error: `DeepSeek API error: ${response.status} - ${response.statusText}`,
+          error: `DeepSeek Reasoner API error: ${response.status} - ${response.statusText}`,
           details: errorDetails,
           debug: {
             requestUrl: 'https://api.deepseek.com/chat/completions',
@@ -178,7 +178,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ DeepSeek Edge Function: API response successful, streaming response')
+    console.log('✅ DeepSeek Reasoner Edge Function: API response successful, streaming response')
 
     // Return the streaming response with proper headers
     return new Response(response.body, {
@@ -191,7 +191,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('❌ DeepSeek Edge Function: Unexpected error', {
+    console.error('❌ DeepSeek Reasoner Edge Function: Unexpected error', {
       name: error.name,
       message: error.message,
       stack: error.stack,
@@ -200,7 +200,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: `Edge Function error: ${error.message}`,
+        error: `DeepSeek Reasoner Edge Function error: ${error.message}`,
         debug: {
           errorName: error.name,
           errorStack: error.stack?.split('\n').slice(0, 5), // First 5 lines of stack

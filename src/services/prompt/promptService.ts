@@ -1,14 +1,14 @@
 
 import type { PromptGenerationRequest, PromptGenerationResult } from './types';
-import { DeepSeekClient } from './deepseekClient';
+import { DeepSeekReasonerClient } from './deepseekReasonerClient';
 import { PromptTemplates } from './promptTemplates';
 import { MetadataGenerators } from './metadataGenerators';
 
 class PromptService {
-  private deepSeekClient: DeepSeekClient;
+  private deepSeekReasonerClient: DeepSeekReasonerClient;
 
   constructor() {
-    this.deepSeekClient = new DeepSeekClient();
+    this.deepSeekReasonerClient = new DeepSeekReasonerClient();
   }
 
   async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
@@ -27,10 +27,10 @@ class PromptService {
         { role: 'user' as const, content: userQuery }
       ];
 
-      const { reasoningContent, finalContent } = await this.deepSeekClient.generateWithReasoning(messages);
+      const { reasoningContent, finalContent } = await this.deepSeekReasonerClient.generateWithReasoning(messages);
 
       // Add to conversation history for multi-turn conversations
-      this.deepSeekClient.addToConversationHistory([
+      this.deepSeekReasonerClient.addToConversationHistory([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userQuery },
         { role: 'assistant', content: finalContent }
@@ -44,7 +44,7 @@ class PromptService {
       const a2aProtocols = MetadataGenerators.generateA2AProtocols(request);
       const ragPipeline = MetadataGenerators.generateRAGPipeline(request);
 
-      console.log('✅ Unlimited NoCodeLos Blueprint Stack master prompt generated with full DeepSeek integration');
+      console.log('✅ Unlimited NoCodeLos Blueprint Stack master prompt generated with full DeepSeek Reasoner integration');
       
       return {
         prompt: finalContent,
@@ -64,7 +64,7 @@ class PromptService {
   }
 
   async continueConversation(userMessage: string): Promise<PromptGenerationResult> {
-    return this.deepSeekClient.continueConversation(userMessage);
+    return this.deepSeekReasonerClient.continueConversation(userMessage);
   }
 }
 
