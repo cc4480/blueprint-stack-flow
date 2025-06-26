@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, includeContext = true } = await req.json();
+    const { messages, includeContext = true, maxTokens = 16384 } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(
@@ -25,92 +25,177 @@ serve(async (req) => {
     let contextData = '';
     
     if (includeContext) {
-      console.log('🔍 Fetching RAG 2.0, MCP, and A2A context...');
+      console.log('🔍 Fetching comprehensive RAG 2.0, MCP, and A2A context...');
       
-      // Fetch RAG 2.0 documents
+      // Fetch RAG 2.0 documents with expanded context
       const { data: ragDocs } = await supabase
         .from('rag_documents')
-        .select('content, metadata, source, tags')
-        .limit(10);
+        .select('content, metadata, source, tags, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-      // Fetch MCP servers and capabilities  
+      // Fetch MCP servers and capabilities with detailed info
       const { data: mcpServers } = await supabase
         .from('mcp_servers')
-        .select('name, status, capabilities, transport, endpoint')
-        .eq('status', 'connected');
+        .select('name, status, capabilities, transport, endpoint, description, version')
+        .eq('status', 'connected')
+        .limit(15);
 
-      // Fetch A2A agents and recent tasks
+      // Fetch A2A agents with comprehensive details
       const { data: a2aAgents } = await supabase
         .from('a2a_agents')
-        .select('name, description, capabilities, status')
-        .eq('status', 'online');
+        .select('name, description, capabilities, status, last_active, performance_metrics')
+        .eq('status', 'online')
+        .limit(15);
 
+      // Fetch recent A2A tasks with detailed metadata
       const { data: recentTasks } = await supabase
         .from('a2a_tasks')
-        .select('status, metadata, created_at')
+        .select('status, metadata, created_at, agent_id, task_type, complexity_score')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
-      // Fetch recent RAG queries for insights
+      // Fetch recent RAG queries with performance insights
       const { data: recentQueries } = await supabase
         .from('rag_queries')
-        .select('query, total_found, processing_time_ms, created_at')
+        .select('query, total_found, processing_time_ms, created_at, relevance_score, feedback_score')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
-      // Fetch MCP tool executions
+      // Fetch MCP tool executions with performance metrics
       const { data: toolExecutions } = await supabase
         .from('mcp_tool_executions')
-        .select('tool_name, status, execution_time_ms, created_at')
+        .select('tool_name, status, execution_time_ms, created_at, input_params, output_data')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(10);
 
-      // Build comprehensive context
+      // Fetch system performance metrics
+      const { data: systemMetrics } = await supabase
+        .from('system_metrics')
+        .select('metric_name, value, timestamp, category')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+
+      // Fetch integration status
+      const { data: integrationStatus } = await supabase
+        .from('integration_status')
+        .select('service_name, status, last_check, response_time_ms, error_count')
+        .order('last_check', { ascending: false });
+
+      // Build comprehensive context with detailed sections
       contextData = `
-=== REAL-TIME SYSTEM CONTEXT ===
+=== COMPREHENSIVE REAL-TIME SYSTEM CONTEXT ===
 
-RAG 2.0 KNOWLEDGE BASE:
-${ragDocs?.map(doc => `- Source: ${doc.source}\n  Content: ${doc.content?.substring(0, 200)}...\n  Tags: ${doc.tags?.join(', ')}`).join('\n') || 'No RAG documents available'}
+📊 SYSTEM OVERVIEW:
+- RAG 2.0 Pipeline: Advanced retrieval with hybrid search and context compression
+- MCP Protocol: Model Context Protocol for seamless tool integration
+- A2A Network: Agent-to-Agent communication for distributed intelligence
+- DeepSeek Integration: Real-time streaming with chain-of-thought reasoning
 
-MCP PROTOCOL SERVERS:
-${mcpServers?.map(server => `- ${server.name} (${server.status})\n  Transport: ${server.transport}\n  Capabilities: ${JSON.stringify(server.capabilities)}`).join('\n') || 'No MCP servers connected'}
+🔍 RAG 2.0 KNOWLEDGE BASE (${ragDocs?.length || 0} documents):
+${ragDocs?.map(doc => `
+- Document: ${doc.source} (${doc.created_at})
+  Content Preview: ${doc.content?.substring(0, 500)}...
+  Tags: ${doc.tags?.join(', ') || 'None'}
+  Metadata: ${JSON.stringify(doc.metadata || {})}
+`).join('\n') || 'No RAG documents available'}
 
-A2A AGENT NETWORK:
-${a2aAgents?.map(agent => `- ${agent.name}: ${agent.description}\n  Status: ${agent.status}\n  Capabilities: ${JSON.stringify(agent.capabilities)}`).join('\n') || 'No A2A agents online'}
+🌐 MCP PROTOCOL SERVERS (${mcpServers?.length || 0} active):
+${mcpServers?.map(server => `
+- Server: ${server.name} (v${server.version || 'unknown'})
+  Status: ${server.status} | Transport: ${server.transport}
+  Endpoint: ${server.endpoint}
+  Description: ${server.description || 'No description'}
+  Capabilities: ${JSON.stringify(server.capabilities || {})}
+`).join('\n') || 'No MCP servers connected'}
 
-RECENT A2A TASKS:
-${recentTasks?.map(task => `- Status: ${task.status} (${task.created_at})\n  Metadata: ${JSON.stringify(task.metadata)}`).join('\n') || 'No recent tasks'}
+🤖 A2A AGENT NETWORK (${a2aAgents?.length || 0} online):
+${a2aAgents?.map(agent => `
+- Agent: ${agent.name} (${agent.status})
+  Description: ${agent.description}
+  Last Active: ${agent.last_active}
+  Capabilities: ${JSON.stringify(agent.capabilities || {})}
+  Performance: ${JSON.stringify(agent.performance_metrics || {})}
+`).join('\n') || 'No A2A agents online'}
 
-RECENT RAG QUERIES:
-${recentQueries?.map(q => `- "${q.query}" → ${q.total_found} results (${q.processing_time_ms}ms)`).join('\n') || 'No recent queries'}
+📋 RECENT A2A TASKS (${recentTasks?.length || 0} tasks):
+${recentTasks?.map(task => `
+- Task: ${task.task_type || 'Unknown'} (${task.status})
+  Created: ${task.created_at}
+  Agent: ${task.agent_id}
+  Complexity: ${task.complexity_score || 'N/A'}
+  Metadata: ${JSON.stringify(task.metadata || {})}
+`).join('\n') || 'No recent tasks'}
 
-RECENT MCP EXECUTIONS:
-${toolExecutions?.map(exec => `- ${exec.tool_name}: ${exec.status} (${exec.execution_time_ms}ms)`).join('\n') || 'No recent executions'}
+🔎 RECENT RAG QUERIES (${recentQueries?.length || 0} queries):
+${recentQueries?.map(q => `
+- Query: "${q.query}"
+  Results: ${q.total_found} found (${q.processing_time_ms}ms)
+  Relevance Score: ${q.relevance_score || 'N/A'}
+  User Feedback: ${q.feedback_score || 'N/A'}
+  Timestamp: ${q.created_at}
+`).join('\n') || 'No recent queries'}
 
-=== END SYSTEM CONTEXT ===
+⚡ RECENT MCP EXECUTIONS (${toolExecutions?.length || 0} executions):
+${toolExecutions?.map(exec => `
+- Tool: ${exec.tool_name} (${exec.status})
+  Execution Time: ${exec.execution_time_ms}ms
+  Timestamp: ${exec.created_at}
+  Input: ${JSON.stringify(exec.input_params || {})}
+  Output: ${JSON.stringify(exec.output_data || {})}
+`).join('\n') || 'No recent executions'}
+
+📈 SYSTEM PERFORMANCE METRICS:
+${systemMetrics?.map(metric => `
+- ${metric.metric_name}: ${metric.value} (${metric.category})
+  Timestamp: ${metric.timestamp}
+`).join('\n') || 'No system metrics available'}
+
+🔗 INTEGRATION STATUS:
+${integrationStatus?.map(integration => `
+- Service: ${integration.service_name} (${integration.status})
+  Last Check: ${integration.last_check}
+  Response Time: ${integration.response_time_ms}ms
+  Error Count: ${integration.error_count || 0}
+`).join('\n') || 'No integration status available'}
+
+=== CONTEXT ANALYSIS ===
+Total Context Sources: ${(ragDocs?.length || 0) + (mcpServers?.length || 0) + (a2aAgents?.length || 0)}
+Active Integrations: ${mcpServers?.filter(s => s.status === 'connected').length || 0}
+Online Agents: ${a2aAgents?.filter(a => a.status === 'online').length || 0}
+Recent Activity: ${(recentTasks?.length || 0) + (recentQueries?.length || 0) + (toolExecutions?.length || 0)} operations
+
+=== ENHANCED CAPABILITIES ===
+🧠 Advanced Reasoning: Chain-of-thought processing with DeepSeek
+🔄 Real-time Streaming: Token-by-token response delivery
+🎯 Context-Aware: Dynamic RAG retrieval based on query intent
+🚀 Multi-Agent Coordination: Distributed task execution
+🔒 Secure Communication: Encrypted MCP protocol channels
+📊 Performance Monitoring: Real-time metrics and feedback loops
+
+=== END COMPREHENSIVE SYSTEM CONTEXT ===
 `;
 
-      console.log('✅ Context data prepared, length:', contextData.length);
+      console.log('✅ Comprehensive context data prepared, length:', contextData.length);
     }
 
-    // Enhanced system prompt with database context
+    // Enhanced system prompt with comprehensive context
     const enhancedMessages = [...messages];
     if (includeContext && contextData) {
-      // Add context to the system message or create one
       const systemMessageIndex = enhancedMessages.findIndex(m => m.role === 'system');
       if (systemMessageIndex >= 0) {
         enhancedMessages[systemMessageIndex].content += `\n\n${contextData}`;
       } else {
         enhancedMessages.unshift({
           role: 'system',
-          content: `You are a helpful AI assistant with access to real-time system data.\n\n${contextData}`
+          content: `You are an advanced AI assistant with access to comprehensive real-time system data. You have deep knowledge of RAG 2.0, MCP (Model Context Protocol), and A2A (Agent-to-Agent) protocols. Provide detailed, comprehensive responses that leverage all available context data.\n\n${contextData}`
         });
       }
     }
 
-    console.log('🚀 Starting DeepSeek streaming with database context');
+    console.log('🚀 Starting DeepSeek streaming with enhanced context and extended output limits');
 
-    // Stream response from DeepSeek
+    // Stream response from DeepSeek with enhanced parameters
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -121,7 +206,11 @@ ${toolExecutions?.map(exec => `- ${exec.tool_name}: ${exec.status} (${exec.execu
         model: 'deepseek-chat',
         messages: enhancedMessages,
         temperature: 0.7,
+        max_tokens: maxTokens,
         stream: true,
+        presence_penalty: 0.1,
+        frequency_penalty: 0.1,
+        top_p: 0.95,
       }),
     });
 
@@ -129,20 +218,25 @@ ${toolExecutions?.map(exec => `- ${exec.tool_name}: ${exec.status} (${exec.execu
       throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
     }
 
-    // Return streaming response with proper headers
+    // Return streaming response with enhanced headers
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+        'Access-Control-Expose-Headers': 'X-Stream-Status',
+        'X-Stream-Status': 'active',
       },
     });
 
   } catch (error) {
-    console.error('❌ DeepSeek chat error:', error);
+    console.error('❌ DeepSeek enhanced chat error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message || 'Internal server error' 
+      error: error.message || 'Internal server error',
+      timestamp: new Date().toISOString(),
+      context: 'deepseek-chat-enhanced'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

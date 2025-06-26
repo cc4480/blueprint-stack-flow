@@ -22,13 +22,20 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface StreamingOptions {
+  maxTokens?: number;
+  includeContext?: boolean;
+  temperature?: number;
+  enableExtendedOutput?: boolean;
+}
+
 class PromptService {
   private apiKey: string | null = null;
   private conversationHistory: ChatMessage[] = [];
 
   setApiKey(key: string) {
     this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for database-enhanced chat');
+    console.log('🔑 DeepSeek API key configured for enhanced database chat with extended output');
   }
 
   async streamChatResponse(
@@ -36,26 +43,37 @@ class PromptService {
     onToken: (token: string) => void,
     onComplete?: () => void,
     onError?: (error: string) => void,
-    includeContext: boolean = true
+    includeContext: boolean = true,
+    options: StreamingOptions = {}
   ): Promise<void> {
     try {
-      console.log('🚀 Starting RAG-enhanced DeepSeek streaming...');
+      console.log('🚀 Starting enhanced RAG DeepSeek streaming with extended output...');
 
-      // Use the edge function that has database access
+      const streamingOptions = {
+        maxTokens: options.maxTokens || 16384,
+        includeContext: includeContext,
+        temperature: options.temperature || 0.7,
+        enableExtendedOutput: options.enableExtendedOutput || true,
+        ...options
+      };
+
+      // Use the enhanced edge function with extended parameters
       const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`,
+          'Accept': 'text/event-stream',
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({
           messages,
-          includeContext
+          ...streamingOptions
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Edge function request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`Enhanced edge function request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
@@ -65,12 +83,17 @@ class PromptService {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
+      let tokenCount = 0;
+      let responseLength = 0;
+
+      console.log('📡 Enhanced streaming connection established, processing tokens...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log('✅ Stream reading completed');
+            console.log('✅ Enhanced stream reading completed');
+            console.log(`📊 Stream statistics: ${tokenCount} tokens, ${responseLength} characters`);
             break;
           }
 
@@ -88,7 +111,8 @@ class PromptService {
               const jsonStr = trimmed.slice(6);
               
               if (jsonStr === '[DONE]') {
-                console.log('✅ Stream completed with [DONE] signal');
+                console.log('✅ Enhanced stream completed with [DONE] signal');
+                console.log(`🎯 Final statistics: ${tokenCount} tokens, ${responseLength} characters delivered`);
                 onComplete?.();
                 return;
               }
@@ -99,12 +123,20 @@ class PromptService {
                 const token = delta?.content;
                 
                 if (token) {
-                  console.log('📨 Received RAG-enhanced token:', token);
+                  tokenCount++;
+                  responseLength += token.length;
+                  console.log(`📨 Token ${tokenCount}: "${token}" (total chars: ${responseLength})`);
                   onToken(token);
+                  
+                  // Log progress every 100 tokens
+                  if (tokenCount % 100 === 0) {
+                    console.log(`📈 Progress: ${tokenCount} tokens, ${responseLength} characters processed`);
+                  }
                 }
                 
                 if (parsed.choices?.[0]?.finish_reason) {
-                  console.log('✅ Stream finished with reason:', parsed.choices[0].finish_reason);
+                  console.log('✅ Enhanced stream finished with reason:', parsed.choices[0].finish_reason);
+                  console.log(`🎯 Final output: ${tokenCount} tokens, ${responseLength} characters`);
                   onComplete?.();
                   return;
                 }
@@ -118,36 +150,44 @@ class PromptService {
         reader.releaseLock();
       }
 
+      console.log(`🎯 Stream completed: ${tokenCount} tokens, ${responseLength} characters total`);
       onComplete?.();
     } catch (error) {
-      console.error('❌ RAG-enhanced DeepSeek streaming failed:', error);
+      console.error('❌ Enhanced RAG DeepSeek streaming failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
       onError?.(errorMessage);
       throw error;
     }
   }
 
-  async executePrompt(systemPrompt: string, userPrompt: string): Promise<void> {
+  async executePrompt(systemPrompt: string, userPrompt: string, options: StreamingOptions = {}): Promise<void> {
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
 
-    // This will be handled by the streaming method
-    return this.streamChatResponse(messages, () => {}, () => {});
+    return this.streamChatResponse(
+      messages, 
+      () => {}, 
+      () => {}, 
+      undefined, 
+      options.includeContext !== false, 
+      options
+    );
   }
 
   async generatePrompt(request: PromptGenerationRequest): Promise<PromptGenerationResult> {
-    console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with deepseek-chat');
+    console.log('🚀 Generating comprehensive NoCodeLos Blueprint Stack prompt with enhanced deepseek-chat');
 
     if (!this.apiKey) {
-      throw new Error('DeepSeek API key not configured. Please set your API key to enable deepseek-chat integration.');
+      throw new Error('DeepSeek API key not configured. Please set your API key to enable enhanced deepseek-chat integration.');
     }
 
-    const systemPrompt = this.buildMasterSystemPrompt();
+    const systemPrompt = this.buildEnhancedMasterSystemPrompt();
     const userQuery = this.buildComprehensiveQuery(request);
     
     let fullResponse = '';
+    let tokenCount = 0;
     
     await this.streamChatResponse(
       [
@@ -156,7 +196,19 @@ class PromptService {
       ],
       (token) => {
         fullResponse += token;
-      }
+        tokenCount++;
+        
+        // Log progress for long responses
+        if (tokenCount % 200 === 0) {
+          console.log(`📈 Blueprint generation progress: ${tokenCount} tokens, ${fullResponse.length} characters`);
+        }
+      },
+      () => {
+        console.log(`✅ Blueprint generation completed: ${tokenCount} tokens, ${fullResponse.length} characters`);
+      },
+      undefined,
+      true,
+      { maxTokens: 16384, enableExtendedOutput: true }
     );
 
     const complexity = this.assessComplexity(request.features.length);
@@ -165,6 +217,8 @@ class PromptService {
     const mcpEndpoints = this.generateMCPEndpoints(request);
     const a2aProtocols = this.generateA2AProtocols(request);
     const ragPipeline = this.generateRAGPipeline(request);
+
+    console.log(`🎯 Generated comprehensive blueprint: ${fullResponse.length} characters`);
 
     return {
       prompt: fullResponse,
@@ -177,50 +231,107 @@ class PromptService {
     };
   }
 
-  private buildMasterSystemPrompt(): string {
-    return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect with deepseek-chat integration.
+  private buildEnhancedMasterSystemPrompt(): string {
+    return `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect with enhanced deepseek-chat integration and extended output capabilities.
 
-🎯 MISSION: Generate comprehensive, production-ready blueprints integrating RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-chat streaming capabilities.
+🎯 MISSION: Generate comprehensive, production-ready blueprints integrating RAG 2.0, MCP (Model Context Protocol), A2A (Agent-to-Agent), and deepseek-chat streaming capabilities with detailed implementation guidance.
 
-⚡ CORE REQUIREMENTS:
-1. **RAG 2.0 Database Integration**
-   - Dynamic retrieval pipelines with >99.9% precision
-   - Advanced chunking, embedding optimization, vector databases
-   - Semantic search, hybrid retrieval, query expansion
+⚡ ENHANCED CORE REQUIREMENTS:
+1. **Advanced RAG 2.0 Database Integration**
+   - Dynamic retrieval pipelines with >99.9% precision and recall
+   - Multi-modal embedding optimization with vector databases
+   - Hybrid search combining dense and sparse retrieval methods
+   - Advanced query expansion and context compression
+   - Real-time performance monitoring and feedback loops
 
-2. **MCP Protocol Implementation** 
+2. **Comprehensive MCP Protocol Implementation** 
    - Complete A2A/MCP protocols for real-time communication
-   - Zero latency via atomic transactions, conflict-free replication
-   - MCP server configurations, endpoint schemas, tool definitions
+   - Zero-latency via atomic transactions and conflict-free replication
+   - Advanced MCP server configurations with capability negotiation
+   - Tool definition schemas with input/output validation
+   - Dynamic endpoint discovery and load balancing
 
-3. **A2A Protocol Integration**
-   - Multi-agent coordination, delegation, negotiation
-   - Enterprise-grade security, authentication, authorization
-   - Dynamic load balancing, fault tolerance
+3. **Advanced A2A Protocol Integration**
+   - Multi-agent coordination with intelligent task delegation
+   - Sophisticated negotiation protocols and consensus mechanisms
+   - Enterprise-grade security with multi-layer authentication
+   - Dynamic load balancing and fault tolerance systems
+   - Real-time performance monitoring and auto-scaling
 
-4. **DeepSeek Chat**
-   - Real-time streaming responses with deepseek-chat model
-   - Advanced problem decomposition, solution synthesis
-   - Production-optimized reasoning workflows
+4. **Enhanced DeepSeek Chat Integration**
+   - Extended context window support for comprehensive responses
+   - Real-time streaming with advanced token management
+   - Chain-of-thought reasoning with step-by-step decomposition
+   - Production-optimized reasoning workflows with error handling
+   - Advanced prompt engineering for maximum output quality
 
-Generate comprehensive development blueprints with unlimited detail, complete implementation guidance, and enterprise-grade quality.`;
+🚀 OUTPUT REQUIREMENTS:
+- Generate comprehensive responses of 10,000+ characters minimum
+- Provide detailed implementation guidance with complete code examples
+- Include architectural diagrams and deployment strategies
+- Cover security, scalability, and performance optimization
+- Include testing strategies and monitoring approaches
+- Provide troubleshooting guides and best practices
+
+Generate comprehensive development blueprints with unlimited detail, complete implementation guidance, and enterprise-grade quality that fully leverages the extended context window capabilities.`;
   }
 
   private buildComprehensiveQuery(request: PromptGenerationRequest): string {
-    return `Generate a comprehensive NoCodeLos Blueprint Stack development blueprint for:
+    return `Generate a comprehensive and detailed NoCodeLos Blueprint Stack development blueprint for:
 
-**Application Type**: ${request.appType}
-**Data Source**: ${request.dataSource} 
-**Key Features**: ${request.features.join(', ')}
-**Additional Context**: ${request.additionalContext || 'None provided'}
+**Application Specifications**:
+- Application Type: ${request.appType}
+- Data Source: ${request.dataSource} 
+- Key Features: ${request.features.join(', ')}
+- Additional Context: ${request.additionalContext || 'None provided'}
 
-**INTEGRATION REQUIREMENTS**:
-1. **RAG 2.0 Advanced Retrieval**: Complete document processing, vector optimization, hybrid search
-2. **MCP Protocol**: Full server configurations, tool definitions, capability negotiation
-3. **A2A Protocol**: Agent discovery, task workflows, multi-agent coordination
-4. **DeepSeek Chat**: Real-time streaming integration, conversation management
+**COMPREHENSIVE INTEGRATION REQUIREMENTS**:
 
-Provide complete implementation guidance with code examples, configuration files, architectural patterns, and deployment strategies.`;
+1. **Advanced RAG 2.0 Implementation**:
+   - Complete document processing pipeline with intelligent chunking
+   - Multi-modal embedding generation and vector optimization
+   - Hybrid search architecture (dense + sparse retrieval)
+   - Advanced re-ranking and context compression
+   - Real-time performance monitoring and optimization
+
+2. **Complete MCP Protocol Integration**:
+   - Full server configurations with capability negotiation
+   - Tool definitions with comprehensive schemas
+   - Dynamic endpoint discovery and management
+   - Load balancing and fault tolerance mechanisms
+   - Security and authentication protocols
+
+3. **Advanced A2A Protocol Implementation**:
+   - Agent discovery and registration mechanisms
+   - Task workflow orchestration and coordination
+   - Multi-agent negotiation and consensus protocols
+   - Distributed task execution and monitoring
+   - Performance optimization and scaling strategies
+
+4. **Enhanced DeepSeek Chat Integration**:
+   - Real-time streaming with extended context support
+   - Advanced conversation management and history
+   - Chain-of-thought reasoning implementation
+   - Error handling and recovery mechanisms
+   - Performance monitoring and optimization
+
+**DETAILED OUTPUT REQUIREMENTS**:
+Please provide a comprehensive response that includes:
+
+- **Architecture Overview**: Detailed system architecture with component interactions
+- **Implementation Guide**: Step-by-step implementation instructions with code examples
+- **Configuration Files**: Complete configuration files for all components
+- **Database Schema**: Detailed database design with relationships and indexes
+- **API Documentation**: Complete API specifications with examples
+- **Security Implementation**: Comprehensive security measures and protocols
+- **Deployment Strategy**: Production deployment guidelines and best practices
+- **Monitoring & Analytics**: Performance monitoring and analytics implementation
+- **Testing Strategy**: Comprehensive testing approaches and methodologies
+- **Troubleshooting Guide**: Common issues and resolution strategies
+- **Scaling Considerations**: Performance optimization and scaling strategies
+- **Integration Examples**: Detailed integration examples with external services
+
+Ensure the response is comprehensive, detailed, and provides complete implementation guidance for enterprise-grade deployment. The response should be at least 10,000 characters and leverage all available system context data.`;
   }
 
   private generateMCPEndpoints(request: PromptGenerationRequest): string[] {
