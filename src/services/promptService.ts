@@ -1,3 +1,4 @@
+
 export interface PromptGenerationRequest {
   appType: string;
   dataSource: string;
@@ -35,7 +36,7 @@ class PromptService {
 
   setApiKey(key: string) {
     this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for enhanced database chat with extended output');
+    console.log('🔑 DeepSeek API key configured for enhanced streaming');
   }
 
   async streamChatResponse(
@@ -47,7 +48,7 @@ class PromptService {
     options: StreamingOptions = {}
   ): Promise<void> {
     try {
-      console.log('🚀 Starting enhanced RAG DeepSeek streaming with extended output...');
+      console.log('🚀 Starting enhanced DeepSeek streaming with comprehensive context...');
 
       const streamingOptions = {
         maxTokens: options.maxTokens || 16384,
@@ -57,7 +58,7 @@ class PromptService {
         ...options
       };
 
-      // Use the enhanced edge function with extended parameters
+      // Direct streaming to DeepSeek via our enhanced edge function
       const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
         method: 'POST',
         headers: {
@@ -73,11 +74,11 @@ class PromptService {
       });
 
       if (!response.ok) {
-        throw new Error(`Enhanced edge function request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`DeepSeek streaming request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
-        throw new Error('No response stream available');
+        throw new Error('No DeepSeek response stream available');
       }
 
       const reader = response.body.getReader();
@@ -86,14 +87,14 @@ class PromptService {
       let tokenCount = 0;
       let responseLength = 0;
 
-      console.log('📡 Enhanced streaming connection established, processing tokens...');
+      console.log('📡 DeepSeek streaming connection established, processing enhanced tokens...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log('✅ Enhanced stream reading completed');
-            console.log(`📊 Stream statistics: ${tokenCount} tokens, ${responseLength} characters`);
+            console.log('✅ DeepSeek stream reading completed');
+            console.log(`📊 Final stream statistics: ${tokenCount} tokens, ${responseLength} characters`);
             break;
           }
 
@@ -111,8 +112,8 @@ class PromptService {
               const jsonStr = trimmed.slice(6);
               
               if (jsonStr === '[DONE]') {
-                console.log('✅ Enhanced stream completed with [DONE] signal');
-                console.log(`🎯 Final statistics: ${tokenCount} tokens, ${responseLength} characters delivered`);
+                console.log('✅ DeepSeek stream completed with [DONE] signal');
+                console.log(`🎯 Final enhanced output: ${tokenCount} tokens, ${responseLength} characters delivered`);
                 onComplete?.();
                 return;
               }
@@ -125,23 +126,23 @@ class PromptService {
                 if (token) {
                   tokenCount++;
                   responseLength += token.length;
-                  console.log(`📨 Token ${tokenCount}: "${token}" (total chars: ${responseLength})`);
+                  console.log(`📨 DeepSeek token ${tokenCount}: "${token}" (total chars: ${responseLength})`);
                   onToken(token);
                   
-                  // Log progress every 100 tokens
+                  // Log progress every 100 tokens for enhanced monitoring
                   if (tokenCount % 100 === 0) {
-                    console.log(`📈 Progress: ${tokenCount} tokens, ${responseLength} characters processed`);
+                    console.log(`📈 DeepSeek progress: ${tokenCount} tokens, ${responseLength} characters processed`);
                   }
                 }
                 
                 if (parsed.choices?.[0]?.finish_reason) {
-                  console.log('✅ Enhanced stream finished with reason:', parsed.choices[0].finish_reason);
-                  console.log(`🎯 Final output: ${tokenCount} tokens, ${responseLength} characters`);
+                  console.log('✅ DeepSeek stream finished with reason:', parsed.choices[0].finish_reason);
+                  console.log(`🎯 Final enhanced output: ${tokenCount} tokens, ${responseLength} characters`);
                   onComplete?.();
                   return;
                 }
               } catch (parseError) {
-                console.warn('⚠️ JSON parse error for line:', jsonStr, parseError);
+                console.warn('⚠️ JSON parse error for DeepSeek response:', jsonStr, parseError);
               }
             }
           }
@@ -150,11 +151,11 @@ class PromptService {
         reader.releaseLock();
       }
 
-      console.log(`🎯 Stream completed: ${tokenCount} tokens, ${responseLength} characters total`);
+      console.log(`🎯 DeepSeek stream completed: ${tokenCount} tokens, ${responseLength} characters total`);
       onComplete?.();
     } catch (error) {
-      console.error('❌ Enhanced RAG DeepSeek streaming failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown streaming error';
+      console.error('❌ Enhanced DeepSeek streaming failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown DeepSeek streaming error';
       onError?.(errorMessage);
       throw error;
     }

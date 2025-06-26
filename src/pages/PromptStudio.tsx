@@ -18,13 +18,13 @@ const PromptStudio = () => {
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [includeContext, setIncludeContext] = useState(true);
-  const [maxTokens, setMaxTokens] = useState([8192]);
+  const [maxTokens, setMaxTokens] = useState([16384]);
   const [temperature, setTemperature] = useState([0.7]);
   const [extendedOutput, setExtendedOutput] = useState(true);
   const [tokenCount, setTokenCount] = useState(0);
   const [responseLength, setResponseLength] = useState(0);
   const [streamingTime, setStreamingTime] = useState(0);
-  const [systemPrompt, setSystemPrompt] = useState('You are a helpful AI assistant specialized in the NoCodeLos Blueprint Stack with RAG 2.0, MCP, and A2A protocol integration. You have access to comprehensive real-time system data and can provide detailed, extensive responses leveraging all available context. Generate comprehensive responses of at least 10,000 characters with detailed implementation guidance.');
+  const [systemPrompt, setSystemPrompt] = useState('You are the NoCodeLos Blueprint Stack Master AI with comprehensive RAG 2.0, MCP, and A2A protocol integration. You have access to real-time system data and can provide detailed, extensive responses leveraging all available context. Generate comprehensive responses of at least 10,000 characters with detailed implementation guidance, architectural patterns, and complete code examples.');
   
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -69,7 +69,7 @@ const PromptStudio = () => {
     abortControllerRef.current = new AbortController();
     
     try {
-      console.log('🚀 Starting enhanced database DeepSeek streaming with extended output...');
+      console.log('🚀 Starting enhanced DeepSeek streaming with extended output...');
       
       await promptService.streamChatResponse(
         [
@@ -85,13 +85,13 @@ const PromptStudio = () => {
           setIsStreaming(false);
           const finalTime = Date.now() - streamStartTime.current;
           setStreamingTime(finalTime);
-          toast.success(`✅ Response completed: ${tokenCount} tokens in ${(finalTime / 1000).toFixed(1)}s`);
-          console.log('✅ Enhanced database streaming completed successfully');
+          toast.success(`✅ DeepSeek response completed: ${tokenCount} tokens in ${(finalTime / 1000).toFixed(1)}s`);
+          console.log('✅ Enhanced DeepSeek streaming completed successfully');
         },
         (error: string) => {
           setIsStreaming(false);
-          toast.error(`❌ Streaming error: ${error}`);
-          console.error('❌ Streaming error:', error);
+          toast.error(`❌ DeepSeek streaming error: ${error}`);
+          console.error('❌ DeepSeek streaming error:', error);
         },
         includeContext,
         {
@@ -103,9 +103,9 @@ const PromptStudio = () => {
     } catch (error) {
       setIsStreaming(false);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      setResponse(`Error: ${errorMessage}`);
-      toast.error('❌ Failed to execute prompt');
-      console.error('❌ Execute prompt failed:', error);
+      setResponse(`DeepSeek Error: ${errorMessage}`);
+      toast.error('❌ Failed to execute DeepSeek prompt');
+      console.error('❌ Execute DeepSeek prompt failed:', error);
     }
   };
 
@@ -113,7 +113,7 @@ const PromptStudio = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsStreaming(false);
-      toast.info('Streaming stopped');
+      toast.info('DeepSeek streaming stopped');
     }
   };
 
@@ -136,7 +136,7 @@ const PromptStudio = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success('Enhanced response exported successfully');
+    toast.success('DeepSeek response exported successfully');
   };
 
   const formatTime = (ms: number) => {
@@ -163,7 +163,7 @@ const PromptStudio = () => {
             Enhanced DeepSeek Chat Studio
           </h1>
           <p className="text-purple-300 text-lg">
-            Extended context window with comprehensive RAG 2.0, MCP & A2A integration
+            Real-time streaming with comprehensive RAG 2.0, MCP & A2A integration
           </p>
         </div>
 
@@ -173,7 +173,7 @@ const PromptStudio = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="w-5 h-5 text-blue-400" />
-                Enhanced Database Chat Configuration
+                Enhanced DeepSeek Configuration
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -185,7 +185,7 @@ const PromptStudio = () => {
                 />
                 <Label htmlFor="include-context" className="flex items-center gap-2">
                   <Database className="w-4 h-4" />
-                  Include Comprehensive Database Context
+                  Include Comprehensive RAG+MCP+A2A Context
                 </Label>
               </div>
 
@@ -258,7 +258,7 @@ const PromptStudio = () => {
                   id="user-prompt"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Ask for comprehensive analysis of system status, detailed RAG implementation, MCP configuration, A2A protocols..."
+                  placeholder="Ask for comprehensive analysis, detailed implementation guidance, complete architectural blueprints..."
                   className="mt-2 bg-black border-purple-400/30"
                   rows={8}
                 />
@@ -272,7 +272,7 @@ const PromptStudio = () => {
                     className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Start Enhanced Chat
+                    Start DeepSeek Chat
                   </Button>
                 ) : (
                   <Button 
@@ -306,13 +306,13 @@ const PromptStudio = () => {
               <CardTitle className="flex items-center gap-2 justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 text-green-400" />
-                  <span>Enhanced Response Output</span>
+                  <span>DeepSeek Response Output</span>
                 </div>
                 {isStreaming && (
                   <div className="flex items-center gap-2 text-sm text-green-400">
                     <Database className="w-3 h-3 animate-pulse" />
                     <div className="animate-pulse w-2 h-2 bg-green-400 rounded-full"></div>
-                    Streaming Extended Response...
+                    Streaming DeepSeek Response...
                   </div>
                 )}
               </CardTitle>
@@ -324,7 +324,7 @@ const PromptStudio = () => {
                 readOnly
                 className="bg-black border-green-400/30 text-green-300 font-mono text-sm"
                 rows={12}
-                placeholder="Enhanced DeepSeek response with comprehensive database context will stream here..."
+                placeholder="Enhanced DeepSeek response with comprehensive RAG+MCP+A2A context will stream here..."
               />
               
               {/* Enhanced Statistics */}
@@ -362,7 +362,7 @@ const PromptStudio = () => {
                     className="border-green-400/50"
                     onClick={() => {
                       navigator.clipboard.writeText(response);
-                      toast.success('Enhanced response copied to clipboard');
+                      toast.success('DeepSeek response copied to clipboard');
                     }}
                   >
                     Copy to Clipboard
@@ -383,7 +383,7 @@ const PromptStudio = () => {
               </div>
               <div className="text-center">
                 <div className="text-purple-400 font-semibold">Integration</div>
-                <div className="text-gray-300">Enhanced DB + Streaming</div>
+                <div className="text-gray-300">Enhanced Streaming</div>
               </div>
               <div className="text-center">
                 <div className="text-green-400 font-semibold">Context</div>
@@ -404,7 +404,7 @@ const PromptStudio = () => {
               <div className="text-center">
                 <div className="text-cyan-400 font-semibold">Status</div>
                 <div className="text-gray-300">
-                  {isStreaming ? 'Enhanced Streaming' : 'Ready'}
+                  {isStreaming ? 'Streaming Active' : 'Ready'}
                 </div>
               </div>
             </div>
