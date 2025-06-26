@@ -4,22 +4,18 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Home, Brain, Database, Network, Settings, Users, BarChart3, FileText, Zap, Github, BookOpen, Shield, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
-
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   const mainNavItems = [{
     path: '/',
     label: 'Home',
@@ -70,14 +66,8 @@ const Navigation = () => {
     label: 'Settings',
     icon: Settings
   }];
-
-  return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-      isScrolled 
-        ? 'bg-black/95 backdrop-blur-md border-blue-400/30' 
-        : 'bg-transparent border-transparent'
-    }`}>
-      <div className="container mx-auto px-6">
+  return <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${isScrolled ? 'bg-black/95 backdrop-blur-md border-blue-400/30' : 'bg-transparent border-transparent'}`}>
+      <div className="container mx-auto px-6 bg-zinc-950">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
@@ -96,8 +86,7 @@ const Navigation = () => {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid gap-3 p-6 w-[400px] lg:w-[500px] lg:grid-cols-2">
-                      {mainNavItems.slice(1, 5).map(item => (
-                        <NavigationMenuLink key={item.path} asChild>
+                      {mainNavItems.slice(1, 5).map(item => <NavigationMenuLink key={item.path} asChild>
                           <Link to={item.path} className={`block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-blue-400/10 hover:text-blue-400 focus:bg-blue-400/10 focus:text-blue-400 ${isActive(item.path) ? 'bg-blue-400/20 text-blue-400' : 'text-white'}`}>
                             <div className="flex items-center space-x-2">
                               <item.icon className="w-4 h-4" />
@@ -110,8 +99,7 @@ const Navigation = () => {
                               {item.path === '/mcp-center' && 'Configure MCP protocols'}
                             </p>
                           </Link>
-                        </NavigationMenuLink>
-                      ))}
+                        </NavigationMenuLink>)}
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -124,16 +112,14 @@ const Navigation = () => {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="grid gap-3 p-6 w-[300px]">
-                      {secondaryNavItems.slice(0, 3).map(item => (
-                        <NavigationMenuLink key={item.path} asChild>
+                      {secondaryNavItems.slice(0, 3).map(item => <NavigationMenuLink key={item.path} asChild>
                           <Link to={item.path} className={`block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-blue-400/10 hover:text-blue-400 focus:bg-blue-400/10 focus:text-blue-400 ${isActive(item.path) ? 'bg-blue-400/20 text-blue-400' : 'text-white'}`}>
                             <div className="flex items-center space-x-2">
                               <item.icon className="w-4 h-4" />
                               <div className="text-sm font-medium leading-none">{item.label}</div>
                             </div>
                           </Link>
-                        </NavigationMenuLink>
-                      ))}
+                        </NavigationMenuLink>)}
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -181,21 +167,15 @@ const Navigation = () => {
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-blue-400/30">
+        {isMobileMenuOpen && <div className="lg:hidden py-4 border-t border-blue-400/30">
             <div className="space-y-2">
-              {[...mainNavItems, ...secondaryNavItems].map(item => (
-                <Link key={item.path} to={item.path} className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.path) ? 'bg-blue-400/20 text-blue-400' : 'text-white hover:bg-blue-400/10 hover:text-blue-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+              {[...mainNavItems, ...secondaryNavItems].map(item => <Link key={item.path} to={item.path} className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.path) ? 'bg-blue-400/20 text-blue-400' : 'text-white hover:bg-blue-400/10 hover:text-blue-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                   <item.icon className="w-4 h-4" />
                   {item.label}
-                </Link>
-              ))}
+                </Link>)}
             </div>
-          </div>
-        )}
+          </div>}
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navigation;
