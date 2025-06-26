@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Copy, Download, Zap, CheckCircle, Clock, Brain, Network, Database, GitBranch } from "lucide-react";
 import { toast } from "sonner";
 import ApiKeyManager from "./ApiKeyManager";
-
 const InteractiveDemo = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showApiKey, setShowApiKey] = useState(false);
@@ -25,7 +24,6 @@ const InteractiveDemo = () => {
     a2aProtocols?: string[];
     ragPipeline?: string;
   } | null>(null);
-
   const appTypes = [{
     id: "dashboard",
     label: "Business Dashboard",
@@ -57,7 +55,6 @@ const InteractiveDemo = () => {
     icon: "🚀",
     description: "Software as a Service"
   }];
-
   const dataSources = [{
     id: "supabase",
     label: "Supabase",
@@ -79,7 +76,6 @@ const InteractiveDemo = () => {
     icon: "🤖",
     description: "Dynamic AI content"
   }];
-
   const features = [{
     id: "auth",
     label: "User Authentication",
@@ -113,87 +109,74 @@ const InteractiveDemo = () => {
     label: "File Upload/Storage",
     category: "Features"
   }];
-
   useEffect(() => {
     console.log('🎯 NoCodeLos Blueprint Stack Interactive Demo initialized with DeepSeek integration');
   }, []);
-
   const handleApiKeyChange = (key: string | null) => {
     if (key) {
       setShowApiKey(false);
       console.log('✅ DeepSeek API key configured for NoCodeLos Blueprint Stack');
     }
   };
-
-  const streamChatResponse = async (
-    messages: Array<{role: string, content: string}>, 
-    onToken: (token: string) => void,
-    onComplete?: () => void,
-    onError?: (error: string) => void
-  ): Promise<void> => {
+  const streamChatResponse = async (messages: Array<{
+    role: string;
+    content: string;
+  }>, onToken: (token: string) => void, onComplete?: () => void, onError?: (error: string) => void): Promise<void> => {
     try {
       console.log('🚀 Starting RAG-enhanced DeepSeek streaming...');
-
       const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`
         },
         body: JSON.stringify({
           messages,
           includeContext: true
-        }),
+        })
       });
-
       if (!response.ok) {
         throw new Error(`Edge function request failed: ${response.status} ${response.statusText}`);
       }
-
       if (!response.body) {
         throw new Error('No response stream available');
       }
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
-
       try {
         while (true) {
-          const { done, value } = await reader.read();
+          const {
+            done,
+            value
+          } = await reader.read();
           if (done) {
             console.log('✅ Stream reading completed');
             break;
           }
-
-          buffer += decoder.decode(value, { stream: true });
-          
+          buffer += decoder.decode(value, {
+            stream: true
+          });
           const parts = buffer.split('\n\n');
           buffer = parts.pop() || '';
-
           for (const part of parts) {
             const trimmed = part.trim();
             if (!trimmed) continue;
-            
             if (trimmed.startsWith('data: ')) {
               const jsonStr = trimmed.slice(6);
-              
               if (jsonStr === '[DONE]') {
                 console.log('✅ Stream completed with [DONE] signal');
                 onComplete?.();
                 return;
               }
-              
               try {
                 const parsed = JSON.parse(jsonStr);
                 const delta = parsed.choices?.[0]?.delta;
                 const token = delta?.content;
-                
                 if (token) {
                   console.log('📨 Received RAG-enhanced token:', token);
                   onToken(token);
                 }
-                
                 if (parsed.choices?.[0]?.finish_reason) {
                   console.log('✅ Stream finished with reason:', parsed.choices[0].finish_reason);
                   onComplete?.();
@@ -208,7 +191,6 @@ const InteractiveDemo = () => {
       } finally {
         reader.releaseLock();
       }
-
       onComplete?.();
     } catch (error) {
       console.error('❌ RAG-enhanced DeepSeek streaming failed:', error);
@@ -217,16 +199,13 @@ const InteractiveDemo = () => {
       throw error;
     }
   };
-
   const generatePrompt = async () => {
     if (formData.features.length === 0) {
       toast.error('Please select at least one feature');
       return;
     }
-    
     setIsGenerating(true);
     console.log('🚀 Generating NoCodeLos Blueprint Stack prompt with RAG 2.0 + MCP + A2A...');
-
     try {
       const systemPrompt = `You are the NoCodeLos Blueprint Stack Master AI - Supreme Application Architect with deepseek-chat integration.
 
@@ -254,7 +233,6 @@ const InteractiveDemo = () => {
    - Production-optimized reasoning workflows
 
 Generate comprehensive development blueprints with unlimited detail, complete implementation guidance, and enterprise-grade quality.`;
-
       const userQuery = `Generate a comprehensive NoCodeLos Blueprint Stack development blueprint for:
 
 **Application Type**: ${formData.appType}
@@ -269,61 +247,53 @@ Generate comprehensive development blueprints with unlimited detail, complete im
 4. **DeepSeek Chat**: Real-time streaming integration, conversation management
 
 Provide complete implementation guidance with code examples, configuration files, architectural patterns, and deployment strategies.`;
-
       let fullResponse = '';
-      
-      await streamChatResponse(
-        [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userQuery }
-        ],
-        (token) => {
-          fullResponse += token;
-        },
-        () => {
-          // Generation complete
-          const complexity = assessComplexity(formData.features.length);
-          const estimatedTime = estimateBuildTime(formData.features.length, complexity);
-          const suggestedComponents = generateComponentSuggestions();
-          const mcpEndpoints = generateMCPEndpoints();
-          const a2aProtocols = generateA2AProtocols();
-          const ragPipeline = generateRAGPipeline();
-
-          setGeneratedResult({
-            prompt: fullResponse,
-            estimatedBuildTime: estimatedTime,
-            complexity,
-            suggestedComponents,
-            mcpEndpoints,
-            a2aProtocols,
-            ragPipeline
-          });
-          
-          setCurrentStep(4);
-          setIsGenerating(false);
-          console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration');
-          toast.success('🎉 Your NoCodeLos Blueprint Stack master prompt is ready!');
-        },
-        (error) => {
-          setIsGenerating(false);
-          console.error('❌ Blueprint Stack prompt generation failed:', error);
-          toast.error('Failed to generate blueprint. Please ensure your DeepSeek API key is configured.');
-        }
-      );
+      await streamChatResponse([{
+        role: 'system',
+        content: systemPrompt
+      }, {
+        role: 'user',
+        content: userQuery
+      }], token => {
+        fullResponse += token;
+      }, () => {
+        // Generation complete
+        const complexity = assessComplexity(formData.features.length);
+        const estimatedTime = estimateBuildTime(formData.features.length, complexity);
+        const suggestedComponents = generateComponentSuggestions();
+        const mcpEndpoints = generateMCPEndpoints();
+        const a2aProtocols = generateA2AProtocols();
+        const ragPipeline = generateRAGPipeline();
+        setGeneratedResult({
+          prompt: fullResponse,
+          estimatedBuildTime: estimatedTime,
+          complexity,
+          suggestedComponents,
+          mcpEndpoints,
+          a2aProtocols,
+          ragPipeline
+        });
+        setCurrentStep(4);
+        setIsGenerating(false);
+        console.log('✅ NoCodeLos Blueprint Stack prompt generated with full DeepSeek integration');
+        toast.success('🎉 Your NoCodeLos Blueprint Stack master prompt is ready!');
+      }, error => {
+        setIsGenerating(false);
+        console.error('❌ Blueprint Stack prompt generation failed:', error);
+        toast.error('Failed to generate blueprint. Please ensure your DeepSeek API key is configured.');
+      });
     } catch (error) {
       setIsGenerating(false);
       console.error('❌ Blueprint Stack prompt generation failed:', error);
       toast.error('Failed to generate blueprint. Please ensure your DeepSeek API key is configured.');
     }
   };
-
   const assessComplexity = (featureCount: number): string => {
     if (featureCount <= 2) return 'Simple';
     if (featureCount <= 4) return 'Moderate';
     if (featureCount <= 6) return 'Complex';
     return 'Advanced';
   };
-
   const estimateBuildTime = (featureCount: number, complexity: string): string => {
     const baseTime = {
       'Simple': 2,
@@ -331,89 +301,60 @@ Provide complete implementation guidance with code examples, configuration files
       'Complex': 10,
       'Advanced': 20
     };
-    
     const days = baseTime[complexity as keyof typeof baseTime] || 5;
     return `${days}-${days + 3} days`;
   };
-
   const generateComponentSuggestions = (): string[] => {
     const components = ['Header', 'Footer', 'Layout', 'MCPClient', 'A2AAgent', 'RAGRetriever'];
-    
     if (formData.features.includes('auth')) {
       components.push('AuthProvider', 'LoginForm', 'SignupForm');
     }
-    
     if (formData.features.includes('payments')) {
       components.push('PaymentForm', 'PricingCard', 'CheckoutFlow');
     }
-    
     if (formData.features.includes('realtime')) {
       components.push('WebSocketProvider', 'LiveChat', 'NotificationCenter');
     }
-    
     if (formData.features.includes('analytics')) {
       components.push('Dashboard', 'MetricsCard', 'ChartContainer');
     }
-    
     if (formData.features.includes('search')) {
       components.push('SearchBar', 'FilterPanel', 'ResultsList');
     }
-
     return components;
   };
-
   const generateMCPEndpoints = (): string[] => {
     const endpoints = ['/.well-known/mcp-manifest.json'];
-    
     if (formData.features.includes('auth')) {
       endpoints.push('/mcp/auth-provider', '/mcp/user-management');
     }
-    
     if (formData.features.includes('payments')) {
       endpoints.push('/mcp/payment-processor', '/mcp/billing-service');
     }
-    
     if (formData.features.includes('realtime')) {
       endpoints.push('/mcp/websocket-server', '/mcp/notification-hub');
     }
-    
     if (formData.features.includes('analytics')) {
       endpoints.push('/mcp/analytics-collector', '/mcp/metrics-aggregator');
     }
-
     endpoints.push('/mcp/rag-retriever', '/mcp/knowledge-indexer');
-    
     return endpoints;
   };
-
   const generateA2AProtocols = (): string[] => {
     const protocols = ['agent-discovery', 'task-coordination', 'message-exchange'];
-    
     if (formData.features.includes('realtime')) {
       protocols.push('real-time-collaboration', 'live-updates');
     }
-    
     if (formData.features.includes('analytics')) {
       protocols.push('data-aggregation', 'cross-agent-analytics');
     }
-    
     protocols.push('rag-knowledge-sharing', 'distributed-reasoning');
-    
     return protocols;
   };
-
   const generateRAGPipeline = (): string => {
-    const components = [
-      'Document Ingestion → Chunking Strategy',
-      'Embedding Generation → Vector Database',
-      'Hybrid Search (Dense + Sparse)',
-      'Re-ranking → Context Compression',
-      'Query Enhancement → Response Generation'
-    ];
-    
+    const components = ['Document Ingestion → Chunking Strategy', 'Embedding Generation → Vector Database', 'Hybrid Search (Dense + Sparse)', 'Re-ranking → Context Compression', 'Query Enhancement → Response Generation'];
     return components.join(' → ');
   };
-
   const handleFeatureToggle = (featureId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -421,7 +362,6 @@ Provide complete implementation guidance with code examples, configuration files
     }));
     console.log('🔄 NoCodeLos Blueprint Stack features updated:', formData.features);
   };
-
   const copyToClipboard = async () => {
     if (generatedResult) {
       await navigator.clipboard.writeText(generatedResult.prompt);
@@ -429,7 +369,6 @@ Provide complete implementation guidance with code examples, configuration files
       console.log('📋 Blueprint Stack prompt copied to clipboard');
     }
   };
-
   const downloadPrompt = () => {
     if (generatedResult) {
       const blob = new Blob([generatedResult.prompt], {
@@ -445,7 +384,6 @@ Provide complete implementation guidance with code examples, configuration files
       console.log('📥 Blueprint Stack prompt file downloaded');
     }
   };
-
   const resetDemo = () => {
     setCurrentStep(0);
     setFormData({
@@ -457,7 +395,6 @@ Provide complete implementation guidance with code examples, configuration files
     setGeneratedResult(null);
     console.log('🔄 NoCodeLos Blueprint Stack demo reset');
   };
-
   const getStepTitle = () => {
     switch (currentStep) {
       case 0:
@@ -474,9 +411,7 @@ Provide complete implementation guidance with code examples, configuration files
         return "";
     }
   };
-
-  return (
-    <section className="py-20 bg-black">
+  return <section className="py-20 bg-black">
       <div className="container mx-auto px-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -504,92 +439,63 @@ Provide complete implementation guidance with code examples, configuration files
           </div>
 
           {/* API Key Setup */}
-          {showApiKey && (
-            <div className="mb-8">
+          {showApiKey && <div className="mb-8">
               <ApiKeyManager onApiKeyChange={handleApiKeyChange} />
-            </div>
-          )}
+            </div>}
 
           <Card className="shadow-2xl border-gray-800 bg-gray-900 overflow-hidden">
             <CardHeader className="gradient-logo text-white">
               <CardTitle className="text-2xl flex items-center justify-between">
                 <span>Step {currentStep + 1}: {getStepTitle()}</span>
-                {!showApiKey && currentStep < 4 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowApiKey(true)}
-                    className="text-white hover:bg-white/20"
-                  >
-                    <Brain className="w-4 h-4 mr-2" />
-                    Setup DeepSeek AI
-                  </Button>
-                )}
+                {!showApiKey && currentStep < 4}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 bg-gray-900">
               {/* Step 0: App Type Selection */}
-              {currentStep === 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {appTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => {
-                        setFormData(prev => ({
-                          ...prev,
-                          appType: type.label
-                        }));
-                        setCurrentStep(1);
-                        console.log('📱 App type selected:', type.label);
-                      }}
-                      className="p-6 border-2 border-gray-700 rounded-xl hover:border-purple-400 hover:bg-gray-800 transition-all duration-300 text-center group bg-gray-800"
-                    >
+              {currentStep === 0 && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {appTypes.map(type => <button key={type.id} onClick={() => {
+                setFormData(prev => ({
+                  ...prev,
+                  appType: type.label
+                }));
+                setCurrentStep(1);
+                console.log('📱 App type selected:', type.label);
+              }} className="p-6 border-2 border-gray-700 rounded-xl hover:border-purple-400 hover:bg-gray-800 transition-all duration-300 text-center group bg-gray-800">
                       <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
                         {type.icon}
                       </div>
                       <div className="font-semibold text-gray-100 mb-2">{type.label}</div>
                       <div className="text-sm text-gray-400">{type.description}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    </button>)}
+                </div>}
 
               {/* Step 1: Data Source Selection */}
-              {currentStep === 1 && (
-                <div className="space-y-6">
+              {currentStep === 1 && <div className="space-y-6">
                   <div className="text-center mb-6">
                     <p className="text-lg text-gray-300">
                       Building: <span className="font-semibold text-purple-400">{formData.appType}</span>
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {dataSources.map((source) => (
-                      <button
-                        key={source.id}
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            dataSource: source.label
-                          }));
-                          setCurrentStep(2);
-                          console.log('💾 Data source selected:', source.label);
-                        }}
-                        className="p-6 border-2 border-gray-700 rounded-xl hover:border-purple-400 hover:bg-gray-800 transition-all duration-300 text-center group bg-gray-800"
-                      >
+                    {dataSources.map(source => <button key={source.id} onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    dataSource: source.label
+                  }));
+                  setCurrentStep(2);
+                  console.log('💾 Data source selected:', source.label);
+                }} className="p-6 border-2 border-gray-700 rounded-xl hover:border-purple-400 hover:bg-gray-800 transition-all duration-300 text-center group bg-gray-800">
                         <div className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">
                           {source.icon}
                         </div>
                         <div className="font-semibold text-gray-100 mb-2">{source.label}</div>
                         <div className="text-sm text-gray-400">{source.description}</div>
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Step 2: Feature Selection */}
-              {currentStep === 2 && (
-                <div className="space-y-6">
+              {currentStep === 2 && <div className="space-y-6">
                   <div className="text-center mb-6">
                     <p className="text-lg text-gray-300">
                       Building: <span className="font-semibold text-purple-400">{formData.appType}</span> with{" "}
@@ -598,40 +504,24 @@ Provide complete implementation guidance with code examples, configuration files
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    {features.map((feature) => (
-                      <label
-                        key={feature.id}
-                        className="flex items-center space-x-3 p-4 border-2 border-gray-700 rounded-xl cursor-pointer hover:border-purple-400 transition-all duration-300 bg-gray-800"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.features.includes(feature.id)}
-                          onChange={() => handleFeatureToggle(feature.id)}
-                          className="w-5 h-5 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
-                        />
+                    {features.map(feature => <label key={feature.id} className="flex items-center space-x-3 p-4 border-2 border-gray-700 rounded-xl cursor-pointer hover:border-purple-400 transition-all duration-300 bg-gray-800">
+                        <input type="checkbox" checked={formData.features.includes(feature.id)} onChange={() => handleFeatureToggle(feature.id)} className="w-5 h-5 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500" />
                         <div className="flex-1">
                           <span className="font-medium text-gray-100">{feature.label}</span>
                           <span className="text-xs text-purple-400 ml-2">({feature.category})</span>
                         </div>
-                      </label>
-                    ))}
+                      </label>)}
                   </div>
                   
                   <div className="text-center">
-                    <Button
-                      onClick={() => setCurrentStep(3)}
-                      disabled={formData.features.length === 0}
-                      className="gradient-logo hover:opacity-90 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    >
+                    <Button onClick={() => setCurrentStep(3)} disabled={formData.features.length === 0} className="gradient-logo hover:opacity-90 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                       Continue to Final Details
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Step 3: Additional Requirements */}
-              {currentStep === 3 && (
-                <div className="space-y-6">
+              {currentStep === 3 && <div className="space-y-6">
                   <div className="text-center mb-6">
                     <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg p-4 mb-4">
                       <p className="text-lg text-gray-100 font-medium">
@@ -643,43 +533,28 @@ Provide complete implementation guidance with code examples, configuration files
                   <div className="space-y-4">
                     <label className="block">
                       <span className="text-gray-300 font-medium">Additional Requirements (Optional)</span>
-                      <textarea
-                        value={formData.additionalRequirements}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          additionalRequirements: e.target.value
-                        }))}
-                        placeholder="Any specific design preferences, integrations, or custom functionality..."
-                        className="mt-2 w-full p-4 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-32 resize-none bg-gray-800 text-gray-100 placeholder-gray-400"
-                      />
+                      <textarea value={formData.additionalRequirements} onChange={e => setFormData(prev => ({
+                    ...prev,
+                    additionalRequirements: e.target.value
+                  }))} placeholder="Any specific design preferences, integrations, or custom functionality..." className="mt-2 w-full p-4 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-32 resize-none bg-gray-800 text-gray-100 placeholder-gray-400" />
                     </label>
                   </div>
 
                   <div className="text-center">
-                    <Button
-                      onClick={generatePrompt}
-                      disabled={isGenerating}
-                      className="gradient-logo hover:opacity-90 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]"
-                    >
-                      {isGenerating ? (
-                        <div className="flex items-center space-x-2">
+                    <Button onClick={generatePrompt} disabled={isGenerating} className="gradient-logo hover:opacity-90 text-white px-12 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]">
+                      {isGenerating ? <div className="flex items-center space-x-2">
                           <Brain className="w-5 h-5 animate-spin" />
                           <span>Generating Blueprint...</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
+                        </div> : <div className="flex items-center space-x-2">
                           <Zap className="w-5 h-5" />
                           <span>Generate NoCodeLos Blueprint</span>
-                        </div>
-                      )}
+                        </div>}
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Step 4: Generated Result with Advanced Integration Details */}
-              {currentStep === 4 && generatedResult && (
-                <div className="space-y-6">
+              {currentStep === 4 && generatedResult && <div className="space-y-6">
                   <div className="text-center">
                     <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-100 mb-2">
@@ -718,91 +593,65 @@ Provide complete implementation guidance with code examples, configuration files
                     </div>
                   </div>
 
-                  {generatedResult.ragPipeline && (
-                    <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg p-6">
+                  {generatedResult.ragPipeline && <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg p-6">
                       <h4 className="font-semibold text-gray-100 mb-3 flex items-center">
                         <Database className="w-5 h-5 mr-2 text-blue-300" />
                         RAG 2.0 Pipeline:
                       </h4>
                       <p className="text-sm text-gray-200 font-mono">{generatedResult.ragPipeline}</p>
-                    </div>
-                  )}
+                    </div>}
 
-                  {generatedResult.mcpEndpoints && generatedResult.mcpEndpoints.length > 0 && (
-                    <div className="bg-gradient-to-r from-green-900 to-emerald-900 rounded-lg p-6">
+                  {generatedResult.mcpEndpoints && generatedResult.mcpEndpoints.length > 0 && <div className="bg-gradient-to-r from-green-900 to-emerald-900 rounded-lg p-6">
                       <h4 className="font-semibold text-gray-100 mb-3 flex items-center">
                         <Network className="w-5 h-5 mr-2 text-green-300" />
                         MCP Endpoints:
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {generatedResult.mcpEndpoints.map((endpoint, index) => (
-                          <span key={index} className="bg-green-800 text-green-200 px-3 py-1 rounded-full text-sm font-mono">
+                        {generatedResult.mcpEndpoints.map((endpoint, index) => <span key={index} className="bg-green-800 text-green-200 px-3 py-1 rounded-full text-sm font-mono">
                             {endpoint}
-                          </span>
-                        ))}
+                          </span>)}
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
-                  {generatedResult.a2aProtocols && generatedResult.a2aProtocols.length > 0 && (
-                    <div className="bg-gradient-to-r from-orange-900 to-red-900 rounded-lg p-6">
+                  {generatedResult.a2aProtocols && generatedResult.a2aProtocols.length > 0 && <div className="bg-gradient-to-r from-orange-900 to-red-900 rounded-lg p-6">
                       <h4 className="font-semibold text-gray-100 mb-3 flex items-center">
                         <GitBranch className="w-5 h-5 mr-2 text-orange-300" />
                         A2A Protocols:
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {generatedResult.a2aProtocols.map((protocol, index) => (
-                          <span key={index} className="bg-orange-800 text-orange-200 px-3 py-1 rounded-full text-sm font-medium">
+                        {generatedResult.a2aProtocols.map((protocol, index) => <span key={index} className="bg-orange-800 text-orange-200 px-3 py-1 rounded-full text-sm font-medium">
                             {protocol}
-                          </span>
-                        ))}
+                          </span>)}
                       </div>
-                    </div>
-                  )}
+                    </div>}
 
                   <div className="bg-gradient-to-r from-purple-900 to-pink-900 rounded-lg p-6">
                     <h4 className="font-semibold text-gray-100 mb-3">Suggested Components:</h4>
                     <div className="flex flex-wrap gap-2">
-                      {generatedResult.suggestedComponents.map((component, index) => (
-                        <span key={index} className="bg-purple-800 text-purple-200 px-3 py-1 rounded-full text-sm font-medium">
+                      {generatedResult.suggestedComponents.map((component, index) => <span key={index} className="bg-purple-800 text-purple-200 px-3 py-1 rounded-full text-sm font-medium">
                           {component}
-                        </span>
-                      ))}
+                        </span>)}
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button
-                      onClick={copyToClipboard}
-                      className="gradient-logo hover:opacity-90 text-white px-8 py-3 rounded-full font-semibold"
-                    >
+                    <Button onClick={copyToClipboard} className="gradient-logo hover:opacity-90 text-white px-8 py-3 rounded-full font-semibold">
                       <Copy className="w-4 h-4 mr-2" />
                       Copy Blueprint
                     </Button>
-                    <Button
-                      onClick={downloadPrompt}
-                      variant="outline"
-                      className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-3 rounded-full font-semibold bg-transparent"
-                    >
+                    <Button onClick={downloadPrompt} variant="outline" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white px-8 py-3 rounded-full font-semibold bg-transparent">
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </Button>
-                    <Button
-                      onClick={resetDemo}
-                      variant="ghost"
-                      className="text-gray-400 hover:text-gray-200 hover:bg-gray-800 px-8 py-3 rounded-full font-semibold"
-                    >
+                    <Button onClick={resetDemo} variant="ghost" className="text-gray-400 hover:text-gray-200 hover:bg-gray-800 px-8 py-3 rounded-full font-semibold">
                       🔄 Create Another
                     </Button>
                   </div>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default InteractiveDemo;
