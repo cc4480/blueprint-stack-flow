@@ -36,7 +36,9 @@ class PromptService {
 
   setApiKey(key: string) {
     this.apiKey = key;
-    console.log('🔑 DeepSeek API key configured for enhanced streaming');
+    // Store in localStorage for persistence
+    localStorage.setItem('deepseek_api_key', key);
+    console.log('🔑 DeepSeek API key configured for direct streaming');
   }
 
   async streamChatResponse(
@@ -48,37 +50,49 @@ class PromptService {
     options: StreamingOptions = {}
   ): Promise<void> {
     try {
-      console.log('🚀 Starting enhanced DeepSeek streaming with comprehensive context...');
+      console.log('🚀 Starting direct DeepSeek API streaming...');
 
-      const streamingOptions = {
-        maxTokens: options.maxTokens || 16384,
-        includeContext: includeContext,
-        temperature: options.temperature || 0.7,
-        enableExtendedOutput: options.enableExtendedOutput || true,
-        ...options
-      };
+      // Get API key from instance or localStorage
+      const apiKey = this.apiKey || localStorage.getItem('deepseek_api_key');
+      
+      if (!apiKey) {
+        throw new Error('DeepSeek API key not configured. Please set your API key.');
+      }
 
-      // Direct streaming to DeepSeek via our enhanced edge function
-      const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
+      // Enhanced messages with context if requested
+      const enhancedMessages = includeContext ? [
+        {
+          role: 'system' as const,
+          content: `You are an advanced AI assistant with comprehensive knowledge of RAG 2.0, MCP (Model Context Protocol), and A2A (Agent-to-Agent) protocols. Provide detailed, comprehensive responses that leverage modern AI capabilities and architectural patterns. Generate extensive, detailed responses with practical implementation guidance.`
+        },
+        ...messages
+      ] : messages;
+
+      // Direct call to DeepSeek API
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`,
-          'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({
-          messages,
-          ...streamingOptions
+          model: 'deepseek-chat',
+          messages: enhancedMessages,
+          temperature: options.temperature || 0.7,
+          max_tokens: options.maxTokens || 16384,
+          stream: true,
+          presence_penalty: 0.1,
+          frequency_penalty: 0.1,
+          top_p: 0.95,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek streaming request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
-        throw new Error('No DeepSeek response stream available');
+        throw new Error('No DeepSeek API response stream available');
       }
 
       const reader = response.body.getReader();
@@ -87,13 +101,13 @@ class PromptService {
       let tokenCount = 0;
       let responseLength = 0;
 
-      console.log('📡 DeepSeek streaming connection established, processing enhanced tokens...');
+      console.log('📡 DeepSeek API streaming connection established, processing tokens...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log('✅ DeepSeek stream reading completed');
+            console.log('✅ DeepSeek API stream reading completed');
             console.log(`📊 Final stream statistics: ${tokenCount} tokens, ${responseLength} characters`);
             break;
           }
@@ -112,8 +126,8 @@ class PromptService {
               const jsonStr = trimmed.slice(6);
               
               if (jsonStr === '[DONE]') {
-                console.log('✅ DeepSeek stream completed with [DONE] signal');
-                console.log(`🎯 Final enhanced output: ${tokenCount} tokens, ${responseLength} characters delivered`);
+                console.log('✅ DeepSeek API stream completed with [DONE] signal');
+                console.log(`🎯 Final output: ${tokenCount} tokens, ${responseLength} characters delivered`);
                 onComplete?.();
                 return;
               }
@@ -129,15 +143,15 @@ class PromptService {
                   console.log(`📨 DeepSeek token ${tokenCount}: "${token}" (total chars: ${responseLength})`);
                   onToken(token);
                   
-                  // Log progress every 100 tokens for enhanced monitoring
+                  // Log progress every 100 tokens
                   if (tokenCount % 100 === 0) {
                     console.log(`📈 DeepSeek progress: ${tokenCount} tokens, ${responseLength} characters processed`);
                   }
                 }
                 
                 if (parsed.choices?.[0]?.finish_reason) {
-                  console.log('✅ DeepSeek stream finished with reason:', parsed.choices[0].finish_reason);
-                  console.log(`🎯 Final enhanced output: ${tokenCount} tokens, ${responseLength} characters`);
+                  console.log('✅ DeepSeek API stream finished with reason:', parsed.choices[0].finish_reason);
+                  console.log(`🎯 Final output: ${tokenCount} tokens, ${responseLength} characters`);
                   onComplete?.();
                   return;
                 }
@@ -151,11 +165,11 @@ class PromptService {
         reader.releaseLock();
       }
 
-      console.log(`🎯 DeepSeek stream completed: ${tokenCount} tokens, ${responseLength} characters total`);
+      console.log(`🎯 DeepSeek API stream completed: ${tokenCount} tokens, ${responseLength} characters total`);
       onComplete?.();
     } catch (error) {
-      console.error('❌ Enhanced DeepSeek streaming failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown DeepSeek streaming error';
+      console.error('❌ Direct DeepSeek API streaming failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown DeepSeek API streaming error';
       onError?.(errorMessage);
       throw error;
     }

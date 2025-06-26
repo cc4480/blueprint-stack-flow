@@ -9,28 +9,37 @@ export class StreamingService {
     onError?: (error: string) => void
   ): Promise<void> {
     try {
-      console.log('🚀 Starting direct DeepSeek streaming...');
+      console.log('🚀 Starting direct DeepSeek API streaming...');
       
-      // Use the enhanced edge function with proper streaming
-      const response = await fetch('https://gewrxsorvvfgipwwcdzs.supabase.co/functions/v1/deepseek-chat', {
+      // Get the API key from localStorage or environment
+      const apiKey = localStorage.getItem('deepseek_api_key') || 'sk-your-api-key-here';
+      
+      if (!apiKey || apiKey === 'sk-your-api-key-here') {
+        throw new Error('DeepSeek API key not configured. Please set your API key in the settings.');
+      }
+      
+      // Direct call to DeepSeek API with streaming
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdld3J4c29ydnZmZ2lwd3djZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTY0MDQsImV4cCI6MjA2NjI5MjQwNH0.1ambxVpRHftCB9ueDN4PrVwm3clrYsM5smEICoPy4Kg`
         },
         body: JSON.stringify({
+          model: 'deepseek-chat',
           messages,
-          includeContext: true,
-          maxTokens: 16384
-        })
+          temperature: 0.7,
+          max_tokens: 16384,
+          stream: true,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek streaming request failed: ${response.status} ${response.statusText}`);
+        throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
       }
 
       if (!response.body) {
-        throw new Error('No response stream available');
+        throw new Error('No response stream available from DeepSeek API');
       }
 
       const reader = response.body.getReader();
@@ -38,13 +47,13 @@ export class StreamingService {
       let buffer = '';
       let tokenCount = 0;
 
-      console.log('📡 DeepSeek streaming connection established, processing tokens...');
+      console.log('📡 DeepSeek API streaming connection established, processing tokens...');
 
       try {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log('✅ DeepSeek stream reading completed');
+            console.log('✅ DeepSeek API stream reading completed');
             break;
           }
 
@@ -62,7 +71,7 @@ export class StreamingService {
               const jsonStr = trimmed.slice(6);
               
               if (jsonStr === '[DONE]') {
-                console.log('✅ DeepSeek stream completed with [DONE] signal');
+                console.log('✅ DeepSeek API stream completed with [DONE] signal');
                 onComplete?.();
                 return;
               }
@@ -79,7 +88,7 @@ export class StreamingService {
                 }
                 
                 if (parsed.choices?.[0]?.finish_reason) {
-                  console.log('✅ DeepSeek stream finished with reason:', parsed.choices[0].finish_reason);
+                  console.log('✅ DeepSeek API stream finished with reason:', parsed.choices[0].finish_reason);
                   onComplete?.();
                   return;
                 }
@@ -93,11 +102,11 @@ export class StreamingService {
         reader.releaseLock();
       }
 
-      console.log(`🎯 DeepSeek stream completed: ${tokenCount} tokens total`);
+      console.log(`🎯 DeepSeek API stream completed: ${tokenCount} tokens total`);
       onComplete?.();
     } catch (error) {
-      console.error('❌ DeepSeek streaming failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown DeepSeek streaming error';
+      console.error('❌ DeepSeek API streaming failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown DeepSeek API streaming error';
       onError?.(errorMessage);
       throw error;
     }
