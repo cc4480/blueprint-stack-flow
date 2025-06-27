@@ -154,10 +154,10 @@ ${prompt}
                     return newContent;
                   });
                 } else if (data.type === 'complete') {
-                  setGeneratedBlueprint(data.content || data.fullContent || '');
-                  setStreamProgress(`✅ Blueprint completed! ${data.tokens || 0} tokens in ${data.processingTime || 0}ms`);
+                  // Don't overwrite the accumulated blueprint content - just update the progress
+                  setStreamProgress(`✅ Blueprint completed! Generation finished successfully`);
                   setIsStreaming(false);
-                  console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
+                  console.log(`✅ Blueprint generation completed`);
                   return;
                 } else if (data.type === 'error') {
                   setStreamProgress(`❌ Error: ${data.error}`);
