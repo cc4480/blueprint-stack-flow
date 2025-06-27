@@ -21,7 +21,7 @@ const ProblemSection = () => {
                   You've probably asked ChatGPT to help you build an app. Maybe you spent hours in conversation… 
                   and ended up with a generic spec doc or broken template.
                 </p>
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-[#feae67]">
                   That's not your fault. It's the method.
                 </p>
               </div>
