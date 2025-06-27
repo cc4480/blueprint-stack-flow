@@ -254,7 +254,10 @@ class BugTracker {
     const a = document.createElement('a');
     a.href = url;
     a.download = `bug-report-${Date.now()}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
 

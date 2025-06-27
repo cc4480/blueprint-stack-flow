@@ -1,5 +1,4 @@
-// Component validation and health checking utilities
-import React from 'react';
+import { useState, useEffect } from 'react';
 
 interface ComponentHealth {
   name: string;
@@ -100,25 +99,25 @@ class ComponentValidator {
 
     Object.entries(validationRules).forEach(([field, rules]) => {
       const value = formData[field];
-
-      if (rules.required && (!value || value.toString().trim() === '')) {
+      
+      if (rules.required && (!value || value === '')) {
         errors[field] = `${field} is required`;
-        return;
       }
-
-      if (value && rules.minLength && value.toString().length < rules.minLength) {
+      
+      if (rules.minLength && value && value.length < rules.minLength) {
         errors[field] = `${field} must be at least ${rules.minLength} characters`;
-        return;
       }
-
-      if (value && rules.maxLength && value.toString().length > rules.maxLength) {
+      
+      if (rules.maxLength && value && value.length > rules.maxLength) {
         errors[field] = `${field} must be no more than ${rules.maxLength} characters`;
-        return;
       }
-
-      if (value && rules.pattern && !rules.pattern.test(value)) {
-        errors[field] = rules.message || `${field} format is invalid`;
-        return;
+      
+      if (rules.pattern && value && !rules.pattern.test(value)) {
+        errors[field] = `${field} format is invalid`;
+      }
+      
+      if (rules.email && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        errors[field] = `${field} must be a valid email address`;
       }
     });
 
@@ -129,17 +128,12 @@ class ComponentValidator {
   }
 
   private updateHealthCheck(health: ComponentHealth): void {
-    const existingIndex = this.healthChecks.findIndex(h => h.name === health.name);
+    const existingIndex = this.healthChecks.findIndex(check => check.name === health.name);
     
     if (existingIndex >= 0) {
       this.healthChecks[existingIndex] = health;
     } else {
       this.healthChecks.push(health);
-    }
-
-    // Log issues for debugging
-    if (health.issues.length > 0) {
-      console.warn(`⚠️ Component issues in ${health.name}:`, health.issues);
     }
   }
 
@@ -182,9 +176,9 @@ export const useComponentValidation = (
   props: Record<string, any>,
   requiredProps: string[]
 ) => {
-  const [health, setHealth] = React.useState<ComponentHealth | null>(null);
+  const [health, setHealth] = useState<ComponentHealth | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const validationResult = componentValidator.validateComponent(
       componentName,
       props,
