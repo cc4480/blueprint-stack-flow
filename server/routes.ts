@@ -309,8 +309,7 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
             },
             { role: 'user', content: prompt }
           ],
-          temperature: parseFloat(temperature?.toString() || '0.7'),
-          max_tokens: 32768,
+          max_tokens: 8192,
           stream: true
         }),
         signal: controller.signal
@@ -604,8 +603,7 @@ Your blueprints must be:
 Generate blueprints that enable developers to build production applications on Lovable 2.0 with zero additional research or decision-making required.` },
             { role: 'user', content: prompt }
           ],
-          temperature,
-          max_tokens: 64000, // Use DeepSeek's full 64K token output capacity
+          max_tokens: 8192, // DeepSeek chat model supports up to 8K tokens output
           stream: true
         }),
         signal: controller.signal
@@ -733,15 +731,15 @@ Generate blueprints that enable developers to build production applications on L
       
       // DeepSeek reasoner doesn't support temperature, top_p according to docs
       const requestBody = {
-        model: model || 'deepseek-reasoner',
+        model: model || 'deepseek-chat',
         messages,
-        max_tokens: max_tokens || 64000,
+        max_tokens: max_tokens || 8192, // DeepSeek chat supports up to 8K tokens output
         stream: stream || false
       };
       
       console.log('📡 Request payload:', JSON.stringify(requestBody, null, 2));
       
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
