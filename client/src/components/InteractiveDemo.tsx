@@ -201,7 +201,6 @@ ${prompt}
     <section id="interactive-demo" className="relative min-h-screen bg-black text-white overflow-hidden py-20">
       {/* Background Animation - matching hero section */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] animate-pulse"></div>
-      
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-red-500/20 rounded-full border border-blue-400/30 font-medium mb-8 backdrop-blur-sm">
@@ -253,7 +252,7 @@ ${prompt}
                   <div className="p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-lg border border-purple-400/30 backdrop-blur-sm">
                     <div className="font-semibold text-purple-300 mb-2">AI & Services</div>
                     <div className="text-sm space-y-1 text-gray-300">
-                      <div>Claude 3.5 Sonnet</div>
+                      <div>Claude 4 Sonnet</div>
                       <div>Stripe Payments</div>
                       <div>Resend Email</div>
                     </div>
