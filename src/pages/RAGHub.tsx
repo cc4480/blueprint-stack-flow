@@ -238,7 +238,7 @@ const RAGHub = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentQueries.map(query => <div key={query.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  {recentQueries.map(query => <div key={query.id} className="flex items-center justify-between p-4 rounded-lg transition-colors bg-zinc-950">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{query.query}</p>
                         <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
