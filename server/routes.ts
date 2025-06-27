@@ -136,6 +136,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
 
+    console.log(`🔑 API Key status: ${apiKey ? 'Available' : 'Missing'} (length: ${apiKey?.length || 0})`);
+
     if (!apiKey) {
       console.log('⚠️ Streaming simulation mode - configure DEEPSEEK_API_KEY for real AI');
       
@@ -239,7 +241,7 @@ Generate comprehensive, production-ready blueprints using ONLY these technologie
             { role: 'user', content: prompt }
           ],
           temperature: parseFloat(temperature?.toString() || '0.7'),
-          max_tokens: 64000,
+          max_tokens: 8192,
           stream: true
         }),
         signal: controller.signal
@@ -248,9 +250,11 @@ Generate comprehensive, production-ready blueprints using ONLY these technologie
       clearTimeout(timeoutId);
 
       if (!deepseekResponse.ok) {
+        const errorText = await deepseekResponse.text();
+        console.error('DeepSeek API error:', deepseekResponse.status, errorText);
         res.write(`data: ${JSON.stringify({
           type: 'error',
-          error: 'API request failed'
+          error: `API request failed: ${deepseekResponse.status} - ${errorText}`
         })}\n\n`);
         res.end();
         return;

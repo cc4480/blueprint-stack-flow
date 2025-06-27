@@ -110,7 +110,7 @@ Complete NoCodeLos Blueprint Stack application successfully migrated from Lovabl
           - Created `/api/stream-blueprint` endpoint for Server-Sent Events
           - Implemented real-time token streaming with visual progress indicators
           - Enhanced user experience with live blueprint generation feedback
-          - Optimized for DeepSeek Chat model with 64K token output capacity
+          - Optimized for DeepSeek Chat model with 8K token output capacity
           - Added comprehensive error handling and connection management
 
 ## API Integration Status
