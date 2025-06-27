@@ -114,8 +114,8 @@ ${prompt}
           prompt: fullPrompt,
           temperature: 0.7,
           systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
-        }),
-        signal: abortController.signal
+        })
+        // Removed signal: abortController.signal to prevent premature abortion
       });
 
       if (timeoutId) clearTimeout(timeoutId);

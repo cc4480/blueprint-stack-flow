@@ -150,12 +150,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let controller: AbortController | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
 
-    // Handle client disconnect
+    // Handle client disconnect - but don't abort immediately
+    let clientDisconnected = false;
     req.on('close', () => {
-      console.log('Client disconnected, cleaning up...');
-      if (controller && !controller.signal.aborted) {
-        controller.abort();
-      }
+      console.log('Client disconnected, marking for cleanup...');
+      clientDisconnected = true;
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
@@ -317,8 +316,8 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
           ],
           max_tokens: 8192,
           stream: true
-        }),
-        signal: controller.signal
+        })
+        // Temporarily removed signal to prevent premature abortion
       });
       
       clearTimeout(timeoutId);
@@ -349,6 +348,12 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
       }
 
       while (true) {
+        // Check if client disconnected
+        if (clientDisconnected) {
+          console.log('Client disconnected, stopping stream processing');
+          break;
+        }
+
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -362,14 +367,15 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
             if (jsonStr === '[DONE]') {
               const processingTime = Date.now() - startTime;
               
-              res.write(`data: ${JSON.stringify({
-                type: 'complete',
-                content: fullContent,
-                processingTime,
-                tokens: fullContent.length
-              })}\n\n`);
-              
-              res.end();
+              if (!clientDisconnected && res.writable) {
+                res.write(`data: ${JSON.stringify({
+                  type: 'complete',
+                  content: fullContent,
+                  processingTime,
+                  tokens: fullContent.length
+                })}\n\n`);
+                res.end();
+              }
               return;
             }
             
@@ -378,7 +384,7 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
                 const parsed = JSON.parse(jsonStr);
                 const delta = parsed.choices?.[0]?.delta;
                 
-                if (delta?.content) {
+                if (delta?.content && !clientDisconnected && res.writable) {
                   fullContent += delta.content;
                   
                   res.write(`data: ${JSON.stringify({
