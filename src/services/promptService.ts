@@ -67,8 +67,8 @@ class PromptService {
         ...messages
       ] : messages;
 
-      // Ensure max_tokens is within DeepSeek's valid range [1, 8192]
-      const maxTokens = Math.min(options.maxTokens || 8192, 8192);
+      // Updated: Support full 64K token range [1, 65536]
+      const maxTokens = Math.min(options.maxTokens || 32768, 65536);
 
       // Direct call to DeepSeek API
       const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -277,7 +277,7 @@ class PromptService {
    - Real-time performance monitoring and auto-scaling
 
 4. **Enhanced DeepSeek Chat Integration**
-   - Extended context window support for comprehensive responses
+   - Extended context window support for comprehensive responses (up to 64K tokens)
    - Real-time streaming with advanced token management
    - Chain-of-thought reasoning with step-by-step decomposition
    - Production-optimized reasoning workflows with error handling

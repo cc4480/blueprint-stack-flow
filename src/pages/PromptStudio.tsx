@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ const PromptStudio = () => {
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [includeContext, setIncludeContext] = useState(true);
-  const [maxTokens, setMaxTokens] = useState([8192]); // Fixed: Changed from 16384 to 8192
+  const [maxTokens, setMaxTokens] = useState([32768]); // Updated: Starting with 32K, max 64K
   const [temperature, setTemperature] = useState([0.7]);
   const [extendedOutput, setExtendedOutput] = useState(true);
   const [tokenCount, setTokenCount] = useState(0);
@@ -68,7 +69,7 @@ const PromptStudio = () => {
     abortControllerRef.current = new AbortController();
     
     try {
-      console.log('🚀 Starting enhanced DeepSeek streaming with corrected max_tokens...');
+      console.log('🚀 Starting enhanced DeepSeek streaming with 64K token support...');
       
       await promptService.streamChatResponse(
         [
@@ -162,7 +163,7 @@ const PromptStudio = () => {
             Enhanced DeepSeek Chat Studio
           </h1>
           <p className="text-purple-300 text-lg">
-            Real-time streaming with comprehensive RAG 2.0, MCP & A2A integration
+            Real-time streaming with comprehensive RAG 2.0, MCP & A2A integration (64K tokens)
           </p>
         </div>
 
@@ -205,20 +206,22 @@ const PromptStudio = () => {
               <div className="space-y-3">
                 <Label className="flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  Max Tokens: {maxTokens[0]}
+                  Max Tokens: {maxTokens[0].toLocaleString()}
                 </Label>
                 <Slider
                   value={maxTokens}
                   onValueChange={setMaxTokens}
-                  max={8192}
+                  max={65536}
                   min={1024}
-                  step={512}
+                  step={1024}
                   className="w-full"
                 />
                 <div className="text-xs text-gray-400 flex justify-between">
                   <span>1K</span>
-                  <span>4K</span>
-                  <span>8K</span>
+                  <span>16K</span>
+                  <span>32K</span>
+                  <span>48K</span>
+                  <span>64K</span>
                 </div>
               </div>
 
