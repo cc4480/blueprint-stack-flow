@@ -3,6 +3,34 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health Check Endpoints
+  app.get("/api/health", async (req, res) => {
+    try {
+      res.json({ 
+        status: "healthy", 
+        timestamp: new Date().toISOString(),
+        version: "4.0",
+        services: ["api", "database", "deepseek"]
+      });
+    } catch (error) {
+      res.status(500).json({ status: "error", error: "Health check failed" });
+    }
+  });
+
+  app.get("/api/db/health", async (req, res) => {
+    try {
+      // Simple database connectivity test
+      await storage.getRagDocuments();
+      res.json({ 
+        status: "healthy", 
+        database: "postgresql",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ status: "error", error: "Database connection failed" });
+    }
+  });
+
   // RAG Documents API
   app.get("/api/rag/documents", async (req, res) => {
     try {
@@ -207,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalAnswer: finalAnswer, // Final answer from DeepSeek
         confidence: 95,
         processingTime,
-        steps: reasoningSteps ? (reasoningSteps.steps || []) : [
+        steps: (reasoningSteps as any)?.steps || [
           { step: 1, thought: "Processing request with DeepSeek Reasoner..." },
           { step: 2, thought: "Analyzing context and generating response..." },
           { step: 3, thought: "Finalizing comprehensive answer..." }

@@ -32,6 +32,7 @@ import {
   Server,
   FileText
 } from 'lucide-react';
+import SystemHealthMonitor from '@/components/SystemHealthMonitor';
 
 // Types
 interface DashboardMetrics {
@@ -449,16 +450,11 @@ export default function Dashboard() {
                       </div>
                       <Progress value={78} className="mt-1" />
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm">
-                        <span>Overall System Health</span>
-                        <span>Excellent</span>
-                      </div>
-                      <Progress value={94} className="mt-1" />
-                    </div>
                   </div>
                 </CardContent>
               </Card>
+
+              <SystemHealthMonitor />
             </div>
           </TabsContent>
         </Tabs>

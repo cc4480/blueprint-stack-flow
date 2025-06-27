@@ -22,6 +22,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Navigation from "./components/Navigation";
 import { analytics } from "./services/analyticsService";
 import { performanceService } from "./services/performanceService";
+import { performanceOptimizer } from "./utils/performanceOptimizer";
+import { errorHandler } from "./utils/errorHandler";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,13 @@ const App: React.FC = () => {
     performanceService.initialize();
     analytics.track('app_loaded', 'lifecycle', 'application_start');
     
+    // Initialize performance optimizations
+    performanceOptimizer.measureWebVitals();
+    performanceOptimizer.setupLazyLoading();
+    performanceOptimizer.preloadCriticalImages([
+      '/lovable-uploads/cd49efdf-9fb4-4552-b98b-348b575a8c29.png'
+    ]);
+    
     // Make analytics available globally for error boundary
     window.analytics = analytics;
     
@@ -39,6 +48,7 @@ const App: React.FC = () => {
     console.log('🛡️ Error Boundary Protection Enabled');
     console.log('🔍 Real-time Console Logging Active');
     console.log('🎯 All Blueprint Stack components now available');
+    console.log('⚡ Performance optimizations active');
     
     // Cleanup on unmount
     return () => {

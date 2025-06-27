@@ -375,8 +375,8 @@ export default function InteractiveDemo() {
   }, [selectedFeatures]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 py-16 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20 py-16 px-4 content-container stable-container">
+      <div className="max-w-6xl mx-auto contain-layout">
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 bg-clip-text text-transparent mb-6">
             Get Your First NoCodeLos Blueprint Stack Master Prompt in 3 Minutes

@@ -114,3 +114,52 @@
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), 0 0 60px rgba(147, 51, 234, 0.2);
   }
 }
+
+/* Layout Stability - Prevent Cumulative Layout Shift */
+@layer base {
+  /* Reserve space for dynamic content */
+  .content-container {
+    min-height: 100vh;
+    contain: layout;
+  }
+  
+  /* Prevent layout shifts from images */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Stable container dimensions */
+  .stable-container {
+    min-height: 600px;
+    contain: layout style;
+  }
+  
+  /* Animation performance optimizations */
+  .animate-optimized {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Prevent font swap layout shift */
+  body {
+    font-display: swap;
+  }
+}
+
+/* Performance optimizations */
+@layer utilities {
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .contain-layout {
+    contain: layout;
+  }
+  
+  .contain-strict {
+    contain: strict;
+  }
+}

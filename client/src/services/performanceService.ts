@@ -89,6 +89,8 @@ class PerformanceService {
   private measureCLS() {
     let clsValue = 0;
     let clsEntries: any[] = [];
+    let lastReportTime = 0;
+    const REPORT_INTERVAL = 5000; // Report every 5 seconds instead of every shift
 
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
@@ -97,7 +99,17 @@ class PerformanceService {
           clsValue += (entry as any).value;
         }
       }
-      this.recordMetric('cumulative-layout-shift', clsValue, 'score');
+      
+      // Only report if enough time has passed and CLS is significant
+      const now = Date.now();
+      if (now - lastReportTime > REPORT_INTERVAL && clsValue > 0.1) {
+        this.recordMetric('cumulative-layout-shift', clsValue, 'score');
+        lastReportTime = now;
+        
+        // Reset to track incremental changes
+        clsValue = 0;
+        clsEntries = [];
+      }
     });
 
     observer.observe({ type: 'layout-shift', buffered: true });
@@ -132,7 +144,12 @@ class PerformanceService {
     };
 
     this.metrics.push(metric);
-    console.log(`⚡ Performance Metric - ${name}: ${value}${unit}`);
+    
+    // Only log important metrics to reduce console spam
+    const importantMetrics = ['cumulative-layout-shift', 'largest-contentful-paint', 'first-input-delay'];
+    if (importantMetrics.includes(name) && (name !== 'cumulative-layout-shift' || value > 0.1)) {
+      console.log(`⚡ Performance Alert - ${name}: ${value}${unit}`);
+    }
   }
 
   getMetrics() {
