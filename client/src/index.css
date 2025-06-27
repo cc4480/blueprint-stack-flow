@@ -128,6 +128,7 @@
     max-width: 100%;
     height: auto;
     display: block;
+    loading: lazy;
   }
   
   /* Stable container dimensions */
@@ -140,11 +141,24 @@
   .animate-optimized {
     will-change: transform;
     transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
   /* Prevent font swap layout shift */
   body {
     font-display: swap;
+  }
+  
+  /* Critical CSS optimization */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Reduce paint and composite layers */
+  .performance-optimized {
+    transform: translateZ(0);
+    will-change: auto;
+    contain: layout style paint;
   }
 }
 

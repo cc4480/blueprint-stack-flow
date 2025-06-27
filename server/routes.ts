@@ -147,10 +147,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
 
+    let controller: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    // Handle client disconnect
+    req.on('close', () => {
+      if (controller) {
+        controller.abort();
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    });
+
     try {
       const startTime = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000);
+      controller = new AbortController();
+      timeoutId = setTimeout(() => {
+        if (controller) {
+          controller.abort();
+        }
+      }, 300000); // 5 minute timeout
       
       const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
@@ -374,11 +391,20 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
       }
     } catch (error) {
       console.error('Streaming error:', error);
-      res.write(`data: ${JSON.stringify({
-        type: 'error',
-        error: 'Streaming failed'
-      })}\n\n`);
-      res.end();
+      
+      // Check if response is still writable before writing
+      if (!res.headersSent && res.writable) {
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: error instanceof Error ? error.message : 'Streaming failed'
+        })}\n\n`);
+        res.end();
+      }
+    } finally {
+      // Clean up resources
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   });
 

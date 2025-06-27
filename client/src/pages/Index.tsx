@@ -6,6 +6,7 @@ import InteractiveDemo from "@/components/InteractiveDemo";
 import ProofSection from "@/components/ProofSection";
 import CommunitySection from "@/components/CommunitySection";
 import FinalCTA from "@/components/FinalCTA";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const Index = () => {
   return (
@@ -18,7 +19,9 @@ const Index = () => {
         <BlueprintStackSection />
       </div>
       <div id="interactive-demo">
-        <InteractiveDemo />
+        <ErrorBoundary>
+          <InteractiveDemo />
+        </ErrorBoundary>
       </div>
       <div id="proof-section">
         <ProofSection />
