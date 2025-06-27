@@ -95,7 +95,7 @@ const CommunitySection = () => {
                 <div className={`bg-gradient-to-br ${platform.color} p-1 rounded-2xl shadow-lg hover:shadow-xl`}>
                   <div className="rounded-xl p-8 text-center h-full bg-slate-950">
                     <div className="text-4xl mb-4">{platform.icon}</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-2xl font-bold mb-2 text-zinc-50">
                       {platform.name}
                     </h3>
                     <div className={`inline-block bg-gradient-to-r ${platform.color} text-white px-3 py-1 rounded-full text-sm font-semibold mb-4`}>
