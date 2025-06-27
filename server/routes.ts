@@ -139,73 +139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`🔑 API Key status: ${apiKey ? 'Available' : 'Missing'} (length: ${apiKey?.length || 0})`);
 
     if (!apiKey) {
-      console.log('⚠️ Streaming simulation mode - configure DEEPSEEK_API_KEY for real AI');
-      
-      const mockBlueprint = `# Lovable 2.0 Application Blueprint
-
-## Project Overview
-Building a modern web application using Lovable's proven technology stack.
-
-## Technology Stack
-- **Frontend**: React 18 + TypeScript + Tailwind CSS
-- **Build Tool**: Vite for optimal development experience
-- **Components**: Shadcn/UI for beautiful, accessible components
-- **Backend**: Supabase for complete backend services
-- **Database**: PostgreSQL via Supabase
-- **Authentication**: Supabase Auth with social providers
-- **Deployment**: One-click deployment to Vercel/Netlify
-
-## Implementation Details
-
-### 1. Project Setup
-\`\`\`json
-{
-  "name": "lovable-app",
-  "dependencies": {
-    "react": "^18.2.0",
-    "@supabase/supabase-js": "^2.39.0",
-    "tailwindcss": "^3.4.0"
-  }
-}
-\`\`\`
-
-### 2. Database Schema
-\`\`\`sql
--- Users table (handled by Supabase Auth)
--- Custom application tables
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users PRIMARY KEY,
-  username TEXT UNIQUE,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-\`\`\`
-
-### 3. Component Structure
-- Layout components with responsive design
-- Authentication flows
-- Dashboard and main application views
-- Reusable UI components using Shadcn
-
-This blueprint provides a complete foundation for rapid development on Lovable 2.0.`;
-
-      // Simulate realistic streaming
-      for (let i = 0; i < mockBlueprint.length; i += 15) {
-        const chunk = mockBlueprint.slice(i, i + 15);
-        res.write(`data: ${JSON.stringify({
-          type: 'token',
-          content: chunk,
-          fullContent: mockBlueprint.slice(0, i + 15)
-        })}\n\n`);
-        await new Promise(resolve => setTimeout(resolve, 30));
-      }
-      
       res.write(`data: ${JSON.stringify({
-        type: 'complete',
-        content: mockBlueprint,
-        processingTime: 2000,
-        tokens: mockBlueprint.length
+        type: 'error',
+        error: 'DeepSeek API key is required. Please configure DEEPSEEK_API_KEY environment variable.'
       })}\n\n`);
-      
       res.end();
       return;
     }
@@ -226,83 +163,137 @@ This blueprint provides a complete foundation for rapid development on Lovable 2
           messages: [
             { 
               role: 'system', 
-              content: systemPrompt || `# Lovable 2.0 Blueprint Generator Expert
+              content: systemPrompt || `# Master Blueprint Generator Expert v4.0
 
-You are an expert AI architect specialized in generating comprehensive application blueprints exclusively for the Lovable 2.0 platform.
+You are an elite AI architect specialized in generating comprehensive, production-ready application blueprints exclusively for the Lovable 2.0 platform. Your mission is to create exhaustively detailed master blueprints that serve as complete technical specifications.
 
-Your task is to generate detailed, natural language application blueprints (9,000-10,000 characters) in markdown format that explain exactly how the application works in explicit detail. These blueprints will be used by Lovable's AI to understand and build complete full-stack applications.
+## CRITICAL OUTPUT REQUIREMENT:
+Generate blueprints that are MINIMUM 25,000 characters (approximately 5,000+ words). This is not a suggestion - it's a hard requirement. The blueprint must be comprehensive enough to build a complete, production-ready application.
 
 ## FIXED TECHNOLOGY STACK (NO EXCEPTIONS):
 - Frontend: React 18 + TypeScript + Tailwind CSS + Vite + Shadcn/UI
-- Backend: Supabase (PostgreSQL + Auth + Storage + Realtime)
+- Backend: Supabase (PostgreSQL + Auth + Storage + Realtime + Edge Functions)
 - Integrations: Claude 3.5 Sonnet + Stripe + Resend + Replicate
-- Deployment: Vercel/Netlify with Entri domains
+- Deployment: Vercel/Netlify with Entri domains + GitHub integration
 
-## BLUEPRINT FORMAT REQUIREMENTS:
-Generate a comprehensive markdown blueprint with natural language explanations covering:
+## MASTER BLUEPRINT STRUCTURE (COMPREHENSIVE COVERAGE):
 
-### 1. Application Overview & Core Purpose
-- Detailed explanation of what the application does and its primary value proposition
-- Target user personas and their specific needs
-- Core business logic and workflow processes
+### 1. Executive Summary & Vision (2,000+ characters)
+- Comprehensive application overview with detailed value proposition
+- Target market analysis and user personas with specific demographics
+- Business model and monetization strategies
+- Competitive landscape and differentiation factors
+- Success metrics and key performance indicators
+- Long-term vision and scalability roadmap
 
-### 2. User Interface & Experience Design
-- Complete description of all screens, pages, and user interfaces
-- Navigation flow and user journey mapping
-- Interactive elements, forms, and user input mechanisms
-- Responsive design behavior across devices
+### 2. Complete User Experience Design (3,000+ characters)
+- Exhaustive description of every screen, page, and user interface
+- Detailed navigation flows and user journey mapping
+- Interactive elements, forms, modals, and user input mechanisms
+- Responsive design behavior across desktop, tablet, and mobile
+- Accessibility features and inclusive design considerations
+- User onboarding experience and feature discovery
+- Error states, loading states, and edge case handling
+- Animation and micro-interaction specifications
 
-### 3. Database Architecture & Data Models
-- Comprehensive explanation of all Supabase database tables and relationships
-- Data validation rules and constraints
-- User data management and storage patterns
-- Real-time data synchronization requirements
+### 3. Comprehensive Database Architecture (3,000+ characters)
+- Complete Supabase database schema with all tables and relationships
+- Detailed field specifications, data types, and constraints
+- Foreign key relationships and referential integrity rules
+- Data validation rules and business logic constraints
+- Indexing strategies for performance optimization
+- Real-time subscription configurations
+- Row Level Security (RLS) policies for each table
+- Data backup and recovery procedures
+- Migration strategies and version control
 
-### 4. Authentication & User Management
+### 4. Authentication & Security Framework (2,500+ characters)
 - Complete user registration and login workflows using Supabase Auth
-- Permission levels and access control systems
-- Profile management and user settings
-- Security measures and data protection
+- Multi-factor authentication implementation
+- Social login integrations (Google, GitHub, etc.)
+- Permission levels, roles, and access control systems
+- Profile management and user settings functionality
+- Password reset and account recovery processes
+- Security measures and data protection protocols
+- GDPR compliance and privacy considerations
+- Session management and token handling
 
-### 5. Core Features & Functionality
-- Detailed explanation of every major feature
-- User workflows for each feature
+### 5. Core Features & Business Logic (4,000+ characters)
+- Exhaustive explanation of every major feature and sub-feature
+- Detailed user workflows for each feature with step-by-step processes
 - Data processing and business rule implementation
-- Integration between different app components
+- Integration between different app components and modules
+- Feature flags and progressive feature rollout
+- User permission checks and authorization flows
+- Data validation and error handling for each feature
+- Performance considerations and optimization strategies
 
-### 6. Real-time Features & Live Updates
+### 6. Real-time Features & Live Updates (2,000+ characters)
 - Real-time data synchronization using Supabase Realtime
-- Live notifications and updates
-- Collaborative features if applicable
-- Performance optimization for real-time data
+- Live notifications and push notification systems
+- Collaborative features and multi-user interactions
+- Conflict resolution for concurrent data modifications
+- Performance optimization for real-time data streams
+- Offline functionality and data synchronization
+- WebSocket connection management and fallback strategies
 
-### 7. Component Architecture & UI Structure
+### 7. Component Architecture & Technical Structure (3,000+ characters)
 - Detailed component hierarchy and organization using React 18
-- Reusable component patterns with Shadcn/UI
-- State management and data flow
-- Tailwind CSS styling approach and design system
+- Reusable component patterns with Shadcn/UI specifications
+- State management architecture and data flow patterns
+- Context providers and global state management
+- Custom hooks and utility functions
+- Tailwind CSS design system and component styling
+- TypeScript interfaces and type definitions
+- Code organization and file structure standards
 
-### 8. External Integrations & Services
-- Stripe payment processing workflows
-- Email functionality using Resend
-- AI features using Claude 3.5 Sonnet
-- Image/media processing with Replicate
+### 8. External Integrations & Third-Party Services (2,500+ characters)
+- Comprehensive Stripe payment processing workflows
+- Subscription management and billing automation
+- Email functionality using Resend with template systems
+- AI features using Claude 3.5 Sonnet with prompt engineering
+- Image/media processing with Replicate AI models
+- Analytics integration and user behavior tracking
+- Error monitoring and performance tracking
+- Third-party API integrations and webhook handling
 
-## CRITICAL REQUIREMENTS:
-- Write in natural language, NO code examples
-- Explain functionality in explicit detail so Lovable AI can understand exactly what to build
-- Focus on comprehensive feature descriptions and user workflows
-- Include complete database design explanations
+### 9. Deployment & DevOps Strategy (2,000+ characters)
+- Complete deployment pipeline using Vercel/Netlify
+- Environment configuration and secrets management
+- CI/CD workflows with GitHub Actions
+- Domain management with Entri integration
+- SSL certificate management and security headers
+- Performance monitoring and error tracking setup
+- Backup strategies and disaster recovery plans
+- Scaling considerations and performance optimization
+
+### 10. Testing & Quality Assurance (2,000+ characters)
+- Comprehensive testing strategy including unit, integration, and E2E tests
+- Test data management and mock data strategies
+- User acceptance testing procedures
+- Performance testing and load testing protocols
+- Security testing and vulnerability assessments
+- Quality gates and code review processes
+- Bug tracking and issue management workflows
+
+## WRITING REQUIREMENTS:
+- Write in natural language with NO code examples
+- Explain every feature in exhaustive detail
+- Include comprehensive user workflow descriptions
+- Provide complete database design explanations
 - Describe all user interactions and system responses
-- Explain how different parts of the application connect and work together
-- Target 9,000-10,000 characters for optimal Lovable AI context window
+- Explain how different components integrate and communicate
 - Use markdown formatting with clear headings and structure
-- Only use the fixed Lovable technology stack mentioned above`
+- MUST exceed 25,000 characters - aim for 30,000+ characters
+- Include specific implementation details for Lovable AI to understand
+- Only use the fixed Lovable technology stack mentioned above
+
+Remember: This blueprint will be used by Lovable's AI to build a complete, production-ready application. Every detail matters for successful implementation.`
             },
             { role: 'user', content: prompt }
           ],
           temperature: parseFloat(temperature?.toString() || '0.7'),
-          max_tokens: 8192,
+          max_tokens: 32768,
           stream: true
         }),
         signal: controller.signal
@@ -398,39 +389,9 @@ Generate a comprehensive markdown blueprint with natural language explanations c
       const apiKey = process.env.DEEPSEEK_API_KEY;
       
       if (!apiKey) {
-        // Return enhanced simulation when API key is not configured
-        const mockResponse = {
-          reasoning: `# DeepSeek Reasoning Simulation\n\n` +
-                    `**Query:** "${prompt}"\n\n` +
-                    `**System Context:** ${systemPrompt || 'NoCodeLos Blueprint Stack Assistant'}\n\n` +
-                    `## Advanced Reasoning Chain:\n\n` +
-                    `### Step 1: Problem Decomposition\n` +
-                    `- Analyzing the core requirements and constraints\n` +
-                    `- Identifying key architectural patterns needed\n` +
-                    `- Mapping to NoCodeLos Blueprint Stack components\n\n` +
-                    `### Step 2: Solution Architecture\n` +
-                    `- RAG 2.0 integration for knowledge retrieval\n` +
-                    `- MCP protocol implementation for server communication\n` +
-                    `- A2A agent coordination for multi-agent workflows\n\n` +
-                    `### Step 3: Implementation Strategy\n` +
-                    `- Component selection and configuration\n` +
-                    `- Integration patterns and data flow\n` +
-                    `- Performance optimization and scaling considerations\n\n` +
-                    `### Step 4: Validation & Testing\n` +
-                    `- Quality assurance and testing strategies\n` +
-                    `- Monitoring and observability setup\n` +
-                    `- Deployment and maintenance procedures\n\n` +
-                    `**Note:** This is a comprehensive simulation. Configure your DEEPSEEK_API_KEY to enable real DeepSeek reasoning with actual chain-of-thought processing.\n\n` +
-                    `**Configuration:**\n` +
-                    `- Temperature: ${temperature}\n` +
-                    `- Max Steps: ${maxSteps}\n` +
-                    `- Processing Time: ${Date.now() - Date.now()}ms (simulated)`,
-          steps: maxSteps || 10,
-          tokens_used: 350,
-          simulated: true
-        };
-
-        return res.json(mockResponse);
+        return res.status(400).json({
+          error: 'DeepSeek API key is required. Please configure DEEPSEEK_API_KEY environment variable.'
+        });
       }
 
       const startTime = Date.now();
