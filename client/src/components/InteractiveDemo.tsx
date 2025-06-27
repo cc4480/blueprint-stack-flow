@@ -53,8 +53,10 @@ export default function InteractiveDemo() {
   const [prompt, setPrompt] = useState('');
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [generatedBlueprint, setGeneratedBlueprint] = useState('');
   const [selectAll, setSelectAll] = useState(false);
+  const [streamProgress, setStreamProgress] = useState('');
 
   const handleFeatureToggle = (featureId: string) => {
     setSelectedFeatures(prev => 
@@ -77,24 +79,91 @@ export default function InteractiveDemo() {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
+    setIsStreaming(true);
+    setGeneratedBlueprint('');
+    setStreamProgress('Initializing Lovable 2.0 blueprint generation...');
     analytics.trackPromptGeneration('lovable-app', selectedFeatures);
 
     try {
-      const request: PromptGenerationRequest = {
-        appType: 'lovable-fullstack',
-        dataSource: 'supabase-postgresql',
-        features: selectedFeatures,
-        platform: 'web',
-        additionalContext: prompt
-      };
+      // Create comprehensive prompt for Lovable 2.0
+      const fullPrompt = `Generate a comprehensive Lovable 2.0 application blueprint for:
 
-      const response = await promptService.generatePrompt(request);
-      setGeneratedBlueprint(response.prompt || response.reasoningContent || 'Blueprint generated successfully!');
+${prompt}
+
+**Selected Features:** ${selectedFeatures.join(', ')}
+
+**Requirements:**
+- Use only Lovable's fixed technology stack (React 18, Tailwind CSS, Vite, Shadcn/UI, Supabase)
+- Include complete code examples and database schemas
+- Provide detailed implementation instructions
+- Ensure production-ready architecture
+- Include deployment and hosting configurations`;
+
+      const response = await fetch('/api/stream-blueprint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          temperature: 0.7,
+          systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No response stream available');
+      }
+
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('data:')) {
+            try {
+              const data = JSON.parse(line.slice(5));
+              
+              if (data.type === 'token') {
+                setGeneratedBlueprint(data.fullContent);
+                setStreamProgress(`Generating blueprint... ${data.fullContent.length} characters`);
+              } else if (data.type === 'complete') {
+                setGeneratedBlueprint(data.content);
+                setStreamProgress(`✅ Blueprint completed! ${data.tokens} tokens in ${data.processingTime}ms`);
+                setIsStreaming(false);
+                console.log(`✅ Blueprint generation completed in ${data.processingTime}ms`);
+                break;
+              } else if (data.type === 'error') {
+                setStreamProgress(`❌ Error: ${data.error}`);
+                throw new Error(data.error);
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', parseError);
+            }
+          }
+        }
+        
+        buffer = lines[lines.length - 1];
+      }
     } catch (error) {
-      console.error('Generation failed:', error);
-      setGeneratedBlueprint('Failed to generate blueprint. Please try again.');
+      console.error('Streaming generation failed:', error);
+      setGeneratedBlueprint('Failed to generate blueprint. Please check your connection and try again.');
+      setStreamProgress('❌ Generation failed');
     } finally {
       setIsGenerating(false);
+      setIsStreaming(false);
     }
   };
 
@@ -234,7 +303,7 @@ export default function InteractiveDemo() {
                   {isGenerating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Blueprint...
+                      {isStreaming ? 'Streaming Blueprint...' : 'Generating Blueprint...'}
                     </>
                   ) : (
                     <>
@@ -243,6 +312,18 @@ export default function InteractiveDemo() {
                     </>
                   )}
                 </Button>
+                
+                {/* Streaming Progress */}
+                {(isGenerating || streamProgress) && (
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
+                      <span className="text-sm text-blue-700 dark:text-blue-300">
+                        {streamProgress || 'Preparing blueprint generation...'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

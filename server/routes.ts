@@ -119,6 +119,213 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DeepSeek Streaming Blueprint Generation
+  app.post("/api/stream-blueprint", async (req, res) => {
+    const { prompt, temperature, systemPrompt } = req.body;
+
+    if (!prompt?.trim()) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    
+    // Set streaming headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+
+    if (!apiKey) {
+      console.log('⚠️ Streaming simulation mode - configure DEEPSEEK_API_KEY for real AI');
+      
+      const mockBlueprint = `# Lovable 2.0 Application Blueprint
+
+## Project Overview
+Building a modern web application using Lovable's proven technology stack.
+
+## Technology Stack
+- **Frontend**: React 18 + TypeScript + Tailwind CSS
+- **Build Tool**: Vite for optimal development experience
+- **Components**: Shadcn/UI for beautiful, accessible components
+- **Backend**: Supabase for complete backend services
+- **Database**: PostgreSQL via Supabase
+- **Authentication**: Supabase Auth with social providers
+- **Deployment**: One-click deployment to Vercel/Netlify
+
+## Implementation Details
+
+### 1. Project Setup
+\`\`\`json
+{
+  "name": "lovable-app",
+  "dependencies": {
+    "react": "^18.2.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "tailwindcss": "^3.4.0"
+  }
+}
+\`\`\`
+
+### 2. Database Schema
+\`\`\`sql
+-- Users table (handled by Supabase Auth)
+-- Custom application tables
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users PRIMARY KEY,
+  username TEXT UNIQUE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+\`\`\`
+
+### 3. Component Structure
+- Layout components with responsive design
+- Authentication flows
+- Dashboard and main application views
+- Reusable UI components using Shadcn
+
+This blueprint provides a complete foundation for rapid development on Lovable 2.0.`;
+
+      // Simulate realistic streaming
+      for (let i = 0; i < mockBlueprint.length; i += 15) {
+        const chunk = mockBlueprint.slice(i, i + 15);
+        res.write(`data: ${JSON.stringify({
+          type: 'token',
+          content: chunk,
+          fullContent: mockBlueprint.slice(0, i + 15)
+        })}\n\n`);
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      
+      res.write(`data: ${JSON.stringify({
+        type: 'complete',
+        content: mockBlueprint,
+        processingTime: 2000,
+        tokens: mockBlueprint.length
+      })}\n\n`);
+      
+      res.end();
+      return;
+    }
+
+    try {
+      const startTime = Date.now();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000);
+      
+      const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { 
+              role: 'system', 
+              content: systemPrompt || `# Lovable 2.0 Blueprint Generator Expert
+
+You are an expert AI architect specialized in generating production-ready application blueprints exclusively for the Lovable 2.0 platform. 
+
+## FIXED TECHNOLOGY STACK (NO EXCEPTIONS):
+- Frontend: React 18 + TypeScript + Tailwind CSS + Vite + Shadcn/UI
+- Backend: Supabase (PostgreSQL + Auth + Storage + Realtime)
+- Integrations: Claude 3.5 Sonnet + Stripe + Resend + Replicate
+- Deployment: Vercel/Netlify with Entri domains
+
+Generate comprehensive, production-ready blueprints using ONLY these technologies. Include complete code examples, database schemas, component architecture, and deployment configurations.`
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: parseFloat(temperature?.toString() || '0.7'),
+          max_tokens: 64000,
+          stream: true
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!deepseekResponse.ok) {
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: 'API request failed'
+        })}\n\n`);
+        res.end();
+        return;
+      }
+
+      let fullContent = '';
+      const reader = deepseekResponse.body?.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+
+      if (!reader) {
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: 'Unable to read stream'
+        })}\n\n`);
+        res.end();
+        return;
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i].trim();
+          if (part.startsWith('data:')) {
+            const jsonStr = part.slice(5).trim();
+            if (jsonStr === '[DONE]') {
+              const processingTime = Date.now() - startTime;
+              
+              res.write(`data: ${JSON.stringify({
+                type: 'complete',
+                content: fullContent,
+                processingTime,
+                tokens: fullContent.length
+              })}\n\n`);
+              
+              res.end();
+              return;
+            }
+            
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const delta = parsed.choices?.[0]?.delta;
+              
+              if (delta?.content) {
+                fullContent += delta.content;
+                
+                res.write(`data: ${JSON.stringify({
+                  type: 'token',
+                  content: delta.content,
+                  fullContent: fullContent
+                })}\n\n`);
+              }
+            } catch (parseError) {
+              // Skip invalid JSON
+            }
+          }
+        }
+        
+        buffer = parts[parts.length - 1];
+      }
+    } catch (error) {
+      console.error('Streaming error:', error);
+      res.write(`data: ${JSON.stringify({
+        type: 'error',
+        error: 'Streaming failed'
+      })}\n\n`);
+      res.end();
+    }
+  });
+
   // DeepSeek reasoning endpoint with full API integration
   app.post("/api/deepseek/reason", async (req, res) => {
     try {
@@ -174,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'deepseek-reasoner',
+          model: 'deepseek-chat',
           messages: [
             { role: 'system', content: systemPrompt || `# Lovable 2.0 Blueprint Generator Expert
 
@@ -347,7 +554,7 @@ Generate blueprints that enable developers to build production applications on L
           ],
           temperature,
           max_tokens: 64000, // Use DeepSeek's full 64K token output capacity
-          stream: false
+          stream: true
         }),
         signal: controller.signal
       });
@@ -361,55 +568,96 @@ Generate blueprints that enable developers to build production applications on L
         });
       }
 
-      const data = await deepseekResponse.json();
-      const processingTime = Date.now() - startTime;
-      
-      // DeepSeek-reasoner provides reasoning_content (CoT) and content (final answer)
-      const finalAnswer = data.choices?.[0]?.message?.content || 'No response generated';
-      const reasoningContent = data.choices?.[0]?.message?.reasoning_content || null;
-      
-      // Use reasoning content as the primary response, with final answer as fallback
-      const reasoning = reasoningContent || finalAnswer;
-      const reasoningSteps = reasoningContent ? { 
-        reasoning: reasoningContent, 
-        finalAnswer: finalAnswer 
-      } : null;
-      
-      // Save conversation to database
-      const sessionId = Array.isArray(req.headers['x-session-id']) 
-        ? req.headers['x-session-id'][0] 
-        : req.headers['x-session-id'] || 'default';
-        
-      await storage.createDeepseekConversation({
-        sessionId,
-        messages: JSON.stringify([
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt },
-          { role: 'assistant', content: reasoning }
-        ]),
-        reasoningSteps: reasoningSteps ? JSON.stringify(reasoningSteps) : null,
-        model: 'deepseek-reasoner',
-        temperature: parseFloat(temperature?.toString() || '0.7'),
-        maxSteps,
-        confidence: 95, // DeepSeek typically has high confidence
-        processingTimeMs: processingTime
-      });
+      // Set up Server-Sent Events for streaming
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
 
-      const response = {
-        reasoning,
-        reasoningContent: reasoningContent, // Chain of Thought from DeepSeek
-        finalAnswer: finalAnswer, // Final answer from DeepSeek
-        confidence: 95,
-        processingTime,
-        steps: (reasoningSteps as any)?.steps || [
-          { step: 1, thought: "Processing request with DeepSeek Reasoner..." },
-          { step: 2, thought: "Analyzing context and generating response..." },
-          { step: 3, thought: "Finalizing comprehensive answer..." }
-        ],
-        rawResponse: data
-      };
+      let fullContent = '';
+      let reasoningContent = '';
+      const reader = deepseekResponse.body?.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
-      res.json(response);
+      if (!reader) {
+        return res.status(500).json({ error: 'Unable to read stream from DeepSeek API' });
+      }
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n\n');
+          
+          for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i].trim();
+            if (part.startsWith('data:')) {
+              const jsonStr = part.slice(5).trim();
+              if (jsonStr === '[DONE]') {
+                const processingTime = Date.now() - startTime;
+                
+                // Send final response with complete data
+                res.write(`data: ${JSON.stringify({
+                  type: 'complete',
+                  content: fullContent,
+                  reasoning: reasoningContent,
+                  processingTime,
+                  tokens: fullContent.length
+                })}\n\n`);
+                
+                res.end();
+                return;
+              }
+              
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta;
+                
+                if (delta?.content) {
+                  fullContent += delta.content;
+                  
+                  // Send streaming token
+                  res.write(`data: ${JSON.stringify({
+                    type: 'token',
+                    content: delta.content,
+                    fullContent: fullContent
+                  })}\n\n`);
+                }
+                
+                if (delta?.reasoning_content) {
+                  reasoningContent += delta.reasoning_content;
+                  
+                  // Send reasoning update
+                  res.write(`data: ${JSON.stringify({
+                    type: 'reasoning',
+                    content: delta.reasoning_content,
+                    fullReasoning: reasoningContent
+                  })}\n\n`);
+                }
+              } catch (parseError) {
+                console.warn('JSON parse error:', parseError);
+              }
+            }
+          }
+          
+          buffer = parts[parts.length - 1];
+        }
+      } catch (streamError) {
+        console.error('Streaming error:', streamError);
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: 'Streaming failed'
+        })}\n\n`);
+        res.end();
+      }
+
+      // This code should not be reached in streaming mode
+      console.error('Reached non-streaming code path, this should not happen');
+      res.status(500).json({ error: 'Internal streaming error' });
     } catch (error) {
       console.error('DeepSeek API error:', error);
       res.status(500).json({ error: "Failed to process reasoning request" });
