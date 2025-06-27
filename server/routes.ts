@@ -230,9 +230,7 @@ This blueprint provides a complete foundation for rapid development on Lovable 2
 
 You are an expert AI architect specialized in generating comprehensive application blueprints exclusively for the Lovable 2.0 platform.
 
-Your task is to generate concise but comprehensive natural language application blueprints (9,000-10,000 characters) in markdown format that explain exactly how the application works. These blueprints will be used by Lovable's AI to understand and build complete full-stack applications.
-
-IMPORTANT: Keep explanations detailed but concise. Target 9,000-10,000 characters total. Be comprehensive but efficient with word choice.
+Your task is to generate detailed, natural language application blueprints (9,000-10,000 characters) in markdown format that explain exactly how the application works in explicit detail. These blueprints will be used by Lovable's AI to understand and build complete full-stack applications.
 
 ## FIXED TECHNOLOGY STACK (NO EXCEPTIONS):
 - Frontend: React 18 + TypeScript + Tailwind CSS + Vite + Shadcn/UI
@@ -297,10 +295,9 @@ Generate a comprehensive markdown blueprint with natural language explanations c
 - Include complete database design explanations
 - Describe all user interactions and system responses
 - Explain how different parts of the application connect and work together
-- **STRICT CHARACTER LIMIT: 9,000-10,000 characters total (stop generating once you reach 10,000 characters)**
+- Target 9,000-10,000 characters for optimal Lovable AI context window
 - Use markdown formatting with clear headings and structure
-- Only use the fixed Lovable technology stack mentioned above
-- Be concise but thorough - every word should add value for Lovable AI understanding`
+- Only use the fixed Lovable technology stack mentioned above`
             },
             { role: 'user', content: prompt }
           ],
