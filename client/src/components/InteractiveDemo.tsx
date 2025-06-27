@@ -410,6 +410,16 @@ ${prompt}
                     >
                       Download
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        window.open('https://lovable.dev', '_blank');
+                      }}
+                      size="sm"
+                      className="border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 backdrop-blur-sm"
+                    >
+                      Use in Lovable
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
