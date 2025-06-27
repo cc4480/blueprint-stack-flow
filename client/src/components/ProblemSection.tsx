@@ -4,7 +4,7 @@ const ProblemSection = () => {
     <section className="py-20 bg-[#000000]">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-black text-center mb-8 text-gray-900">
+          <h2 className="text-4xl md:text-6xl font-black text-center mb-8 text-[#fef2f2]">
             Most people are wasting time <br />
             <span className="text-red-500">prompting AI the wrong way.</span>
             <br />
