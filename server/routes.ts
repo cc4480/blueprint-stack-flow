@@ -152,7 +152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Handle client disconnect
     req.on('close', () => {
-      if (controller) {
+      console.log('Client disconnected, cleaning up...');
+      if (controller && !controller.signal.aborted) {
         controller.abort();
       }
       if (timeoutId) {
@@ -163,11 +164,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const startTime = Date.now();
       controller = new AbortController();
+      
+      // Set a longer timeout for DeepSeek processing
       timeoutId = setTimeout(() => {
-        if (controller) {
+        if (controller && !controller.signal.aborted) {
+          console.log('Request timeout reached, aborting...');
           controller.abort();
         }
       }, 300000); // 5 minute timeout
+      
+      console.log('🤖 Starting DeepSeek streaming request...');
       
       const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
         method: 'POST',
@@ -368,20 +374,23 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
             }
             
             try {
-              const parsed = JSON.parse(jsonStr);
-              const delta = parsed.choices?.[0]?.delta;
-              
-              if (delta?.content) {
-                fullContent += delta.content;
+              if (jsonStr && jsonStr.trim()) {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta;
                 
-                res.write(`data: ${JSON.stringify({
-                  type: 'token',
-                  content: delta.content,
-                  fullContent: fullContent
-                })}\n\n`);
+                if (delta?.content) {
+                  fullContent += delta.content;
+                  
+                  res.write(`data: ${JSON.stringify({
+                    type: 'token',
+                    content: delta.content,
+                    fullContent: fullContent
+                  })}\n\n`);
+                }
               }
             } catch (parseError) {
-              // Skip invalid JSON
+              console.error('JSON parse error for:', jsonStr, parseError);
+              // Skip invalid JSON - continue processing
             }
           }
         }
@@ -391,12 +400,22 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
     } catch (error) {
       console.error('Streaming error:', error);
       
+      // Clear the timeout if it exists
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
       // Check if response is still writable before writing
       if (!res.headersSent && res.writable) {
-        res.write(`data: ${JSON.stringify({
-          type: 'error',
-          error: error instanceof Error ? error.message : 'Streaming failed'
-        })}\n\n`);
+        const errorMessage = error instanceof Error ? error.message : 'Streaming failed';
+        
+        // Don't report "This operation was aborted" as an error to the client if it was a normal disconnect
+        if (errorMessage !== 'This operation was aborted' || !req.destroyed) {
+          res.write(`data: ${JSON.stringify({
+            type: 'error',
+            error: errorMessage
+          })}\n\n`);
+        }
         res.end();
       }
     } finally {
