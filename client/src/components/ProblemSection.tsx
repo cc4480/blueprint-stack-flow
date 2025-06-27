@@ -1,7 +1,7 @@
 
 const ProblemSection = () => {
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-[#000000]">
       <div className="container mx-auto px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-black text-center mb-8 text-gray-900">
