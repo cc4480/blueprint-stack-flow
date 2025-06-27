@@ -228,8 +228,8 @@ const ActivityFeed: React.FC<{ activities: ProjectActivity[] }> = ({ activities 
     <CardContent>
       <div className="space-y-4">
         {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="flex items-center space-x-3">
+          <div key={activity.id} className="flex items-center justify-between p-3 dark:bg-gray-800 rounded-lg bg-[#000000]">
+            <div className="flex items-center space-x-3 bg-[#000000]">
               <div className={`w-3 h-3 rounded-full ${
                 activity.status === 'completed' ? 'bg-green-500' :
                 activity.status === 'in-progress' ? 'bg-yellow-500' : 'bg-red-500'
