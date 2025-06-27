@@ -1,8 +1,6 @@
-
 const ProblemSection = () => {
-  return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-6">
+  return <section className="py-20 bg-gray-900">
+      <div className="container mx-auto px-6 bg-slate-950">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl md:text-6xl font-black text-center mb-8 text-gray-900">
             Most people are wasting time <br />
@@ -98,8 +96,6 @@ const ProblemSection = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ProblemSection;
