@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { bugTracker } from './utils/bugTracker';
 
 // Add global error handlers for unhandled promises
 window.addEventListener('unhandledrejection', (event) => {

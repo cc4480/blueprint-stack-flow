@@ -18,8 +18,30 @@ import {
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
-const client = postgres(process.env.DATABASE_URL!);
-const db = drizzle(client);
+// Database connection with error handling
+let client: ReturnType<typeof postgres>;
+let db: ReturnType<typeof drizzle>;
+
+try {
+  if (!process.env.DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+  
+  client = postgres(process.env.DATABASE_URL, {
+    max: 10, // Maximum connections
+    idle_timeout: 60, // Close idle connections after 60 seconds
+    max_lifetime: 60 * 30, // Close connections after 30 minutes
+    onnotice: (notice) => {
+      console.log('PostgreSQL notice:', notice);
+    }
+  });
+  
+  db = drizzle(client);
+  console.log('✅ Database connected successfully');
+} catch (error) {
+  console.error('❌ Database connection failed:', error);
+  throw error;
+}
 
 export interface IStorage {
   // User methods
@@ -54,44 +76,123 @@ export interface IStorage {
 export class PostgresStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id));
-    return result[0];
+    try {
+      const result = await db.select().from(users).where(eq(users.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw new Error(`Failed to fetch user with id ${id}`);
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.username, username));
-    return result[0];
+    try {
+      const result = await db.select().from(users).where(eq(users.username, username));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching user by username:', error);
+      throw new Error(`Failed to fetch user with username ${username}`);
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
-    return result[0];
+    try {
+      const result = await db.insert(users).values(insertUser).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create user - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // RAG Document methods
   async getRagDocuments(): Promise<RagDocument[]> {
-    return await db.select().from(ragDocuments);
+    try {
+      return await db.select().from(ragDocuments);
+    } catch (error) {
+      console.error('Error fetching RAG documents:', error);
+      throw new Error('Failed to fetch RAG documents');
+    }
   }
 
   async createRagDocument(doc: Partial<RagDocument>): Promise<RagDocument> {
-    const result = await db.insert(ragDocuments).values(doc as any).returning();
-    return result[0];
+    try {
+      // Ensure required fields are present - based on actual schema
+      const documentData = {
+        id: doc.id,
+        title: doc.title || 'Untitled Document',
+        content: doc.content || '',
+        metadata: doc.metadata || {},
+        embedding: doc.embedding || null,
+        createdAt: doc.createdAt || new Date(),
+        updatedAt: doc.updatedAt || new Date()
+      };
+      
+      const result = await db.insert(ragDocuments).values(documentData).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create RAG document - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating RAG document:', error);
+      throw new Error(`Failed to create RAG document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // MCP Server methods
   async getMcpServers(): Promise<McpServer[]> {
-    return await db.select().from(mcpServers);
+    try {
+      return await db.select().from(mcpServers);
+    } catch (error) {
+      console.error('Error fetching MCP servers:', error);
+      throw new Error('Failed to fetch MCP servers');
+    }
   }
 
   async createMcpServer(server: Partial<McpServer>): Promise<McpServer> {
-    const result = await db.insert(mcpServers).values(server as any).returning();
-    return result[0];
+    try {
+      // Match actual schema fields
+      const serverData = {
+        id: server.id,
+        name: server.name || 'Unnamed Server',
+        endpoint: server.endpoint || null,
+        status: server.status || 'inactive',
+        transport: server.transport || 'stdio',
+        capabilities: server.capabilities || {},
+        protocolVersion: server.protocolVersion || null,
+        command: server.command || null,
+        createdAt: server.createdAt || new Date(),
+        updatedAt: server.updatedAt || new Date()
+      };
+      
+      const result = await db.insert(mcpServers).values(serverData).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create MCP server - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating MCP server:', error);
+      throw new Error(`Failed to create MCP server: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   async updateMcpServerStatus(id: string, status: string): Promise<void> {
-    await db.update(mcpServers)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(mcpServers.id, id));
+    try {
+      const result = await db.update(mcpServers)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(mcpServers.id, id))
+        .returning();
+      
+      if (result.length === 0) {
+        throw new Error(`MCP server with id ${id} not found`);
+      }
+    } catch (error) {
+      console.error('Error updating MCP server status:', error);
+      throw new Error(`Failed to update MCP server status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // A2A Agent methods
