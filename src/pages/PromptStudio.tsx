@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,13 +17,13 @@ const PromptStudio = () => {
   const [response, setResponse] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [includeContext, setIncludeContext] = useState(true);
-  const [maxTokens, setMaxTokens] = useState([16384]);
+  const [maxTokens, setMaxTokens] = useState([8192]); // Fixed: Changed from 16384 to 8192
   const [temperature, setTemperature] = useState([0.7]);
   const [extendedOutput, setExtendedOutput] = useState(true);
   const [tokenCount, setTokenCount] = useState(0);
   const [responseLength, setResponseLength] = useState(0);
   const [streamingTime, setStreamingTime] = useState(0);
-  const [systemPrompt, setSystemPrompt] = useState('You are the NoCodeLos Blueprint Stack Master AI with comprehensive RAG 2.0, MCP, and A2A protocol integration. You have access to real-time system data and can provide detailed, extensive responses leveraging all available context. Generate comprehensive responses of at least 10,000 characters with detailed implementation guidance, architectural patterns, and complete code examples.');
+  const [systemPrompt, setSystemPrompt] = useState('You are the NoCodeLos Blueprint Stack Master AI with comprehensive RAG 2.0, MCP, and A2A protocol integration. You have access to real-time system data and can provide detailed, extensive responses leveraging all available context. Generate comprehensive responses with detailed implementation guidance, architectural patterns, and complete code examples.');
   
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -69,7 +68,7 @@ const PromptStudio = () => {
     abortControllerRef.current = new AbortController();
     
     try {
-      console.log('🚀 Starting enhanced DeepSeek streaming with extended output...');
+      console.log('🚀 Starting enhanced DeepSeek streaming with corrected max_tokens...');
       
       await promptService.streamChatResponse(
         [
@@ -177,6 +176,8 @@ const PromptStudio = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <ApiKeyManager onApiKeyChange={handleApiKeyChange} />
+              
               <div className="flex items-center space-x-2">
                 <Switch
                   id="include-context"
@@ -197,7 +198,7 @@ const PromptStudio = () => {
                 />
                 <Label htmlFor="extended-output" className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
-                  Enable Extended Output (10K+ characters)
+                  Enable Extended Output
                 </Label>
               </div>
 
@@ -209,15 +210,15 @@ const PromptStudio = () => {
                 <Slider
                   value={maxTokens}
                   onValueChange={setMaxTokens}
-                  max={16384}
+                  max={8192}
                   min={1024}
                   step={512}
                   className="w-full"
                 />
                 <div className="text-xs text-gray-400 flex justify-between">
                   <span>1K</span>
+                  <span>4K</span>
                   <span>8K</span>
-                  <span>16K</span>
                 </div>
               </div>
 
@@ -394,7 +395,7 @@ const PromptStudio = () => {
               <div className="text-center">
                 <div className="text-orange-400 font-semibold">Output Mode</div>
                 <div className="text-gray-300">
-                  {extendedOutput ? 'Extended (10K+)' : 'Standard'}
+                  {extendedOutput ? 'Extended' : 'Standard'}
                 </div>
               </div>
               <div className="text-center">

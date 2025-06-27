@@ -1,4 +1,3 @@
-
 export interface PromptGenerationRequest {
   appType: string;
   dataSource: string;
@@ -68,6 +67,9 @@ class PromptService {
         ...messages
       ] : messages;
 
+      // Ensure max_tokens is within DeepSeek's valid range [1, 8192]
+      const maxTokens = Math.min(options.maxTokens || 8192, 8192);
+
       // Direct call to DeepSeek API
       const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
@@ -79,7 +81,7 @@ class PromptService {
           model: 'deepseek-chat',
           messages: enhancedMessages,
           temperature: options.temperature || 0.7,
-          max_tokens: options.maxTokens || 16384,
+          max_tokens: maxTokens,
           stream: true,
           presence_penalty: 0.1,
           frequency_penalty: 0.1,
@@ -88,6 +90,8 @@ class PromptService {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('DeepSeek API Error Response:', errorText);
         throw new Error(`DeepSeek API request failed: ${response.status} ${response.statusText}`);
       }
 
@@ -140,7 +144,6 @@ class PromptService {
                 if (token) {
                   tokenCount++;
                   responseLength += token.length;
-                  console.log(`📨 DeepSeek token ${tokenCount}: "${token}" (total chars: ${responseLength})`);
                   onToken(token);
                   
                   // Log progress every 100 tokens
@@ -223,7 +226,7 @@ class PromptService {
       },
       undefined,
       true,
-      { maxTokens: 16384, enableExtendedOutput: true }
+      { maxTokens: 8192, enableExtendedOutput: true }
     );
 
     const complexity = this.assessComplexity(request.features.length);
@@ -281,14 +284,14 @@ class PromptService {
    - Advanced prompt engineering for maximum output quality
 
 🚀 OUTPUT REQUIREMENTS:
-- Generate comprehensive responses of 10,000+ characters minimum
-- Provide detailed implementation guidance with complete code examples
-- Include architectural diagrams and deployment strategies
-- Cover security, scalability, and performance optimization
+- Generate comprehensive responses with detailed implementation guidance
+- Provide complete code examples and architectural diagrams
+- Include deployment strategies and security considerations
+- Cover scalability and performance optimization
 - Include testing strategies and monitoring approaches
 - Provide troubleshooting guides and best practices
 
-Generate comprehensive development blueprints with unlimited detail, complete implementation guidance, and enterprise-grade quality that fully leverages the extended context window capabilities.`;
+Generate comprehensive development blueprints with detailed implementation guidance and enterprise-grade quality.`;
   }
 
   private buildComprehensiveQuery(request: PromptGenerationRequest): string {
@@ -346,7 +349,7 @@ Please provide a comprehensive response that includes:
 - **Scaling Considerations**: Performance optimization and scaling strategies
 - **Integration Examples**: Detailed integration examples with external services
 
-Ensure the response is comprehensive, detailed, and provides complete implementation guidance for enterprise-grade deployment. The response should be at least 10,000 characters and leverage all available system context data.`;
+Ensure the response is comprehensive, detailed, and provides complete implementation guidance for enterprise-grade deployment.`;
   }
 
   private generateMCPEndpoints(request: PromptGenerationRequest): string[] {
