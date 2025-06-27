@@ -16,7 +16,7 @@ const ProblemSection = () => {
           <div className="grid md:grid-cols-2 gap-16 items-center mt-16">
             {/* Problem Description */}
             <div className="space-y-8">
-              <div className="text-xl md:text-2xl text-gray-700 leading-relaxed space-y-6">
+              <div className="text-xl md:text-2xl leading-relaxed space-y-6 text-[#fef2f2]">
                 <p>
                   You've probably asked ChatGPT to help you build an app. Maybe you spent hours in conversation… 
                   and ended up with a generic spec doc or broken template.
