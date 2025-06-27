@@ -15,11 +15,11 @@ const ProblemSection = () => {
             {/* Problem Description */}
             <div className="space-y-8">
               <div className="text-xl md:text-2xl text-gray-700 leading-relaxed space-y-6">
-                <p>
+                <p className="text-zinc-50">
                   You've probably asked ChatGPT to help you build an app. Maybe you spent hours in conversation… 
                   and ended up with a generic spec doc or broken template.
                 </p>
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-gray-50">
                   That's not your fault. It's the method.
                 </p>
               </div>
