@@ -168,59 +168,69 @@ ${prompt}
   };
 
   return (
-    <section id="interactive-demo" className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-blue-900/20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Lovable 2.0 Blueprint Generator
+    <section id="interactive-demo" className="relative min-h-screen bg-black text-white overflow-hidden py-20">
+      {/* Background Animation - matching hero section */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http://www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%239C92AC%22%20fill-opacity%3D%220.1%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%224%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] animate-pulse"></div>
+      
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-red-500/20 rounded-full border border-blue-400/30 font-medium mb-8 backdrop-blur-sm">
+            <Sparkles className="h-5 w-5 text-blue-400" />
+            <span className="text-gray-200">Interactive Blueprint Generator</span>
+          </div>
+          <h2 className="text-5xl md:text-6xl font-black mb-8 leading-tight">
+            <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 bg-clip-text text-transparent">
+              Lovable 2.0 Blueprint Generator
+            </span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Generate production-ready application blueprints using Lovable's proven technology stack
+          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            Generate production-ready application blueprints using <span className="text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text font-bold">Lovable's proven technology stack</span>
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* Lovable Stack Overview */}
           <div className="space-y-6">
-            <Card className="border-2 border-purple-200 dark:border-purple-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Code className="h-5 w-5 text-purple-600" />
+            <Card className="relative bg-black/50 border-2 border-blue-400/30 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-red-500/10 rounded-lg"></div>
+              <CardHeader className="relative z-10">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Code className="h-5 w-5 text-blue-400" />
                   Lovable 2.0 Technology Stack
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-300">
                   Pre-configured stack optimized for rapid development and deployment
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 relative z-10">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <div className="font-medium text-blue-700 dark:text-blue-300 mb-1">Frontend</div>
-                    <div className="text-sm space-y-1">
+                  <div className="p-4 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg border border-blue-400/30 backdrop-blur-sm">
+                    <div className="font-semibold text-blue-300 mb-2">Frontend</div>
+                    <div className="text-sm space-y-1 text-gray-300">
                       <div>React 18 + TypeScript</div>
                       <div>Tailwind CSS + Shadcn/UI</div>
                       <div>Vite Build Tool</div>
                     </div>
                   </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="font-medium text-green-700 dark:text-green-300 mb-1">Backend</div>
-                    <div className="text-sm space-y-1">
+                  <div className="p-4 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-lg border border-green-400/30 backdrop-blur-sm">
+                    <div className="font-semibold text-green-300 mb-2">Backend</div>
+                    <div className="text-sm space-y-1 text-gray-300">
                       <div>Supabase Platform</div>
                       <div>PostgreSQL Database</div>
                       <div>Real-time Features</div>
                     </div>
                   </div>
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                    <div className="font-medium text-purple-700 dark:text-purple-300 mb-1">AI & Services</div>
-                    <div className="text-sm space-y-1">
+                  <div className="p-4 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-lg border border-purple-400/30 backdrop-blur-sm">
+                    <div className="font-semibold text-purple-300 mb-2">AI & Services</div>
+                    <div className="text-sm space-y-1 text-gray-300">
                       <div>Claude 3.5 Sonnet</div>
                       <div>Stripe Payments</div>
                       <div>Resend Email</div>
                     </div>
                   </div>
-                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <div className="font-medium text-orange-700 dark:text-orange-300 mb-1">Deployment</div>
-                    <div className="text-sm space-y-1">
+                  <div className="p-4 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-lg border border-orange-400/30 backdrop-blur-sm">
+                    <div className="font-semibold text-orange-300 mb-2">Deployment</div>
+                    <div className="text-sm space-y-1 text-gray-300">
                       <div>Vercel/Netlify Hosting</div>
                       <div>Entri Domains</div>
                       <div>GitHub Integration</div>
@@ -231,13 +241,14 @@ ${prompt}
             </Card>
 
             {/* Advanced Features Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-600" />
+            <Card className="relative bg-black/50 border-2 border-purple-400/30 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-green-500/10 rounded-lg"></div>
+              <CardHeader className="relative z-10">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Zap className="h-5 w-5 text-yellow-400" />
                   Advanced Features
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-300">
                   Select the features you want to include in your application
                 </CardDescription>
                 <div className="flex items-center space-x-2 pt-2">
@@ -245,26 +256,28 @@ ${prompt}
                     id="select-all" 
                     checked={selectAll}
                     onCheckedChange={handleSelectAll}
+                    className="border-blue-400/50 data-[state=checked]:bg-blue-500"
                   />
-                  <label htmlFor="select-all" className="text-sm font-medium">
+                  <label htmlFor="select-all" className="text-sm font-medium text-gray-200">
                     Select All Features
                   </label>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {ADVANCED_FEATURES.map((feature) => (
-                    <div key={feature.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <div key={feature.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-blue-500/10 border border-transparent hover:border-blue-400/30 transition-all duration-200 backdrop-blur-sm">
                       <Checkbox
                         id={feature.id}
                         checked={selectedFeatures.includes(feature.id)}
                         onCheckedChange={() => handleFeatureToggle(feature.id)}
+                        className="border-blue-400/50 data-[state=checked]:bg-blue-500"
                       />
                       <div className="flex-1">
-                        <label htmlFor={feature.id} className="text-sm font-medium cursor-pointer">
+                        <label htmlFor={feature.id} className="text-sm font-medium cursor-pointer text-gray-200">
                           {feature.name}
                         </label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           {feature.description}
                         </p>
                       </div>
@@ -277,27 +290,31 @@ ${prompt}
 
           {/* Prompt Input and Generation */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-blue-600" />
+            <Card className="relative bg-black/50 border-2 border-green-400/30 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 rounded-lg"></div>
+              <CardHeader className="relative z-10">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Brain className="h-5 w-5 text-green-400" />
                   Describe Your Vision
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-gray-300">
                   Tell us about the application you want to build. Be as detailed as possible.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative z-10">
                 <Textarea
                   placeholder="Describe your application idea... For example: 'A social media platform for photographers with portfolio galleries, image editing tools, and collaboration features. Users should be able to upload photos, create albums, follow other photographers, and sell prints.'"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[200px] resize-none"
+                  className="min-h-[200px] resize-none bg-black/30 border-gray-600/50 text-gray-200 placeholder:text-gray-400 focus:border-blue-400/50 focus:ring-blue-400/20"
                 />
                 <Button 
                   onClick={handleGenerate}
                   disabled={!prompt.trim() || isGenerating}
-                  className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="relative w-full mt-4 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600 text-white px-8 py-6 text-lg font-bold rounded-full border border-blue-300/30 transition-all duration-300 transform hover:scale-105"
+                  style={{
+                    boxShadow: '0 0 30px rgba(59, 130, 246, 0.4), 0 0 60px rgba(147, 51, 234, 0.2)'
+                  }}
                   size="lg"
                 >
                   {isGenerating ? (
@@ -315,10 +332,10 @@ ${prompt}
                 
                 {/* Streaming Progress */}
                 {(isGenerating || streamProgress) && (
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30 backdrop-blur-sm">
                     <div className="flex items-center gap-2">
-                      {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
-                      <span className="text-sm text-blue-700 dark:text-blue-300">
+                      {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
+                      <span className="text-sm text-blue-300 font-medium">
                         {streamProgress || 'Preparing blueprint generation...'}
                       </span>
                     </div>
@@ -329,19 +346,20 @@ ${prompt}
 
             {/* Generated Blueprint */}
             {generatedBlueprint && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-green-600" />
+              <Card className="relative bg-black/50 border-2 border-green-400/30 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 via-blue-500/10 to-purple-500/10 rounded-lg"></div>
+                <CardHeader className="relative z-10">
+                  <CardTitle className="flex items-center gap-2 text-white">
+                    <Sparkles className="h-5 w-5 text-green-400" />
                     Generated Blueprint
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-300">
                     Your production-ready Lovable application blueprint
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200">
+                <CardContent className="relative z-10">
+                  <div className="bg-black/30 border border-gray-600/50 p-4 rounded-lg max-h-96 overflow-y-auto backdrop-blur-sm">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-200 font-mono">
                       {generatedBlueprint}
                     </pre>
                   </div>
@@ -350,6 +368,7 @@ ${prompt}
                       variant="outline" 
                       onClick={() => navigator.clipboard.writeText(generatedBlueprint)}
                       size="sm"
+                      className="border-blue-400/50 text-blue-300 hover:bg-blue-500/10 hover:border-blue-400 backdrop-blur-sm"
                     >
                       Copy Blueprint
                     </Button>
@@ -365,6 +384,7 @@ ${prompt}
                         URL.revokeObjectURL(url);
                       }}
                       size="sm"
+                      className="border-green-400/50 text-green-300 hover:bg-green-500/10 hover:border-green-400 backdrop-blur-sm"
                     >
                       Download
                     </Button>
