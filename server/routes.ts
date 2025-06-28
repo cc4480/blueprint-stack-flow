@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (part.startsWith("data:")) {
             const jsonStr = part.slice(5).trim();
             if (jsonStr === "[DONE]") {
-              res.write(`data: ${JSON.stringify({ type: "complete" })}\n\n`);
+              res.write(`data: [DONE]\n\n`);
               res.end();
               return;
             }
@@ -199,10 +199,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const parsed = JSON.parse(jsonStr);
               const token = parsed.choices?.[0]?.delta?.content;
               if (token) {
-                res.write(`data: ${JSON.stringify({
-                  type: "token",
-                  content: token
-                })}\n\n`);
+                // Send the exact DeepSeek API format to frontend
+                res.write(`data: ${jsonStr}\n\n`);
               }
             } catch (e) {
               console.warn("JSON parse error", e);

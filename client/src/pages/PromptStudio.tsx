@@ -201,55 +201,49 @@ ${response}
       const reader = streamResponse.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
+      let accumulatedResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
+        const parts = buffer.split("\n\n");
         
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line.startsWith('data:')) {
-            try {
-              const jsonData = line.slice(5).trim();
-              if (jsonData) {
-                const data = JSON.parse(jsonData);
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i].trim();
+          if (part.startsWith("data:")) {
+            const jsonStr = part.slice(5).trim();
+            if (jsonStr === "[DONE]") {
+              setStreamingText(`✅ Response completed! Generation finished successfully`);
+              setIsStreaming(false);
+              
+              // Save the accumulated response content to database
+              setTimeout(async () => {
+                await saveBlueprintToDatabase(prompt, accumulatedResponse, { tokens_used: 0 });
+                setSavedToDB(true);
                 
-                if (data.type === 'token' && data.content) {
-                  setResponse(prev => {
-                    const newContent = prev + data.content;
-                    setStreamingText(`Generating response... ${newContent.length} characters`);
-                    return newContent;
-                  });
-                } else if (data.type === 'complete') {
-                  // Don't overwrite the accumulated response content - just update the progress
-                  setStreamingText(`✅ Response completed! Generation finished successfully`);
-                  setIsStreaming(false);
-                  
-                  // Save the accumulated response content to database
-                  setTimeout(async () => {
-                    await saveBlueprintToDatabase(prompt, response, { tokens_used: 0 });
-                    setSavedToDB(true);
-                    
-                    toast({
-                      title: "Response Generated Successfully",
-                      description: "Your prompt response has been generated and automatically saved to the database.",
-                    });
-                  }, 100); // Small delay to ensure response state is updated
-                  return;
-                } else if (data.type === 'error') {
-                  setStreamingText(`❌ Error: ${data.error}`);
-                  throw new Error(data.error);
-                }
+                toast({
+                  title: "Response Generated Successfully",
+                  description: "Your prompt response has been generated and automatically saved to the database.",
+                });
+              }, 100);
+              return;
+            }
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                accumulatedResponse += token;
+                setResponse(accumulatedResponse);
+                setStreamingText(`Generating response... ${accumulatedResponse.length} characters`);
               }
-            } catch (parseError) {
-              console.warn('Failed to parse streaming data:', parseError);
+            } catch (e) {
+              console.warn("JSON parse error", e);
             }
           }
         }
-        buffer = lines[lines.length - 1];
+        buffer = parts[parts.length - 1];
       }
     } catch (error) {
       console.error('Streaming generation failed:', error);
