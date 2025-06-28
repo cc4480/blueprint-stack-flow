@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Zap, Save, Play, Download, Loader2, Copy, CheckCircle, Sparkles } from 'lucide-react';
+import { Brain, Zap, Save, Play, Download, Loader2, Copy, CheckCircle } from 'lucide-react';
 import ApiKeyManager from '@/components/ApiKeyManager';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,7 +13,6 @@ const PromptStudio = () => {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [systemPrompt, setSystemPrompt] = useState(`You are an expert AI architect and Lovable 2.0 platform specialist. Your role is to create comprehensive application prompts specifically optimized for the Lovable no-code platform.
 
@@ -176,99 +175,81 @@ ${response}
 
   const executePrompt = async () => {
     if (!prompt.trim()) return;
-
+    
     setIsLoading(true);
-    setIsStreaming(true);
     setResponse('');
-    setStreamingText('Initializing DeepSeek streaming generation...');
-
+    setStreamingText('');
+    
+    // Add streaming messages like Interactive Demo
+    const streamingMessages = [
+      'Initializing DeepSeek Reasoner...',
+      'Processing system context...',
+      'Analyzing user prompt...',
+      'Generating reasoning chain...',
+      'Crafting comprehensive response...',
+      'Finalizing output...'
+    ];
+    
+    let messageIndex = 0;
+    const streamInterval = setInterval(() => {
+      if (messageIndex < streamingMessages.length) {
+        setStreamingText(streamingMessages[messageIndex]);
+        messageIndex++;
+      } else {
+        setStreamingText('Processing advanced reasoning... This may take a moment for complex queries.');
+      }
+    }, 2000);
+    
     try {
-      // Use the exact same streaming endpoint as Blueprint Generator
-      const streamResponse = await fetch("/api/stream-blueprint", {
-        method: "POST",
+      const response = await fetch('/api/deepseek/reason', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          'x-session-id': `prompt-studio-${Date.now()}`
         },
         body: JSON.stringify({
-          prompt: prompt,
+          prompt,
+          systemPrompt,
           temperature: 0.7,
-          systemPrompt: systemPrompt
-        }),
+          maxSteps: 10
+        })
       });
 
-      if (!streamResponse.body) throw new Error("No response stream");
+      const data = await response.json();
+      
+      clearInterval(streamInterval);
+      setStreamingText('');
+      
+      if (!response.ok) {
+        setResponse(`Error: ${data.error}`);
+        return;
+      }
 
-      const reader = streamResponse.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      if (data.reasoning) {
+        setResponse(data.reasoning);
         
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
+        // Automatically save to database
+        await saveBlueprintToDatabase(prompt, data.reasoning, data);
+        setSavedToDB(true);
         
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line.startsWith('data:')) {
-            try {
-              const jsonData = line.slice(5).trim();
-              if (jsonData) {
-                const data = JSON.parse(jsonData);
-                
-                if (data.type === 'token' && data.content) {
-                  setResponse(prev => {
-                    const newContent = prev + data.content;
-                    setStreamingText(`Generating response... ${newContent.length} characters`);
-                    return newContent;
-                  });
-                } else if (data.type === 'complete') {
-                  // Don't overwrite the accumulated response content - just update the progress
-                  setStreamingText(`✅ Response completed! Generation finished successfully`);
-                  setIsStreaming(false);
-                  
-                  // Save the accumulated response content to database
-                  setTimeout(async () => {
-                    await saveBlueprintToDatabase(prompt, response, { tokens_used: 0 });
-                    setSavedToDB(true);
-                    
-                    toast({
-                      title: "Response Generated Successfully",
-                      description: "Your prompt response has been generated and automatically saved to the database.",
-                    });
-                  }, 100); // Small delay to ensure response state is updated
-                  return;
-                } else if (data.type === 'error') {
-                  setStreamingText(`❌ Error: ${data.error}`);
-                  throw new Error(data.error);
-                }
-              }
-            } catch (parseError) {
-              console.warn('Failed to parse streaming data:', parseError);
-            }
-          }
-        }
-        buffer = lines[lines.length - 1];
+        toast({
+          title: "Blueprint Generated Successfully",
+          description: "Your master blueprint has been generated and automatically saved to the database.",
+        });
+      } else {
+        setResponse('No response received from DeepSeek API');
       }
     } catch (error) {
-      console.error('Streaming generation failed:', error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        setResponse('Response generation was cancelled due to timeout.');
-        setStreamingText('❌ Generation cancelled (timeout)');
-      } else {
-        setResponse('Failed to generate response. Please check your connection and try again.');
-        setStreamingText('❌ Generation failed');
-      }
-      
+      clearInterval(streamInterval);
+      setStreamingText('');
+      setResponse('Error executing prompt. Please check your connection and try again.');
       toast({
         title: "Generation Failed",
-        description: "Failed to generate response. Please try again.",
+        description: "Failed to generate blueprint. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
-      setIsStreaming(false);
     }
   };
 
@@ -339,17 +320,8 @@ ${response}
                   disabled={isLoading || !prompt.trim()}
                   className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isStreaming ? 'Streaming Response...' : 'Processing...'}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Generate Streaming Response
-                    </>
-                  )}
+                  <Play className="w-4 h-4 mr-2" />
+                  {isLoading ? 'Processing...' : 'Execute'}
                 </Button>
                 <Button variant="outline" className="border-blue-400/50">
                   <Save className="w-4 h-4 mr-2" />
@@ -368,14 +340,28 @@ ${response}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Real-time streaming progress */}
-              {(isLoading || streamingText) && (
-                <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30 backdrop-blur-sm">
-                  <div className="flex items-center gap-2">
-                    {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
-                    <span className="text-sm text-blue-300 font-medium">
-                      {streamingText || 'Preparing response generation...'}
-                    </span>
+              {/* Enhanced streaming status display */}
+              {isLoading && streamingText && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-400/40 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
+                        <div className="absolute inset-0 w-5 h-5 rounded-full border-2 border-blue-400/20 animate-pulse"></div>
+                      </div>
+                      <div>
+                        <span className="text-blue-300 font-medium text-sm">{streamingText}</span>
+                        <div className="text-xs text-blue-400/70 mt-1">DeepSeek Reasoner Active</div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-100"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
+                    </div>
+                  </div>
+                  <div className="mt-3 w-full bg-gray-800 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse"></div>
                   </div>
                 </div>
               )}
