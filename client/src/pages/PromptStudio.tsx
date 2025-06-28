@@ -183,18 +183,16 @@ ${response}
     setStreamingText('Initializing DeepSeek streaming generation...');
 
     try {
-      // Use direct streaming endpoint for real-time token display
-      const streamResponse = await fetch("/api/direct-stream", {
+      // Use the same working stream-blueprint endpoint that works perfectly in blueprint generator
+      const streamResponse = await fetch("/api/stream-blueprint", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.7
+          prompt: prompt,
+          temperature: 0.7,
+          systemPrompt: systemPrompt
         }),
       });
 
@@ -250,6 +248,7 @@ ${response}
             }
           }
         }
+        buffer = lines[lines.length - 1];
         buffer = lines[lines.length - 1];
       }
     } catch (error) {
