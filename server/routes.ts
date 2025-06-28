@@ -152,7 +152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Handle client disconnect
     req.on('close', () => {
-      if (controller) {
+      console.log('Client disconnected, cleaning up...');
+      if (controller && !controller.signal.aborted) {
         controller.abort();
       }
       if (timeoutId) {
@@ -163,13 +164,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const startTime = Date.now();
       controller = new AbortController();
+      
+      // Set a longer timeout for streaming responses
       timeoutId = setTimeout(() => {
-        if (controller) {
+        if (controller && !controller.signal.aborted) {
+          console.log('Request timeout after 5 minutes');
           controller.abort();
         }
       }, 300000); // 5 minute timeout
       
-      const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      const deepseekResponse = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -382,7 +386,8 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
                 })}\n\n`);
               }
             } catch (parseError) {
-              // Skip invalid JSON
+              console.warn('Failed to parse DeepSeek streaming data:', parseError, 'Raw data:', jsonStr);
+              // Skip invalid JSON but continue processing
             }
           }
         }
@@ -392,11 +397,21 @@ Remember: This blueprint will be used by Lovable's AI to build a complete, produ
     } catch (error) {
       console.error('Streaming error:', error);
       
+      let errorMessage = 'Streaming failed';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request was cancelled by client';
+          console.log('Stream cancelled by client disconnect');
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       // Check if response is still writable before writing
       if (!res.headersSent && res.writable) {
         res.write(`data: ${JSON.stringify({
           type: 'error',
-          error: error instanceof Error ? error.message : 'Streaming failed'
+          error: errorMessage
         })}\n\n`);
         res.end();
       }

@@ -147,7 +147,7 @@ ${prompt}
             if (line.startsWith('data:')) {
               try {
                 const jsonData = line.slice(5).trim();
-                if (jsonData) {
+                if (jsonData && jsonData !== '') {
                   const data = JSON.parse(jsonData);
                   
                   if (data.type === 'token' && data.fullContent) {
@@ -166,7 +166,7 @@ ${prompt}
                   }
                 }
               } catch (parseError) {
-                console.warn('Failed to parse streaming data:', parseError);
+                console.warn('Failed to parse streaming data:', parseError, 'Raw line:', line);
                 // Continue processing other lines instead of breaking
               }
             }

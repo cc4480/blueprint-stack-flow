@@ -22,6 +22,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Navigation from "./components/Navigation";
 import BlueprintGenerator from "./components/BlueprintGenerator";
 import SystemStatus from "./components/SystemStatus";
+import StreamingTest from "./components/StreamingTest";
 import { analytics } from "./services/analyticsService";
 import { performanceService } from "./services/performanceService";
 import { performanceOptimizer } from "./utils/performanceOptimizer";
@@ -81,6 +82,7 @@ const App: React.FC = () => {
               <Route path="/integrations" element={<Integrations />} />
               <Route path="/blueprint-generator" element={<BlueprintGenerator />} />
               <Route path="/system-status" element={<SystemStatus />} />
+              <Route path="/streaming-test" element={<StreamingTest />} />
               <Route path="/settings" element={<Settings />} />
               {/* Fallback routes for any authentication or onboarding flows */}
               <Route path="/auth" element={<Index />} />
