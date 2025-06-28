@@ -154,8 +154,8 @@ ${prompt}
                     return newContent;
                   });
                 } else if (data.type === 'complete') {
-                  setGeneratedBlueprint(data.content || data.fullContent || '');
-                  setStreamProgress(`✅ Blueprint completed! ${data.tokens || 0} tokens in ${data.processingTime || 0}ms`);
+                  // Don't overwrite the accumulated content, just mark as complete
+                  setStreamProgress(`✅ Blueprint generation completed successfully!`);
                   setIsStreaming(false);
                   console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
                   return;
