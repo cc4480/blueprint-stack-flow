@@ -183,7 +183,7 @@ ${response}
     setStreamingText('Initializing DeepSeek streaming generation...');
 
     try {
-      // Use the exact same streaming endpoint as Blueprint Generator
+      // Use server-side streaming endpoint for secure API key handling
       const streamResponse = await fetch("/api/stream-blueprint", {
         method: "POST",
         headers: {
@@ -220,11 +220,10 @@ ${response}
                 if (data.type === 'token' && data.content) {
                   setResponse(prev => {
                     const newContent = prev + data.content;
-                    setStreamingText(`Generating response... ${newContent.length} characters`);
+                    setStreamingText(`Streaming response... ${newContent.length} characters`);
                     return newContent;
                   });
                 } else if (data.type === 'complete') {
-                  // Don't overwrite the accumulated response content - just update the progress
                   setStreamingText(`✅ Response completed! Generation finished successfully`);
                   setIsStreaming(false);
                   
@@ -237,7 +236,7 @@ ${response}
                       title: "Response Generated Successfully",
                       description: "Your prompt response has been generated and automatically saved to the database.",
                     });
-                  }, 100); // Small delay to ensure response state is updated
+                  }, 100);
                   return;
                 } else if (data.type === 'error') {
                   setStreamingText(`❌ Error: ${data.error}`);
