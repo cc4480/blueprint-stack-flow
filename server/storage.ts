@@ -1,6 +1,5 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { cache } from "./cache";
 import { 
   users, 
   ragDocuments, 
@@ -78,21 +77,8 @@ export class PostgresStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     try {
-      // Check cache first for high-performance reads
-      const cached = cache.getUser(`${id}`);
-      if (cached) {
-        return cached;
-      }
-
       const result = await db.select().from(users).where(eq(users.id, id));
-      const user = result[0];
-      
-      // Cache the result for 30 minutes
-      if (user) {
-        cache.setUser(`${id}`, user);
-      }
-      
-      return user;
+      return result[0];
     } catch (error) {
       console.error('Error fetching user:', error);
       throw new Error(`Failed to fetch user with id ${id}`);

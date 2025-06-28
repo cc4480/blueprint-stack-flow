@@ -90,135 +90,93 @@ export default function InteractiveDemo() {
 
     try {
       // Create comprehensive prompt for Lovable 2.0
-      const fullPrompt = `Create a comprehensive production-ready application blueprint for the following requirements:
+      const fullPrompt = `Generate a comprehensive Lovable 2.0 application blueprint for:
 
-**PROJECT DESCRIPTION:**
 ${prompt}
 
-**SELECTED FEATURES TO IMPLEMENT:**
-${selectedFeatures.map(f => `- ${f}`).join('\n')}
+**Selected Features:** ${selectedFeatures.join(', ')}
 
-**IMPORTANT INSTRUCTIONS:**
-1. Generate a COMPLETE blueprint with MINIMUM 20,000 characters
-2. Use Lovable's technology stack: React 18, TypeScript, Tailwind CSS, Vite, Shadcn/UI, Supabase
-3. Include FULL code implementations, not snippets or placeholders
-4. Provide detailed database schemas with all fields and relationships
-5. Include complete authentication flows and API implementations
-6. Add comprehensive error handling and edge case management
-7. Provide production deployment configurations
+**Requirements:**
+- Use only Lovable's fixed technology stack (React 18, Tailwind CSS, Vite, Shadcn/UI, Supabase)
+- Include complete code examples and database schemas
+- Provide detailed implementation instructions
+- Ensure production-ready architecture
+- Include deployment and hosting configurations`;
 
-Remember: This blueprint will be used to build a real production application on Lovable.dev, so be extremely thorough and detailed in every section.`;
+      timeoutId = setTimeout(() => abortController.abort(), 300000); // 5 minute timeout
 
-      // Use the exact streaming implementation you provided
-      const messages = [
-        {
-          role: "system",
-          content: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
-        },
-        {
-          role: "user", 
-          content: fullPrompt
-        }
-      ];
-
-      const response = await fetch("/api/stream-blueprint", {
-        method: "POST",
+      const response = await fetch('/api/stream-blueprint', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           prompt: fullPrompt,
           temperature: 0.7,
           systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
         }),
+        signal: abortController.signal
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers.get('content-type'));
+      if (timeoutId) clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      if (!response.body) throw new Error("No response stream");
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
+      if (!reader) {
+        throw new Error('No response stream available');
+      }
 
-      let accumulatedContent = '';
+      let buffer = '';
+      let isComplete = false;
       
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          console.log('Stream reading completed');
-          break;
-        }
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line === '') continue; // Skip empty lines
+      while (true && !isComplete) {
+        try {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
           
-          if (line.startsWith('data:')) {
-            const jsonData = line.slice(5).trim();
-            
-            if (jsonData === '[DONE]') {
-              console.log('Received [DONE] signal');
-              continue;
-            }
-            
-            try {
-              const data = JSON.parse(jsonData);
-              
-              if (data.type === 'token' && data.content) {
-                accumulatedContent += data.content;
-                setGeneratedBlueprint(accumulatedContent);
-                const percentage = Math.min(Math.round((accumulatedContent.length / 20000) * 100), 100);
-                setStreamProgress(`Generating comprehensive blueprint... ${accumulatedContent.length.toLocaleString()} characters (${percentage}%)`);
-              } else if (data.type === 'complete') {
-                const finalContent = data.content || accumulatedContent;
-                const finalLength = finalContent.length;
-                
-                setGeneratedBlueprint(finalContent);
-                setStreamProgress(`✅ Blueprint completed! Generated ${finalLength.toLocaleString()} characters`);
-                console.log(`✅ Blueprint generation completed with ${finalLength.toLocaleString()} characters`);
-                
-                // Save to database if blueprint is substantial
-                if (finalLength > 15000) {
-                  fetch('/api/blueprint-prompts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      name: `Lovable Blueprint - ${new Date().toLocaleDateString()}`,
-                      prompt: prompt,
-                      generatedBlueprint: finalContent,
-                      features: selectedFeatures,
-                      metadata: {
-                        characterCount: finalLength,
-                        generatedAt: new Date().toISOString()
-                      }
-                    })
-                  }).then(() => console.log('✅ Blueprint saved to database'))
-                    .catch(err => console.error('Failed to save blueprint:', err));
+          for (let i = 0; i < lines.length - 1; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith('data:')) {
+              try {
+                const jsonData = line.slice(5).trim();
+                if (jsonData) {
+                  const data = JSON.parse(jsonData);
+                  
+                  if (data.type === 'token' && data.fullContent) {
+                    setGeneratedBlueprint(data.fullContent);
+                    setStreamProgress(`Generating blueprint... ${data.fullContent.length} characters`);
+                  } else if (data.type === 'complete') {
+                    setGeneratedBlueprint(data.content || data.fullContent || '');
+                    setStreamProgress(`✅ Blueprint completed! ${data.tokens || 0} tokens in ${data.processingTime || 0}ms`);
+                    setIsStreaming(false);
+                    isComplete = true;
+                    console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
+                    break;
+                  } else if (data.type === 'error') {
+                    setStreamProgress(`❌ Error: ${data.error}`);
+                    throw new Error(data.error);
+                  }
                 }
-                
-                setIsStreaming(false);
-                return;
-              } else if (data.type === 'error') {
-                setStreamProgress(`❌ Error: ${data.error}`);
-                setIsStreaming(false);
-                throw new Error(data.error);
+              } catch (parseError) {
+                console.warn('Failed to parse streaming data:', parseError);
+                // Continue processing other lines instead of breaking
               }
-            } catch (parseError) {
-              console.error('Failed to parse streaming data:', parseError, 'Line:', line);
             }
           }
+          
+          buffer = lines[lines.length - 1];
+        } catch (readError) {
+          console.error('Error reading stream:', readError);
+          break;
         }
-        
-        buffer = lines[lines.length - 1];
       }
     } catch (error) {
       console.error('Streaming generation failed:', error);
@@ -374,14 +332,11 @@ Remember: This blueprint will be used to build a real production application on 
               </CardHeader>
               <CardContent className="relative z-10">
                 <Textarea
-                  placeholder="Describe your application idea in detail... Be specific about features, user workflows, and functionality. The more detailed your description, the more comprehensive your blueprint will be. For example: 'A social media platform for photographers with portfolio galleries, image editing tools, and collaboration features. Users should be able to upload photos, create albums, follow other photographers, and sell prints. Include admin dashboard, analytics, payment processing, and mobile responsiveness.'"
+                  placeholder="Describe your application idea... For example: 'A social media platform for photographers with portfolio galleries, image editing tools, and collaboration features. Users should be able to upload photos, create albums, follow other photographers, and sell prints.'"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[250px] resize-none bg-black/30 border-gray-600/50 text-gray-200 placeholder:text-gray-400 focus:border-blue-400/50 focus:ring-blue-400/20"
+                  className="min-h-[200px] resize-none bg-black/30 border-gray-600/50 text-gray-200 placeholder:text-gray-400 focus:border-blue-400/50 focus:ring-blue-400/20"
                 />
-                <div className="mt-2 text-xs text-gray-400">
-                  💡 Tip: Provide detailed descriptions to generate comprehensive 20,000+ character blueprints tailored for Lovable
-                </div>
                 <Button 
                   onClick={handleGenerate}
                   disabled={!prompt.trim() || isGenerating}
@@ -407,27 +362,12 @@ Remember: This blueprint will be used to build a real production application on 
                 {/* Streaming Progress */}
                 {(isGenerating || streamProgress) && (
                   <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30 backdrop-blur-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
-                        <span className="text-sm text-blue-300 font-medium">
-                          {streamProgress || 'Preparing blueprint generation...'}
-                        </span>
-                      </div>
-                      {generatedBlueprint.length > 0 && (
-                        <span className="text-xs text-blue-200 font-mono">
-                          {generatedBlueprint.length.toLocaleString()} chars
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2">
+                      {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
+                      <span className="text-sm text-blue-300 font-medium">
+                        {streamProgress || 'Preparing blueprint generation...'}
+                      </span>
                     </div>
-                    {generatedBlueprint.length > 0 && (
-                      <div className="mt-2 w-full bg-blue-900/30 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-400 to-purple-400 transition-all duration-300"
-                          style={{ width: `${Math.min((generatedBlueprint.length / 20000) * 100, 100)}%` }}
-                        />
-                      </div>
-                    )}
                   </div>
                 )}
               </CardContent>
@@ -447,11 +387,8 @@ Remember: This blueprint will be used to build a real production application on 
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="relative z-10">
-                  <div className="bg-black/30 border border-gray-600/50 p-6 rounded-lg max-h-[600px] overflow-y-auto backdrop-blur-sm">
-                    <div className="mb-3 text-sm text-gray-400">
-                      Blueprint Length: {generatedBlueprint.length.toLocaleString()} characters
-                    </div>
-                    <pre className="whitespace-pre-wrap text-sm text-gray-200 font-mono leading-relaxed">
+                  <div className="bg-black/30 border border-gray-600/50 p-4 rounded-lg max-h-96 overflow-y-auto backdrop-blur-sm">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-200 font-mono">
                       {generatedBlueprint}
                     </pre>
                   </div>
@@ -479,16 +416,6 @@ Remember: This blueprint will be used to build a real production application on 
                       className="border-green-400/50 text-green-300 hover:bg-green-500/10 hover:border-green-400 backdrop-blur-sm"
                     >
                       Download
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        window.open('https://lovable.dev', '_blank');
-                      }}
-                      size="sm"
-                      className="border-purple-400/50 text-purple-300 hover:bg-purple-500/10 hover:border-purple-400 backdrop-blur-sm"
-                    >
-                      Use in Lovable
                     </Button>
                   </div>
                 </CardContent>

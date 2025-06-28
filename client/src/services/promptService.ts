@@ -220,12 +220,12 @@ class PromptService {
       const userQuery = this.buildComprehensiveMasterQuery(request);
       
       const payload = {
-        model: 'deepseek-chat',
+        model: 'deepseek-reasoner',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userQuery }
         ],
-        max_tokens: 8192,
+        max_tokens: 64000,
         temperature: 0.7,
         top_p: 0.9,
         stream: false
