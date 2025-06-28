@@ -160,7 +160,10 @@ class ErrorHandler {
       if (filter.type) filtered = filtered.filter(e => e.type === filter.type);
       if (filter.severity) filtered = filtered.filter(e => e.severity === filter.severity);
       if (filter.resolved !== undefined) filtered = filtered.filter(e => e.resolved === filter.resolved);
-      if (filter.component) filtered = filtered.filter(e => e.component && e.component.includes(filter.component));
+      if (filter.component) {
+        const componentFilter = filter.component;
+        filtered = filtered.filter(e => e.component && e.component.includes(componentFilter));
+      }
     }
 
     return filtered.sort((a, b) => b.timestamp - a.timestamp);

@@ -184,7 +184,10 @@ class BugTracker {
       if (filter.type) filtered = filtered.filter(b => b.type === filter.type);
       if (filter.severity) filtered = filtered.filter(b => b.severity === filter.severity);
       if (filter.resolved !== undefined) filtered = filtered.filter(b => b.resolved === filter.resolved);
-      if (filter.component) filtered = filtered.filter(b => b.component && b.component.includes(filter.component));
+      if (filter.component) {
+        const componentFilter = filter.component;
+        filtered = filtered.filter(b => b.component && b.component.includes(componentFilter));
+      }
     }
 
     return filtered.sort((a, b) => b.timestamp - a.timestamp);

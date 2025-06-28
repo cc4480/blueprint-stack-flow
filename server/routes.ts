@@ -144,7 +144,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const messages = [
         {
           role: "system",
-          content: systemPrompt || "You are a Lovable 2.0 blueprint generation expert."
+          content: systemPrompt || `You are a Lovable 2.0 blueprint generation expert. Generate an EXTREMELY DETAILED blueprint with MINIMUM 20,000 characters.
+
+MANDATORY BLUEPRINT STRUCTURE (Each section MUST be comprehensive):
+
+1. PROJECT OVERVIEW (2,000+ chars)
+- Detailed application description, user personas, use cases
+- Business logic and workflow explanations
+- Success metrics and KPIs
+
+2. TECHNOLOGY STACK DETAILS (2,000+ chars)
+- Complete package.json with ALL dependencies and versions
+- Detailed configuration files (tailwind.config.js, tsconfig.json, etc.)
+- Environment variables setup with explanations
+
+3. DATABASE SCHEMA (3,000+ chars)
+- Complete Supabase PostgreSQL table definitions with ALL fields
+- Detailed relationships, indexes, and constraints
+- Row Level Security policies with full SQL
+- Migration scripts and seed data examples
+
+4. AUTHENTICATION SYSTEM (2,000+ chars)
+- Complete Supabase Auth implementation
+- User registration/login flows with full code
+- Role-based access control implementation
+- Social auth integration code
+
+5. COMPONENT ARCHITECTURE (3,000+ chars)
+- Detailed React component hierarchy
+- Complete code for each major component
+- State management patterns with examples
+- Routing structure with protected routes
+
+6. API IMPLEMENTATION (2,000+ chars)
+- Complete API endpoints with error handling
+- Data validation schemas
+- Integration patterns for external services
+- WebSocket/real-time features if applicable
+
+7. UI/UX IMPLEMENTATION (2,000+ chars)
+- Complete Tailwind CSS styling patterns
+- Responsive design implementation
+- Accessibility features (ARIA labels, keyboard nav)
+- Animation and interaction patterns
+
+8. FEATURES IMPLEMENTATION (3,000+ chars)
+- Detailed code for EVERY feature
+- Business logic implementation
+- Error handling and edge cases
+- Performance optimization techniques
+
+9. DEPLOYMENT & DEVOPS (1,000+ chars)
+- Vercel/Netlify configuration
+- CI/CD pipeline setup
+- Environment management
+- Monitoring and logging setup
+
+CRITICAL: 
+- Write COMPLETE code examples, no summaries
+- Include FULL implementations, not snippets
+- Add detailed comments in code
+- Provide multiple variations where applicable
+- Your response MUST exceed 20,000 characters`
         },
         {
           role: "user", 
@@ -152,23 +213,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
 
-      const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      const requestBody = {
+        model: "deepseek-chat",
+        messages,
+        temperature: 0.7,
+        stream: true,
+        max_tokens: 64000
+      };
+      
+      console.log('DeepSeek request:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages,
-          temperature: 0.7,
-          stream: true,
-          max_tokens: 8192
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('DeepSeek API error:', response.status, errorData);
+        throw new Error(`DeepSeek API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       if (!response.body) {
@@ -191,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (part.startsWith("data:")) {
             const jsonStr = part.slice(5).trim();
             if (jsonStr === "[DONE]") {
-              res.write(`data: [DONE]\n\n`);
+              res.write(`data: ${JSON.stringify({ type: 'complete' })}\n\n`);
               res.end();
               return;
             }
@@ -199,8 +266,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const parsed = JSON.parse(jsonStr);
               const token = parsed.choices?.[0]?.delta?.content;
               if (token) {
-                // Send the exact DeepSeek API format to frontend
-                res.write(`data: ${jsonStr}\n\n`);
+                // Send formatted event for frontend
+                res.write(`data: ${JSON.stringify({
+                  type: 'token',
+                  content: token
+                })}\n\n`);
               }
             } catch (e) {
               console.warn("JSON parse error", e);
@@ -405,17 +475,28 @@ Your blueprints must be:
 - **Accessible**: WCAG compliant and mobile-responsive
 - **Tested**: Include testing strategies and quality assurance
 
+## BLUEPRINT LENGTH REQUIREMENTS
+
+**CRITICAL**: Generate comprehensive blueprints that are MINIMUM 20,000 characters in length. This ensures:
+- Complete implementation details for every feature
+- Full code examples for all components
+- Detailed database schemas with all fields
+- Comprehensive deployment instructions
+- Production-ready error handling
+- Performance optimization strategies
+
 ## CONVERSATION STYLE
-- Be comprehensive yet concise
-- Provide specific, actionable guidance
-- Include code examples for all implementations
+- Be EXTREMELY detailed and comprehensive
+- Provide complete, production-ready code examples
+- Include full implementation for every feature
 - Focus on Lovable platform best practices
 - Ensure all recommendations work within Lovable's ecosystem
+- Never summarize or abbreviate - provide full implementations
 
-Generate blueprints that enable developers to build production applications on Lovable 2.0 with zero additional research or decision-making required.` },
+Generate blueprints that enable developers to build production applications on Lovable 2.0 with zero additional research or decision-making required. Each section should be thoroughly detailed with complete code examples, never use placeholders or abbreviated examples.` },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 8192, // DeepSeek chat model supports up to 8K tokens output
+          max_tokens: 32768, // Increased for 20K+ character blueprints
           stream: true
         }),
         signal: controller.signal
@@ -436,6 +517,8 @@ Generate blueprints that enable developers to build production applications on L
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
+      
+      console.log('📡 Starting blueprint streaming...');
 
       let fullContent = '';
       let reasoningContent = '';
@@ -453,12 +536,12 @@ Generate blueprints that enable developers to build production applications on L
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split('\n\n');
+          const lines = buffer.split('\n');
           
-          for (let i = 0; i < parts.length - 1; i++) {
-            const part = parts[i].trim();
-            if (part.startsWith('data:')) {
-              const jsonStr = part.slice(5).trim();
+          for (let i = 0; i < lines.length - 1; i++) {
+            const line = lines[i].trim();
+            if (line.startsWith('data:')) {
+              const jsonStr = line.slice(5).trim();
               if (jsonStr === '[DONE]') {
                 const processingTime = Date.now() - startTime;
                 
@@ -471,6 +554,7 @@ Generate blueprints that enable developers to build production applications on L
                   tokens: fullContent.length
                 })}\n\n`);
                 
+                console.log(`✅ Blueprint streaming completed: ${fullContent.length} characters`);
                 res.end();
                 return;
               }
@@ -485,9 +569,13 @@ Generate blueprints that enable developers to build production applications on L
                   // Send streaming token
                   res.write(`data: ${JSON.stringify({
                     type: 'token',
-                    content: delta.content,
-                    fullContent: fullContent
+                    content: delta.content
                   })}\n\n`);
+                  
+                  // Log progress every 1000 characters
+                  if (fullContent.length % 1000 === 0) {
+                    console.log(`📝 Streaming progress: ${fullContent.length} characters`);
+                  }
                 }
                 
                 if (delta?.reasoning_content) {
@@ -496,8 +584,7 @@ Generate blueprints that enable developers to build production applications on L
                   // Send reasoning update
                   res.write(`data: ${JSON.stringify({
                     type: 'reasoning',
-                    content: delta.reasoning_content,
-                    fullReasoning: reasoningContent
+                    content: delta.reasoning_content
                   })}\n\n`);
                 }
               } catch (parseError) {
@@ -506,7 +593,7 @@ Generate blueprints that enable developers to build production applications on L
             }
           }
           
-          buffer = parts[parts.length - 1];
+          buffer = lines[lines.length - 1];
         }
       } catch (streamError) {
         console.error('Streaming error:', streamError);
