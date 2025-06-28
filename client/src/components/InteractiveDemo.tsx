@@ -103,80 +103,73 @@ ${prompt}
 - Ensure production-ready architecture
 - Include deployment and hosting configurations`;
 
-      timeoutId = setTimeout(() => abortController.abort(), 300000); // 5 minute timeout
+      // Use the exact streaming implementation you provided
+      const messages = [
+        {
+          role: "system",
+          content: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
+        },
+        {
+          role: "user", 
+          content: fullPrompt
+        }
+      ];
 
-      const response = await fetch('/api/stream-blueprint', {
-        method: 'POST',
+      const response = await fetch("/api/stream-blueprint", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           prompt: fullPrompt,
           temperature: 0.7,
           systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
         }),
-        signal: abortController.signal
       });
 
-      if (timeoutId) clearTimeout(timeoutId);
+      if (!response.body) throw new Error("No response stream");
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
 
-      if (!reader) {
-        throw new Error('No response stream available');
-      }
-
-      let buffer = '';
-      let isComplete = false;
-      
-      while (true && !isComplete) {
-        try {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          
-          for (let i = 0; i < lines.length - 1; i++) {
-            const line = lines[i].trim();
-            if (line.startsWith('data:')) {
-              try {
-                const jsonData = line.slice(5).trim();
-                if (jsonData) {
-                  const data = JSON.parse(jsonData);
-                  
-                  if (data.type === 'token' && data.fullContent) {
-                    setGeneratedBlueprint(data.fullContent);
-                    setStreamProgress(`Generating blueprint... ${data.fullContent.length} characters`);
-                  } else if (data.type === 'complete') {
-                    setGeneratedBlueprint(data.content || data.fullContent || '');
-                    setStreamProgress(`✅ Blueprint completed! ${data.tokens || 0} tokens in ${data.processingTime || 0}ms`);
-                    setIsStreaming(false);
-                    isComplete = true;
-                    console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
-                    break;
-                  } else if (data.type === 'error') {
-                    setStreamProgress(`❌ Error: ${data.error}`);
-                    throw new Error(data.error);
-                  }
+        const lines = buffer.split('\n');
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('data:')) {
+            try {
+              const jsonData = line.slice(5).trim();
+              if (jsonData) {
+                const data = JSON.parse(jsonData);
+                
+                if (data.type === 'token' && data.content) {
+                  setGeneratedBlueprint(prev => {
+                    const newContent = prev + data.content;
+                    setStreamProgress(`Generating blueprint... ${newContent.length} characters`);
+                    return newContent;
+                  });
+                } else if (data.type === 'complete') {
+                  setGeneratedBlueprint(data.content || data.fullContent || '');
+                  setStreamProgress(`✅ Blueprint completed! ${data.tokens || 0} tokens in ${data.processingTime || 0}ms`);
+                  setIsStreaming(false);
+                  console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
+                  return;
+                } else if (data.type === 'error') {
+                  setStreamProgress(`❌ Error: ${data.error}`);
+                  throw new Error(data.error);
                 }
-              } catch (parseError) {
-                console.warn('Failed to parse streaming data:', parseError);
-                // Continue processing other lines instead of breaking
               }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', parseError);
             }
           }
-          
-          buffer = lines[lines.length - 1];
-        } catch (readError) {
-          console.error('Error reading stream:', readError);
-          break;
         }
+        buffer = lines[lines.length - 1];
       }
     } catch (error) {
       console.error('Streaming generation failed:', error);

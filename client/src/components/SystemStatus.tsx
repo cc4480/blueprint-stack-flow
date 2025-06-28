@@ -279,7 +279,7 @@ const SystemStatus: React.FC = () => {
                       {Object.entries(component.metrics).map(([key, value]) => (
                         <div key={key} className="flex justify-between">
                           <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                          <span className="font-medium">{value}</span>
+                          <span className="font-medium">{String(value)}</span>
                         </div>
                       ))}
                     </div>
