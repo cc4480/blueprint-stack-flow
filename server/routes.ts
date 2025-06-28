@@ -1,12 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { handleDirectStream } from "./directStream";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Direct real-time streaming endpoint
-  app.post("/api/direct-stream", handleDirectStream);
-
   // Health Check Endpoints
   app.get("/api/health", async (req, res) => {
     try {
