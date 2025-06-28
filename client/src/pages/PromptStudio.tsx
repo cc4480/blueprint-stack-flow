@@ -178,28 +178,8 @@ ${response}
     
     setIsLoading(true);
     setResponse('');
-    setStreamingText('');
-    
-    // Add streaming messages like Interactive Demo
-    const streamingMessages = [
-      'Initializing DeepSeek Reasoner...',
-      'Processing system context...',
-      'Analyzing user prompt...',
-      'Generating reasoning chain...',
-      'Crafting comprehensive response...',
-      'Finalizing output...'
-    ];
-    
-    let messageIndex = 0;
-    const streamInterval = setInterval(() => {
-      if (messageIndex < streamingMessages.length) {
-        setStreamingText(streamingMessages[messageIndex]);
-        messageIndex++;
-      } else {
-        setStreamingText('Processing advanced reasoning... This may take a moment for complex queries.');
-      }
-    }, 2000);
-    
+    setStreamingText('Initializing DeepSeek streaming...');
+
     try {
       const response = await fetch('/api/deepseek/reason', {
         method: 'POST',
@@ -215,33 +195,85 @@ ${response}
         })
       });
 
-      const data = await response.json();
-      
-      clearInterval(streamInterval);
-      setStreamingText('');
-      
       if (!response.ok) {
-        setResponse(`Error: ${data.error}`);
+        const errorData = await response.json().catch(() => ({}));
+        setResponse(`Error: ${errorData.error || 'Request failed'}`);
         return;
       }
 
-      if (data.reasoning) {
-        setResponse(data.reasoning);
-        
-        // Automatically save to database
-        await saveBlueprintToDatabase(prompt, data.reasoning, data);
+      if (!response.body) {
+        setResponse('Error: No response stream received');
+        return;
+      }
+
+      // Handle streaming response
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let accumulatedResponse = "";
+
+      setStreamingText('Streaming response from DeepSeek...');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+
+        for (let i = 0; i < lines.length - 1; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('data:')) {
+            try {
+              const jsonData = line.slice(5).trim();
+              if (jsonData && jsonData !== '[DONE]') {
+                const data = JSON.parse(jsonData);
+                
+                if (data.type === 'token' && data.content) {
+                  accumulatedResponse += data.content;
+                  setResponse(accumulatedResponse);
+                  setStreamingText(`Streaming... ${accumulatedResponse.length} characters`);
+                } else if (data.type === 'complete') {
+                  setStreamingText(`✅ Blueprint completed! ${data.totalCharacters || accumulatedResponse.length} characters`);
+                  
+                  // Automatically save to database
+                  await saveBlueprintToDatabase(prompt, accumulatedResponse, data);
+                  setSavedToDB(true);
+                  
+                  toast({
+                    title: "Blueprint Generated Successfully",
+                    description: "Your master blueprint has been generated and automatically saved to the database.",
+                  });
+                  return;
+                } else if (data.type === 'error') {
+                  setResponse(`Error: ${data.error}`);
+                  setStreamingText('❌ Generation failed');
+                  return;
+                }
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', parseError);
+            }
+          }
+        }
+        buffer = lines[lines.length - 1];
+      }
+
+      // If we reach here, save the final response
+      if (accumulatedResponse) {
+        await saveBlueprintToDatabase(prompt, accumulatedResponse, {});
         setSavedToDB(true);
+        setStreamingText(`✅ Blueprint completed! ${accumulatedResponse.length} characters`);
         
         toast({
-          title: "Blueprint Generated Successfully",
+          title: "Blueprint Generated Successfully", 
           description: "Your master blueprint has been generated and automatically saved to the database.",
         });
-      } else {
-        setResponse('No response received from DeepSeek API');
       }
+
     } catch (error) {
-      clearInterval(streamInterval);
-      setStreamingText('');
+      console.error('Streaming error:', error);
+      setStreamingText('❌ Generation failed');
       setResponse('Error executing prompt. Please check your connection and try again.');
       toast({
         title: "Generation Failed",

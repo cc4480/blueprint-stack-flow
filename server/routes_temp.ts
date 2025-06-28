@@ -234,7 +234,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DeepSeek reasoning endpoint with full API integration
-  // DeepSeek reasoning endpoint - Simple JSON response for Prompt Studio
   app.post("/api/deepseek/reason", async (req, res) => {
     try {
       const { prompt, systemPrompt, temperature = 0.7, maxSteps = 10 } = req.body;
@@ -242,99 +241,301 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!apiKey) {
         return res.status(400).json({
-          error: "DeepSeek API key is required. Please configure DEEPSEEK_API_KEY environment variable."
+          error: 'DeepSeek API key is required. Please configure DEEPSEEK_API_KEY environment variable.'
         });
       }
 
-      console.log("🤖 Processing DeepSeek reasoning request...");
+      const startTime = Date.now();
       
-      const deepseekResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
-        method: "POST",
+      // Call DeepSeek API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for blueprint generation
+      
+      const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: 'deepseek-chat',
           messages: [
-            { 
-              role: "system", 
-              content: systemPrompt || `You are an expert AI architect and Lovable 2.0 platform specialist. Your role is to create comprehensive application prompts specifically optimized for the Lovable no-code platform.
+            { role: 'system', content: systemPrompt || `# Lovable 2.0 Blueprint Generator Expert
 
-Generate detailed, production-ready blueprints that include complete technical specifications, database design, component architecture, and implementation details. Focus on creating comprehensive prompts that enable developers to build full applications without additional research.`
-            },
-            { role: "user", content: prompt }
+You are an expert AI architect specialized in generating production-ready application blueprints exclusively for the Lovable 2.0 platform. Your role is to create comprehensive, immediately implementable blueprints using Lovable's proven technology stack.
+
+## LOVABLE 2.0 TECHNOLOGY STACK (MANDATORY - NO EXCEPTIONS)
+
+### Frontend Framework (Fixed)
+- **React 18** with TypeScript - Modern declarative UI framework
+- **Tailwind CSS** - Utility-first CSS framework for rapid styling
+- **Vite** - Next-generation build tool and dev server
+- **Shadcn/UI** - High-quality, accessible component library
+- **Lucide React** - Beautiful icon library
+
+### Backend Platform (Fixed)
+- **Supabase** - Complete backend-as-a-service platform
+- **PostgreSQL** - Robust relational database via Supabase
+- **Supabase Auth** - Complete authentication and authorization
+- **Supabase Storage** - Secure file storage and management
+- **Supabase Realtime** - Live data synchronization
+
+### AI & Integrations (Lovable Ecosystem)
+- **Claude 3.5 Sonnet** - Primary AI model for intelligent features
+- **Stripe** - Payment processing and subscription management
+- **Resend** - Transactional email service
+- **Replicate** - AI-generated media and content
+- **Entri** - Domain management and hosting
+- **Vercel/Netlify** - One-click deployment hosting
+
+### Development Approach
+- **Vibe Coding** - Conversational AI-driven development
+- **GitHub Integration** - Real-time two-way synchronization
+- **One-Click Publishing** - Instant deployment capabilities
+
+## BLUEPRINT GENERATION REQUIREMENTS
+
+### 1. Application Architecture
+Generate detailed system architecture including:
+- Component hierarchy and data flow
+- Supabase database schema with tables, relationships, and RLS policies
+- Authentication flows with role-based access control
+- File upload and storage patterns
+- Real-time data synchronization strategies
+
+### 2. Database Design (Supabase PostgreSQL)
+- Complete table schemas with proper relationships
+- Row Level Security (RLS) policies for data protection
+- Database triggers and functions for business logic
+- Indexing strategies for optimal performance
+- Migration scripts and seed data
+
+### 3. Authentication System (Supabase Auth)
+- User registration and login flows
+- Role-based permissions and access control
+- Social authentication providers (Google, GitHub, etc.)
+- Password reset and email verification
+- Protected routes and middleware
+
+### 4. Frontend Implementation (React + Tailwind + Shadcn)
+- Component structure and reusable patterns
+- State management with React hooks and context
+- Form handling with validation
+- Responsive design with Tailwind CSS
+- Accessibility best practices
+
+### 5. API Integration
+- Supabase client configuration and setup
+- CRUD operations with proper error handling
+- Real-time subscriptions and live updates
+- File upload and storage operations
+- External API integrations (Stripe, Resend, etc.)
+
+### 6. Advanced Features Integration
+Based on selected features, include:
+- **Stripe Payments**: Complete checkout flows and subscription management
+- **Resend Email**: Transactional emails and notifications
+- **Claude AI**: Intelligent features and content generation
+- **Replicate Media**: AI-generated images, videos, and audio
+- **Search**: Full-text search with PostgreSQL
+- **Analytics**: Custom event tracking and metrics
+
+### 7. Deployment Configuration
+- Vercel/Netlify deployment settings
+- Environment variable configuration
+- Domain setup with Entri integration
+- CI/CD pipeline with GitHub Actions
+- Performance optimization and caching
+
+## OUTPUT STRUCTURE
+
+Generate blueprints with these sections:
+
+### 1. PROJECT OVERVIEW
+- Application description and core functionality
+- User personas and use cases
+- Technical requirements and constraints
+
+### 2. TECHNOLOGY STACK IMPLEMENTATION
+- Detailed implementation of Lovable's fixed stack
+- Package.json with exact dependencies
+- Configuration files (tailwind.config.js, etc.)
+
+### 3. DATABASE SCHEMA
+- Complete Supabase table definitions
+- Relationships and foreign keys
+- RLS policies and security rules
+- Sample data and migrations
+
+### 4. COMPONENT ARCHITECTURE
+- React component hierarchy
+- Reusable UI components with Shadcn
+- State management patterns
+- Routing and navigation structure
+
+### 5. AUTHENTICATION & AUTHORIZATION
+- Supabase Auth implementation
+- User roles and permissions
+- Protected routes and components
+- Social login integration
+
+### 6. CORE FEATURES IMPLEMENTATION
+- Detailed code examples for each selected feature
+- API endpoints and data flows
+- Error handling and validation
+- Testing strategies
+
+### 7. INTEGRATIONS & SERVICES
+- Stripe payment implementation
+- Resend email configuration
+- Claude AI integration patterns
+- File upload with Supabase Storage
+
+### 8. DEPLOYMENT & HOSTING
+- Vercel/Netlify configuration
+- Environment setup guide
+- Domain configuration with Entri
+- Performance optimization
+
+### 9. DEVELOPMENT WORKFLOW
+- Local development setup
+- GitHub integration and collaboration
+- Code quality and testing
+- Deployment pipeline
+
+### 10. PRODUCTION CONSIDERATIONS
+- Security best practices
+- Performance monitoring
+- Scaling strategies
+- Maintenance procedures
+
+## QUALITY STANDARDS
+
+Your blueprints must be:
+- **Immediately Implementable**: Complete code examples with no ambiguity
+- **Lovable Platform Optimized**: Leverages all platform features and integrations
+- **Production Ready**: Enterprise-grade security, performance, and scalability
+- **Well Documented**: Clear setup instructions and usage guides
+- **Accessible**: WCAG compliant and mobile-responsive
+- **Tested**: Include testing strategies and quality assurance
+
+## CONVERSATION STYLE
+- Be comprehensive yet concise
+- Provide specific, actionable guidance
+- Include code examples for all implementations
+- Focus on Lovable platform best practices
+- Ensure all recommendations work within Lovable's ecosystem
+
+Generate blueprints that enable developers to build production applications on Lovable 2.0 with zero additional research or decision-making required.` },
+            { role: 'user', content: prompt }
           ],
-          max_tokens: 8192,
+          max_tokens: 8192, // DeepSeek chat model supports up to 8K tokens output
           stream: true
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!deepseekResponse.ok) {
         const errorData = await deepseekResponse.json().catch(() => ({}));
-        console.error("❌ DeepSeek API error:", deepseekResponse.status, errorData);
         return res.status(deepseekResponse.status).json({ 
-          error: `DeepSeek API error: ${errorData.error?.message || "Unknown error"}` 
+          error: `DeepSeek API error: ${errorData.error?.message || 'Unknown error'}` 
         });
       }
 
-      // Set streaming headers
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-      res.setHeader("Access-Control-Allow-Origin", "*");
+      // Set up Server-Sent Events for streaming
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Cache-Control');
 
+      let fullContent = '';
+      let reasoningContent = '';
       const reader = deepseekResponse.body?.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      let totalTokens = 0;
-      let totalContent = "";
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
       if (!reader) {
-        return res.status(500).json({ error: "Unable to read stream from DeepSeek API" });
+        return res.status(500).json({ error: 'Unable to read stream from DeepSeek API' });
       }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split("\n\n");
-        
-        for (let i = 0; i < parts.length - 1; i++) {
-          const part = parts[i].trim();
-          if (part.startsWith("data:")) {
-            const jsonStr = part.slice(5).trim();
-            if (jsonStr === "[DONE]") {
-              res.write(`data: ${JSON.stringify({ 
-                type: "complete",
-                totalTokens,
-                totalCharacters: totalContent.length
-              })}\n\n`);
-              res.end();
-              return;
-            }
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const token = parsed.choices?.[0]?.delta?.content;
-              if (token) {
-                totalTokens++;
-                totalContent += token;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n\n');
+          
+          for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i].trim();
+            if (part.startsWith('data:')) {
+              const jsonStr = part.slice(5).trim();
+              if (jsonStr === '[DONE]') {
+                const processingTime = Date.now() - startTime;
+                
+                // Send final response with complete data
                 res.write(`data: ${JSON.stringify({
-                  type: "token",
-                  content: token
+                  type: 'complete',
+                  content: fullContent,
+                  reasoning: reasoningContent,
+                  processingTime,
+                  tokens: fullContent.length
                 })}\n\n`);
+                
+                res.end();
+                return;
               }
-            } catch (e) {
-              console.warn("JSON parse error", e);
+              
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const delta = parsed.choices?.[0]?.delta;
+                
+                if (delta?.content) {
+                  fullContent += delta.content;
+                  
+                  // Send streaming token
+                  res.write(`data: ${JSON.stringify({
+                    type: 'token',
+                    content: delta.content,
+                    fullContent: fullContent
+                  })}\n\n`);
+                }
+                
+                if (delta?.reasoning_content) {
+                  reasoningContent += delta.reasoning_content;
+                  
+                  // Send reasoning update
+                  res.write(`data: ${JSON.stringify({
+                    type: 'reasoning',
+                    content: delta.reasoning_content,
+                    fullReasoning: reasoningContent
+                  })}\n\n`);
+                }
+              } catch (parseError) {
+                console.warn('JSON parse error:', parseError);
+              }
             }
           }
+          
+          buffer = parts[parts.length - 1];
         }
-        buffer = parts[parts.length - 1];
+      } catch (streamError) {
+        console.error('Streaming error:', streamError);
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          error: 'Streaming failed'
+        })}\n\n`);
+        res.end();
       }
-      
+
+      // This code should not be reached in streaming mode
+      console.error('Reached non-streaming code path, this should not happen');
+      res.status(500).json({ error: 'Internal streaming error' });
     } catch (error) {
-      console.error("❌ DeepSeek reasoning error:", error);
+      console.error('DeepSeek API error:', error);
       res.status(500).json({ error: "Failed to process reasoning request" });
     }
   });
