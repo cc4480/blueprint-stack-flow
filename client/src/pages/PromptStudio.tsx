@@ -228,19 +228,16 @@ ${response}
                   setStreamingText(`✅ Response completed! Generation finished successfully`);
                   setIsStreaming(false);
                   
-                  // Save the current response content to database
+                  // Save the accumulated response content to database
                   setTimeout(async () => {
-                    setResponse(currentResponse => {
-                      saveBlueprintToDatabase(prompt, currentResponse, { tokens_used: 0 });
-                      setSavedToDB(true);
-                      
-                      toast({
-                        title: "Response Generated Successfully",
-                        description: "Your prompt response has been generated and automatically saved to the database.",
-                      });
-                      return currentResponse;
+                    await saveBlueprintToDatabase(prompt, response, { tokens_used: 0 });
+                    setSavedToDB(true);
+                    
+                    toast({
+                      title: "Response Generated Successfully",
+                      description: "Your prompt response has been generated and automatically saved to the database.",
                     });
-                  }, 100);
+                  }, 100); // Small delay to ensure response state is updated
                   return;
                 } else if (data.type === 'error') {
                   setStreamingText(`❌ Error: ${data.error}`);

@@ -119,7 +119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DeepSeek Streaming Blueprint Generation - FIXED FOR 20K CHARACTER BLUEPRINTS
+  // DeepSeek Streaming Blueprint Generation
+  // DeepSeek Streaming Blueprint Generation - EXACT implementation as provided
   app.post("/api/stream-blueprint", async (req, res) => {
     const { prompt, systemPrompt } = req.body;
 
@@ -133,20 +134,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "DeepSeek API key is required" });
     }
 
-    // Set proper streaming headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    });
+    // Set streaming headers
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Access-Control-Allow-Origin", "*");
 
     try {
       const messages = [
         {
           role: "system",
-          content: systemPrompt || "You are an expert Lovable 2.0 application architect. Generate comprehensive, detailed blueprints of 15,000-20,000 characters using React, TypeScript, Tailwind CSS, Vite, Shadcn/UI, and Supabase. Include complete architecture, features, database schema, authentication flows, and deployment instructions. Be extremely detailed and thorough."
+          content: systemPrompt || "You are a Lovable 2.0 blueprint generation expert."
         },
         {
           role: "user", 
@@ -154,9 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
 
-      console.log('🚀 Starting DeepSeek streaming request...');
-      
-      const deepseekResponse = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -167,26 +163,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           messages,
           temperature: 0.7,
           stream: true,
-          max_tokens: 16384
+          max_tokens: 8192
         }),
       });
 
-      if (!deepseekResponse.ok) {
-        const errorText = await deepseekResponse.text();
-        console.error(`🚨 DeepSeek API error ${deepseekResponse.status}:`, errorText);
-        res.write(`data: ${JSON.stringify({
-          type: "error",
-          error: `DeepSeek API error: ${deepseekResponse.status} - ${errorText}`
-        })}\n\n`);
-        res.end();
-        return;
+      if (!response.ok) {
+        throw new Error(`DeepSeek API error: ${response.status}`);
       }
 
-      if (!deepseekResponse.body) {
+      if (!response.body) {
         throw new Error("No response stream");
       }
 
-      const reader = deepseekResponse.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
 
@@ -206,19 +195,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               res.end();
               return;
             }
-            if (jsonStr && jsonStr !== "") {
-              try {
-                const parsed = JSON.parse(jsonStr);
-                const token = parsed.choices?.[0]?.delta?.content;
-                if (token) {
-                  res.write(`data: ${JSON.stringify({
-                    type: "token",
-                    content: token
-                  })}\n\n`);
-                }
-              } catch (e) {
-                console.warn("JSON parse error:", e);
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) {
+                res.write(`data: ${JSON.stringify({
+                  type: "token",
+                  content: token
+                })}\n\n`);
               }
+            } catch (e) {
+              console.warn("JSON parse error", e);
             }
           }
         }
