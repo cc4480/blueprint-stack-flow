@@ -115,15 +115,23 @@ ${prompt}
         }
       ];
 
-      const response = await fetch("/api/stream-blueprint", {
+      const response = await fetch("/api/direct-stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: fullPrompt,
-          temperature: 0.7,
-          systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
+          messages: [
+            {
+              role: "system",
+              content: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
+            },
+            {
+              role: "user", 
+              content: fullPrompt
+            }
+          ],
+          temperature: 0.7
         }),
       });
 

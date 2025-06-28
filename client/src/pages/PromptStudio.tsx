@@ -183,16 +183,18 @@ ${response}
     setStreamingText('Initializing DeepSeek streaming generation...');
 
     try {
-      // Use server-side streaming endpoint for secure API key handling
-      const streamResponse = await fetch("/api/stream-blueprint", {
+      // Use direct streaming endpoint for real-time token display
+      const streamResponse = await fetch("/api/direct-stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          prompt: prompt,
-          temperature: 0.7,
-          systemPrompt: systemPrompt
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.7
         }),
       });
 
