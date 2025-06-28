@@ -207,8 +207,8 @@ ${response}
         if (done) break;
         
         buffer += decoder.decode(value, { stream: true });
-
         const lines = buffer.split('\n');
+        
         for (let i = 0; i < lines.length - 1; i++) {
           const line = lines[i].trim();
           if (line.startsWith('data:')) {
