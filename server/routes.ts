@@ -140,6 +140,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader("Connection", "keep-alive");
     res.setHeader("Access-Control-Allow-Origin", "*");
 
+    const startTime = Date.now();
+    let totalTokens = 0;
+    let totalContent = "";
+
     try {
       const messages = [
         {
@@ -191,7 +195,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (part.startsWith("data:")) {
             const jsonStr = part.slice(5).trim();
             if (jsonStr === "[DONE]") {
-              res.write(`data: ${JSON.stringify({ type: "complete" })}\n\n`);
+              const processingTime = Date.now() - startTime;
+              res.write(`data: ${JSON.stringify({ 
+                type: "complete",
+                processingTime,
+                totalTokens,
+                totalCharacters: totalContent.length
+              })}\n\n`);
               res.end();
               return;
             }
@@ -199,6 +209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const parsed = JSON.parse(jsonStr);
               const token = parsed.choices?.[0]?.delta?.content;
               if (token) {
+                totalTokens++;
+                totalContent += token;
                 res.write(`data: ${JSON.stringify({
                   type: "token",
                   content: token

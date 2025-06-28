@@ -154,10 +154,15 @@ ${prompt}
                     return newContent;
                   });
                 } else if (data.type === 'complete') {
-                  // Don't overwrite the accumulated content, just mark as complete
-                  setStreamProgress(`✅ Blueprint generation completed successfully!`);
+                  // Display detailed completion statistics
+                  const processingTime = data.processingTime || 0;
+                  const totalTokens = data.totalTokens || 0;
+                  const totalCharacters = data.totalCharacters || 0;
+                  const timeInSeconds = (processingTime / 1000).toFixed(1);
+                  
+                  setStreamProgress(`✅ Blueprint completed! ${totalCharacters} characters, ${totalTokens} tokens in ${timeInSeconds}s`);
                   setIsStreaming(false);
-                  console.log(`✅ Blueprint generation completed in ${data.processingTime || 0}ms`);
+                  console.log(`✅ Blueprint generation completed in ${processingTime}ms`);
                   return;
                 } else if (data.type === 'error') {
                   setStreamProgress(`❌ Error: ${data.error}`);
