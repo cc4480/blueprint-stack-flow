@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -109,49 +111,84 @@ const mockServers: MCPServer[] = [
 
 // Custom hooks
 const useMCPServers = () => {
-  const [servers, setServers] = useState<MCPServer[]>(mockServers);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch servers from API
+  const { data: servers = [], isLoading } = useQuery({
+    queryKey: ['/api/mcp-servers'],
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time status updates
+  });
+
+  const addServerMutation = useMutation({
+    mutationFn: async (serverData: MCPServerForm) => {
+      const response = await fetch('/api/mcp-servers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(serverData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add MCP server');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mcp-servers'] });
+      toast({
+        title: "Server Added",
+        description: "MCP server has been added successfully. Connection testing in progress...",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add MCP server. Please check your configuration.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteServerMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/mcp-servers/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete MCP server');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/mcp-servers'] });
+      toast({
+        title: "Server Removed",
+        description: "MCP server has been removed successfully.",
+      });
+    },
+  });
 
   const addServer = async (serverData: MCPServerForm) => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newServer: MCPServer = {
-      id: Date.now().toString(),
-      ...serverData,
-      status: 'pending',
-      lastConnected: new Date().toISOString(),
-      responseTime: 0,
-      endpoints: Math.floor(Math.random() * 20) + 5
-    };
-    
-    setServers(prev => [...prev, newServer]);
-    setIsLoading(false);
-  };
-
-  const updateServerStatus = async (id: string, status: MCPServer['status']) => {
-    setServers(prev => 
-      prev.map(server => 
-        server.id === id 
-          ? { 
-              ...server, 
-              status, 
-              lastConnected: new Date().toISOString(),
-              responseTime: status === 'active' ? Math.floor(Math.random() * 300) + 50 : 0
-            }
-          : server
-      )
-    );
+    await addServerMutation.mutateAsync(serverData);
   };
 
   const deleteServer = async (id: string) => {
-    setServers(prev => prev.filter(server => server.id !== id));
+    await deleteServerMutation.mutateAsync(id);
+  };
+
+  const updateServerStatus = async (id: string, status: MCPServer['status']) => {
+    // This would be handled server-side in a real implementation
+    console.log('Updating server status:', id, status);
   };
 
   return {
-    servers,
-    isLoading,
+    servers: servers as MCPServer[],
+    isLoading: isLoading || addServerMutation.isPending || deleteServerMutation.isPending,
     addServer,
     updateServerStatus,
     deleteServer

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -147,76 +148,92 @@ const mockQueries: RAGQuery[] = [
 
 // Custom hooks
 const useRAGDocuments = () => {
-  const [documents, setDocuments] = useState<RAGDocument[]>(mockDocuments);
+  const queryClient = useQueryClient();
   const [isUploading, setIsUploading] = useState(false);
+
+  // Fetch documents from API
+  const { data: documents = [], isLoading } = useQuery({
+    queryKey: ['/api/rag-documents'],
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, metadata }: { file: File; metadata: Partial<RAGDocument['metadata']> }) => {
+      const documentData = {
+        title: file.name,
+        content: `Content of ${file.name}...`,
+        type: file.type.includes('pdf') ? 'pdf' : 'text',
+        size: file.size,
+        metadata: {
+          source: 'upload',
+          author: metadata.author || 'User',
+          tags: metadata.tags || []
+        }
+      };
+
+      const response = await fetch('/api/rag-documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(documentData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload document');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rag-documents'] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/rag-documents/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/rag-documents'] });
+    },
+  });
 
   const uploadDocument = async (file: File, metadata: Partial<RAGDocument['metadata']>) => {
     setIsUploading(true);
-    
-    // Simulate upload and processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newDocument: RAGDocument = {
-      id: Date.now().toString(),
-      title: file.name,
-      content: 'Document content being processed...',
-      type: file.type.includes('pdf') ? 'pdf' : 'text',
-      size: file.size,
-      chunks: Math.floor(file.size / 1000) + Math.floor(Math.random() * 50),
-      embeddings: 0,
-      status: 'processing',
-      createdAt: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      metadata: {
-        tags: [],
-        ...metadata
-      }
-    };
-    
-    setDocuments(prev => [...prev, newDocument]);
-    
-    // Simulate processing completion
-    setTimeout(() => {
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === newDocument.id 
-            ? { ...doc, status: 'ready' as const, embeddings: doc.chunks }
-            : doc
-        )
-      );
-    }, 3000);
-    
-    setIsUploading(false);
+    try {
+      await uploadMutation.mutateAsync({ file, metadata });
+    } catch (error) {
+      console.error('Error uploading document:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const deleteDocument = async (id: string) => {
-    setDocuments(prev => prev.filter(doc => doc.id !== id));
+    try {
+      await deleteMutation.mutateAsync(id);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+    }
   };
 
   const reprocessDocument = async (id: string) => {
-    setDocuments(prev => 
-      prev.map(doc => 
-        doc.id === id 
-          ? { ...doc, status: 'processing' as const, lastUpdated: new Date().toISOString() }
-          : doc
-      )
-    );
-    
-    // Simulate reprocessing
-    setTimeout(() => {
-      setDocuments(prev => 
-        prev.map(doc => 
-          doc.id === id 
-            ? { ...doc, status: 'ready' as const, embeddings: doc.chunks }
-            : doc
-        )
-      );
-    }, 2000);
+    // This would trigger reprocessing on the server
+    console.log('Reprocessing document:', id);
   };
 
   return {
-    documents,
-    isUploading,
+    documents: documents as RAGDocument[],
+    isUploading: isUploading || isLoading,
     uploadDocument,
     deleteDocument,
     reprocessDocument
