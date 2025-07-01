@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -170,11 +169,11 @@ import { Button } from '@/components/ui/button';
 
 export default function WelcomeCard() {
   const [count, setCount] = useState(0);
-  
+
   useEffect(() => {
     console.log('Component mounted');
   }, []);
-  
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -199,7 +198,7 @@ import { Button } from '@/components/ui/button';
 
 export default function PersonalCard() {
   const [showHobby, setShowHobby] = useState(false);
-  
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -493,7 +492,7 @@ const Tutorials = () => {
       );
       const completedCount = updatedModules.filter(m => m.isCompleted).length;
       const progress = (completedCount / updatedModules.length) * 100;
-      
+
       setUserProgress(prev => ({
         ...prev,
         [selectedPath.id]: progress
@@ -709,7 +708,7 @@ const Tutorials = () => {
                       <div 
                         key={tutorial.id}
                         className="p-6 bg-black/30 border border-gray-600 rounded-lg hover:border-blue-400/50 transition-all cursor-pointer"
-                        onClick={() => setSelectedTutorial(tutorial)}
+                        onClick={() => {setSelectedTutorial(tutorial); setCurrentStep(0);}}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <h3 className="text-lg font-semibold text-white">{tutorial.title}</h3>
@@ -718,7 +717,7 @@ const Tutorials = () => {
                           </Badge>
                         </div>
                         <p className="text-gray-300 mb-4">{tutorial.description}</p>
-                        
+
                         <div className="mb-4 p-3 bg-blue-900/20 border border-blue-400/30 rounded">
                           <p className="text-sm text-blue-200">
                             <strong>What you'll build:</strong> {tutorial.preview}
@@ -786,7 +785,7 @@ const Tutorials = () => {
                           </div>
                         </div>
                         <p className="text-gray-300 mb-4">{challenge.description}</p>
-                        
+
                         <div className="flex items-center justify-between mb-4">
                           <Badge className={getDifficultyColor(challenge.difficulty)}>
                             {challenge.difficulty}
@@ -883,7 +882,7 @@ const Tutorials = () => {
                           </Badge>
                         </div>
                         <p className="text-gray-300 mb-4">{project.description}</p>
-                        
+
                         <div className="flex items-center gap-4 mb-4">
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-purple-400" />
@@ -982,7 +981,7 @@ const Tutorials = () => {
                       <div key={index} className="p-5 bg-black/30 border border-yellow-400/30 rounded-lg">
                         <h3 className="text-lg font-semibold text-white mb-2">{resource.title}</h3>
                         <p className="text-gray-300 text-sm mb-4">{resource.description}</p>
-                        
+
                         <div className="mb-4">
                           <h4 className="font-medium text-yellow-400 mb-2 text-sm">Includes:</h4>
                           <div className="space-y-1">
@@ -1051,7 +1050,7 @@ const Tutorials = () => {
                       <div key={index} className="p-5 bg-black/30 border border-blue-400/30 rounded-lg">
                         <h3 className="text-lg font-semibold text-white mb-2">{series.title}</h3>
                         <p className="text-gray-300 text-sm mb-4">{series.description}</p>
-                        
+
                         <div className="flex items-center gap-4 mb-4">
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-blue-400" />
@@ -1154,7 +1153,7 @@ const Tutorials = () => {
                             <AccordionContent>
                               <div className="pl-8 space-y-4">
                                 <p className="text-gray-300">{module.description}</p>
-                                
+
                                 {module.content && (
                                   <div className="space-y-3">
                                     <div className="bg-black/50 p-4 rounded-lg border border-gray-600">
@@ -1197,7 +1196,7 @@ const Tutorials = () => {
                     <CardTitle className="text-2xl">{selectedTutorial.title}</CardTitle>
                     <CardDescription className="text-lg">{selectedTutorial.description}</CardDescription>
                   </div>
-                  <Button variant="ghost" onClick={() => setSelectedTutorial(null)}>
+                  <Button variant="ghost" onClick={() => {setSelectedTutorial(null); setCurrentStep(0);}}>
                     ×
                   </Button>
                 </div>
@@ -1207,16 +1206,19 @@ const Tutorials = () => {
                   <div className="space-y-6">
                     {/* Tutorial Steps */}
                     {selectedTutorial.steps.map((step, index) => (
-                      <div key={step.id} className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                            {step.id}
-                          </div>
-                          <h3 className="text-xl font-semibold">{step.title}</h3>
-                        </div>
-                        
+                          <div key={step.id} className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 ${index <= currentStep ? 'bg-blue-600' : 'bg-gray-600'} text-white rounded-full flex items-center justify-center font-bold`}>
+                                {index < currentStep ? <CheckCircle className="w-5 h-5" /> : step.id}
+                              </div>
+                              <h3 className="text-xl font-semibold">{step.title}</h3>
+                              {index === currentStep && (
+                                <Badge className="bg-blue-600 text-white">Current Step</Badge>
+                              )}
+                            </div>
+
                         <p className="text-gray-300 pl-11">{step.description}</p>
-                        
+
                         {step.code && (
                           <div className="pl-11">
                             <div className="bg-black/50 p-4 rounded-lg border border-gray-600">
@@ -1230,12 +1232,12 @@ const Tutorials = () => {
                             </div>
                           </div>
                         )}
-                        
+
                         <div className="pl-11">
                           <h4 className="font-medium text-blue-400 mb-2">Explanation:</h4>
                           <p className="text-gray-300 text-sm">{step.explanation}</p>
                         </div>
-                        
+
                         {step.tips.length > 0 && (
                           <div className="pl-11">
                             <h4 className="font-medium text-yellow-400 mb-2">Tips:</h4>
@@ -1249,12 +1251,31 @@ const Tutorials = () => {
                             </ul>
                           </div>
                         )}
-                        
+
                         {index < selectedTutorial.steps.length - 1 && (
                           <Separator className="my-6" />
                         )}
                       </div>
                     ))}
+                    {/* Tutorial Navigation */}
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-600">
+                      <Button 
+                        variant="outline" 
+                        disabled={currentStep === 0}
+                        onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                      >
+                        Previous Step
+                      </Button>
+                      <span className="text-sm text-gray-400">
+                        Step {currentStep + 1} of {selectedTutorial.steps.length}
+                      </span>
+                      <Button 
+                        disabled={currentStep === selectedTutorial.steps.length - 1}
+                        onClick={() => setCurrentStep(Math.min(selectedTutorial.steps.length - 1, currentStep + 1))}
+                      >
+                        Next Step
+                      </Button>
+                    </div>
                   </div>
                 </ScrollArea>
               </CardContent>
