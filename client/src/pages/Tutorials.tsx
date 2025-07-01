@@ -355,45 +355,250 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
   const [code, setCode] = useState(initialCode);
   const [output, setOutput] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [testResults, setTestResults] = useState<Array<{test: string, passed: boolean, error?: string}>>([]);
 
-  const runCode = () => {
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput('');
+    setTestResults([]);
+    
     try {
-      // Simple code execution simulation for demo purposes
+      // Simulate code execution delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       if (language === 'javascript') {
-        const result = eval(code);
-        setOutput(String(result));
+        // Create a safe execution environment
+        const consoleOutput: string[] = [];
+        const mockConsole = {
+          log: (...args: any[]) => consoleOutput.push(args.map(arg => String(arg)).join(' ')),
+          error: (...args: any[]) => consoleOutput.push('ERROR: ' + args.map(arg => String(arg)).join(' ')),
+          warn: (...args: any[]) => consoleOutput.push('WARN: ' + args.map(arg => String(arg)).join(' '))
+        };
+        
+        // Replace console temporarily
+        const originalConsole = console;
+        (global as any).console = mockConsole;
+        
+        try {
+          // Execute the code
+          const result = new Function('console', code)(mockConsole);
+          
+          if (consoleOutput.length > 0) {
+            setOutput(consoleOutput.join('\n'));
+          } else if (result !== undefined) {
+            setOutput(String(result));
+          } else {
+            setOutput('Code executed successfully (no output)');
+          }
+        } catch (error) {
+          setOutput(`Runtime Error: ${error}`);
+        } finally {
+          (global as any).console = originalConsole;
+        }
+      } else if (language === 'html') {
+        // For HTML, show preview
+        setOutput('HTML preview available in Preview tab');
+        setShowPreview(true);
+      } else if (language === 'css') {
+        setOutput('CSS styles applied (view in Preview)');
+        setShowPreview(true);
       }
     } catch (error) {
-      setOutput(`Error: ${error}`);
+      setOutput(`Execution Error: ${error}`);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const runTests = () => {
+    const results: Array<{test: string, passed: boolean, error?: string}> = [];
+    
+    // Basic test cases for common functions
+    if (code.includes('findMax')) {
+      try {
+        const result = eval(`${code}; findMax([1, 5, 3, 9, 2])`);
+        results.push({
+          test: 'findMax([1, 5, 3, 9, 2]) should return 9',
+          passed: result === 9
+        });
+      } catch (error) {
+        results.push({
+          test: 'findMax function test',
+          passed: false,
+          error: String(error)
+        });
+      }
+    }
+
+    if (code.includes('reverseArray')) {
+      try {
+        const result = eval(`${code}; reverseArray([1, 2, 3, 4])`);
+        results.push({
+          test: 'reverseArray([1, 2, 3, 4]) should return [4, 3, 2, 1]',
+          passed: JSON.stringify(result) === JSON.stringify([4, 3, 2, 1])
+        });
+      } catch (error) {
+        results.push({
+          test: 'reverseArray function test',
+          passed: false,
+          error: String(error)
+        });
+      }
+    }
+
+    if (code.includes('removeDuplicates')) {
+      try {
+        const result = eval(`${code}; removeDuplicates([1, 2, 2, 3, 3, 4])`);
+        results.push({
+          test: 'removeDuplicates([1, 2, 2, 3, 3, 4]) should return [1, 2, 3, 4]',
+          passed: JSON.stringify(result) === JSON.stringify([1, 2, 3, 4])
+        });
+      } catch (error) {
+        results.push({
+          test: 'removeDuplicates function test',
+          passed: false,
+          error: String(error)
+        });
+      }
+    }
+
+    setTestResults(results);
+  };
+
+  const resetCode = () => {
+    setCode(initialCode);
+    setOutput('');
+    setTestResults([]);
+    setShowPreview(false);
+  };
+
+  const formatCode = () => {
+    // Simple code formatting
+    try {
+      const formatted = code
+        .split('\n')
+        .map(line => line.trim())
+        .join('\n')
+        .replace(/;/g, ';\n')
+        .replace(/{/g, ' {\n  ')
+        .replace(/}/g, '\n}');
+      setCode(formatted);
+    } catch (error) {
+      // If formatting fails, keep original code
     }
   };
 
   return (
     <div className="border rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <Badge variant="secondary">{language}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">{language}</Badge>
+          <Badge variant="outline" className="text-xs">
+            {code.length} characters
+          </Badge>
+        </div>
         <div className="flex gap-2">
-          <Button size="sm" onClick={runCode} variant="outline">
+          <Button size="sm" onClick={formatCode} variant="outline">
+            <PenTool className="w-4 h-4 mr-1" />
+            Format
+          </Button>
+          <Button size="sm" onClick={resetCode} variant="outline">
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Reset
+          </Button>
+          <Button size="sm" onClick={runTests} variant="outline">
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Test
+          </Button>
+          <Button size="sm" onClick={runCode} disabled={isRunning}>
             <PlayCircle className="w-4 h-4 mr-1" />
-            Run
+            {isRunning ? 'Running...' : 'Run'}
           </Button>
-          <Button size="sm" onClick={() => setShowPreview(!showPreview)} variant="outline">
-            <Eye className="w-4 h-4 mr-1" />
-            Preview
-          </Button>
+          {(language === 'html' || language === 'css') && (
+            <Button size="sm" onClick={() => setShowPreview(!showPreview)} variant="outline">
+              <Eye className="w-4 h-4 mr-1" />
+              Preview
+            </Button>
+          )}
         </div>
       </div>
-      <Textarea 
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-        className="font-mono text-sm"
-        rows={8}
-      />
-      {output && (
-        <div className="bg-gray-100 p-2 rounded border">
-          <p className="text-sm font-mono">Output: {output}</p>
-        </div>
-      )}
+      
+      <Tabs defaultValue="code" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="code">Code</TabsTrigger>
+          <TabsTrigger value="output">Output</TabsTrigger>
+          {showPreview && <TabsTrigger value="preview">Preview</TabsTrigger>}
+        </TabsList>
+        
+        <TabsContent value="code" className="mt-4">
+          <Textarea 
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="font-mono text-sm min-h-[300px]"
+            placeholder="Write your code here..."
+          />
+        </TabsContent>
+        
+        <TabsContent value="output" className="mt-4">
+          <div className="space-y-4">
+            {output && (
+              <div className="bg-gray-900 text-green-400 p-4 rounded border font-mono text-sm">
+                <pre className="whitespace-pre-wrap">{output}</pre>
+              </div>
+            )}
+            
+            {testResults.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium">Test Results:</h4>
+                {testResults.map((result, index) => (
+                  <div 
+                    key={index}
+                    className={`p-3 rounded border text-sm ${
+                      result.passed 
+                        ? 'bg-green-50 border-green-200 text-green-800' 
+                        : 'bg-red-50 border-red-200 text-red-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {result.passed ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <X className="w-4 h-4 text-red-600" />
+                      )}
+                      <span>{result.test}</span>
+                    </div>
+                    {result.error && (
+                      <p className="mt-1 text-xs text-red-600">{result.error}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        {showPreview && (
+          <TabsContent value="preview" className="mt-4">
+            <div className="border rounded p-4 bg-white">
+              {language === 'html' && (
+                <div dangerouslySetInnerHTML={{ __html: code }} />
+              )}
+              {language === 'css' && (
+                <div>
+                  <style>{code}</style>
+                  <div className="p-4">
+                    <h3>CSS Preview</h3>
+                    <p>Your CSS styles are applied to this preview area.</p>
+                    <button className="btn">Sample Button</button>
+                    <div className="card">Sample Card</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };
@@ -798,7 +1003,259 @@ nav a:hover {
     icon: Brain,
     isUnlocked: true,
     progress: 0,
-    modules_list: []
+    modules_list: [
+      {
+        id: 'react-hooks-deep-dive',
+        title: 'React Hooks Deep Dive',
+        description: 'Master all React hooks and create custom hooks for reusable logic.',
+        duration: '75 mins',
+        type: 'coding',
+        isCompleted: false,
+        content: `# React Hooks Deep Dive
+
+React Hooks revolutionized how we write React components by allowing functional components to use state and lifecycle features.
+
+## Core Hooks
+
+### useState
+Manages local component state:
+\`\`\`javascript
+const [count, setCount] = useState(0);
+const [user, setUser] = useState({ name: '', email: '' });
+\`\`\`
+
+### useEffect
+Handles side effects and lifecycle:
+\`\`\`javascript
+useEffect(() => {
+  // Component mounted or dependency changed
+  return () => {
+    // Cleanup
+  };
+}, [dependency]);
+\`\`\`
+
+### useContext
+Consumes React context:
+\`\`\`javascript
+const theme = useContext(ThemeContext);
+\`\`\`
+
+## Advanced Hooks
+
+### useReducer
+For complex state management:
+\`\`\`javascript
+const [state, dispatch] = useReducer(reducer, initialState);
+\`\`\`
+
+### useMemo & useCallback
+Performance optimization:
+\`\`\`javascript
+const memoizedValue = useMemo(() => expensiveCalculation(a, b), [a, b]);
+const memoizedCallback = useCallback(() => doSomething(a, b), [a, b]);
+\`\`\`
+
+### Custom Hooks
+Create reusable stateful logic:
+\`\`\`javascript
+function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+  const increment = () => setCount(c => c + 1);
+  const decrement = () => setCount(c => c - 1);
+  const reset = () => setCount(initialValue);
+  return { count, increment, decrement, reset };
+}
+\`\`\``,
+        codeExample: `// Custom Hook Example: useLocalStorage
+import { useState, useEffect } from 'react';
+
+function useLocalStorage(key, initialValue) {
+  // Get value from localStorage or use initial value
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error('Error reading localStorage:', error);
+      return initialValue;
+    }
+  });
+
+  // Return a wrapped version of useState's setter function that persists the new value to localStorage
+  const setValue = (value) => {
+    try {
+      // Allow value to be a function so we have the same API as useState
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error('Error setting localStorage:', error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
+
+// Usage in component
+function Settings() {
+  const [theme, setTheme] = useLocalStorage('theme', 'light');
+  const [notifications, setNotifications] = useLocalStorage('notifications', true);
+
+  return (
+    <div>
+      <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+        Toggle Theme: {theme}
+      </button>
+      <button onClick={() => setNotifications(!notifications)}>
+        Notifications: {notifications ? 'On' : 'Off'}
+      </button>
+    </div>
+  );
+}
+
+// Custom Hook: useApi for data fetching
+function useApi(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch');
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error, refetch: () => fetchData() };
+}`,
+        exercise: 'Create a custom hook for form validation that handles multiple fields and validation rules.',
+        solution: `// Custom Hook: useFormValidation
+import { useState, useCallback } from 'react';
+
+function useFormValidation(initialValues, validationRules) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const validate = useCallback((fieldName, value) => {
+    const rules = validationRules[fieldName];
+    if (!rules) return '';
+
+    for (const rule of rules) {
+      const error = rule.validator(value, values);
+      if (error) return rule.message;
+    }
+    return '';
+  }, [validationRules, values]);
+
+  const handleChange = (name, value) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    
+    if (touched[name]) {
+      const error = validate(name, value);
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
+
+  const handleBlur = (name) => {
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const error = validate(name, values[name]);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const isValid = Object.values(errors).every(error => !error) && 
+                  Object.keys(validationRules).every(key => touched[key]);
+
+  return {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    isValid
+  };
+}
+
+// Usage
+const validationRules = {
+  email: [
+    { validator: (value) => !value, message: 'Email is required' },
+    { validator: (value) => !/\S+@\S+\.\S+/.test(value), message: 'Invalid email' }
+  ],
+  password: [
+    { validator: (value) => !value, message: 'Password is required' },
+    { validator: (value) => value.length < 8, message: 'Password must be at least 8 characters' }
+  ]
+};
+
+function LoginForm() {
+  const { values, errors, touched, handleChange, handleBlur, isValid } = 
+    useFormValidation({ email: '', password: '' }, validationRules);
+
+  return (
+    <form>
+      <input
+        type="email"
+        value={values.email}
+        onChange={(e) => handleChange('email', e.target.value)}
+        onBlur={() => handleBlur('email')}
+      />
+      {touched.email && errors.email && <span>{errors.email}</span>}
+      
+      <input
+        type="password"
+        value={values.password}
+        onChange={(e) => handleChange('password', e.target.value)}
+        onBlur={() => handleBlur('password')}
+      />
+      {touched.password && errors.password && <span>{errors.password}</span>}
+      
+      <button type="submit" disabled={!isValid}>Login</button>
+    </form>
+  );
+}`,
+        liveDemo: () => {
+          const [theme, setTheme] = useState('light');
+          const [count, setCount] = useState(0);
+          
+          return (
+            <Card className="w-full max-w-md mx-auto">
+              <CardHeader>
+                <CardTitle>Custom Hooks Demo</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p>Theme: {theme}</p>
+                  <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                    Toggle Theme
+                  </Button>
+                </div>
+                <div>
+                  <p>Counter: {count}</p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setCount(count - 1)} variant="outline">-</Button>
+                    <Button onClick={() => setCount(0)} variant="secondary">Reset</Button>
+                    <Button onClick={() => setCount(count + 1)}>+</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+      }
+    ]
   },
   {
     id: 'fullstack-development',
@@ -1138,9 +1595,309 @@ export default function AdvancedForm() {
           'Separate concerns: data, errors, and submission state',
           'Use interfaces to ensure type safety'
         ]
+      },
+      {
+        id: 2,
+        title: 'Add Input Fields and Validation',
+        description: 'Implement form fields with real-time validation and error display.',
+        code: `const validateField = (name: keyof FormData, value: any): string => {
+  switch (name) {
+    case 'name':
+      if (!value) return 'Name is required';
+      if (value.length < 2) return 'Name must be at least 2 characters';
+      return '';
+    
+    case 'email':
+      if (!value) return 'Email is required';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+      return '';
+    
+    case 'password':
+      if (!value) return 'Password is required';
+      if (value.length < 8) return 'Password must be at least 8 characters';
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+        return 'Password must contain uppercase, lowercase, and number';
+      }
+      return '';
+    
+    case 'confirmPassword':
+      if (!value) return 'Please confirm your password';
+      if (value !== formData.password) return 'Passwords do not match';
+      return '';
+    
+    case 'terms':
+      if (!value) return 'You must accept the terms and conditions';
+      return '';
+    
+    default:
+      return '';
+  }
+};
+
+const handleInputChange = (name: keyof FormData, value: any) => {
+  setFormData(prev => ({ ...prev, [name]: value }));
+  
+  // Real-time validation
+  const error = validateField(name, value);
+  setErrors(prev => ({ ...prev, [name]: error }));
+  
+  // Revalidate confirm password when password changes
+  if (name === 'password' && formData.confirmPassword) {
+    const confirmError = validateField('confirmPassword', formData.confirmPassword);
+    setErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+  }
+};`,
+        explanation: 'We implement comprehensive validation logic and real-time error checking for better user experience.',
+        tips: [
+          'Validate fields on change for immediate feedback',
+          'Use specific error messages to guide users',
+          'Cross-validate related fields like password confirmation'
+        ]
+      },
+      {
+        id: 3,
+        title: 'Complete Form with Submission',
+        description: 'Add the complete form JSX with submission handling and loading states.',
+        code: `const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  // Validate all fields
+  const newErrors: FormErrors = {};
+  Object.keys(formData).forEach(key => {
+    const error = validateField(key as keyof FormData, formData[key as keyof FormData]);
+    if (error) newErrors[key as keyof FormErrors] = error;
+  });
+  
+  setErrors(newErrors);
+  
+  if (Object.keys(newErrors).length > 0) return;
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    alert('Account created successfully!');
+    setFormData({ name: '', email: '', password: '', confirmPassword: '', terms: false });
+  } catch (error) {
+    alert('Something went wrong. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+return (
+  <Card className="max-w-md mx-auto">
+    <CardHeader>
+      <CardTitle>Create Account</CardTitle>
+      <CardDescription>Fill in your details to get started</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            className={errors.name ? 'border-red-500' : ''}
+          />
+          {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => handleInputChange('password', e.target.value)}
+            className={errors.password ? 'border-red-500' : ''}
+          />
+          {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
+            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+            className={errors.confirmPassword ? 'border-red-500' : ''}
+          />
+          {errors.confirmPassword && <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="terms"
+            checked={formData.terms}
+            onCheckedChange={(checked) => handleInputChange('terms', checked)}
+          />
+          <Label htmlFor="terms" className="text-sm">
+            I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+          </Label>
+        </div>
+        {errors.terms && <p className="text-sm text-red-500">{errors.terms}</p>}
+
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting || Object.values(errors).some(error => error)}
+        >
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+);`,
+        explanation: 'We complete the form with full validation, error handling, and submission logic including loading states.',
+        tips: [
+          'Disable submit button when form has errors',
+          'Show loading states during submission',
+          'Reset form after successful submission',
+          'Handle both client and server errors gracefully'
+        ]
       }
     ],
-    finalCode: 'Complete form implementation with validation...',
+    finalCode: `// Complete Advanced Form Component
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  terms: boolean;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  terms?: string;
+}
+
+export default function AdvancedForm() {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    terms: false
+  });
+  
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateField = (name: keyof FormData, value: any): string => {
+    switch (name) {
+      case 'name':
+        if (!value) return 'Name is required';
+        if (value.length < 2) return 'Name must be at least 2 characters';
+        return '';
+      case 'email':
+        if (!value) return 'Email is required';
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value)) return 'Invalid email format';
+        return '';
+      case 'password':
+        if (!value) return 'Password is required';
+        if (value.length < 8) return 'Password must be at least 8 characters';
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/.test(value)) {
+          return 'Password must contain uppercase, lowercase, and number';
+        }
+        return '';
+      case 'confirmPassword':
+        if (!value) return 'Please confirm your password';
+        if (value !== formData.password) return 'Passwords do not match';
+        return '';
+      case 'terms':
+        if (!value) return 'You must accept the terms and conditions';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleInputChange = (name: keyof FormData, value: any) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+    
+    if (name === 'password' && formData.confirmPassword) {
+      const confirmError = validateField('confirmPassword', formData.confirmPassword);
+      setErrors(prev => ({ ...prev, confirmPassword: confirmError }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const newErrors: FormErrors = {};
+    Object.keys(formData).forEach(key => {
+      const error = validateField(key as keyof FormData, formData[key as keyof FormData]);
+      if (error) newErrors[key as keyof FormErrors] = error;
+    });
+    
+    setErrors(newErrors);
+    
+    if (Object.keys(newErrors).length > 0) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      alert('Account created successfully!');
+      setFormData({ name: '', email: '', password: '', confirmPassword: '', terms: false });
+    } catch (error) {
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Card className="max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Create Account</CardTitle>
+        <CardDescription>Fill in your details to get started</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* All form fields implementation */}
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting || Object.values(errors).some(error => error)}
+          >
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}`,
     livePreview: FormDemo
   },
   {
@@ -1340,6 +2097,641 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
       'Modal closes when ESC key is pressed',
       'Modal closes when clicking outside',
       'Body scroll is disabled when modal is open'
+    ]
+  },
+  {
+    id: 'api-integration-challenge',
+    title: 'Build a Weather API Dashboard',
+    description: 'Create a complete weather dashboard with API integration, error handling, and caching.',
+    difficulty: 'Advanced',
+    points: 300,
+    timeLimit: '60 mins',
+    tasks: [
+      'Fetch weather data from a public API',
+      'Implement proper error handling and loading states',
+      'Add location search functionality',
+      'Implement data caching to reduce API calls',
+      'Display weather forecast with charts'
+    ],
+    starterCode: `import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+interface WeatherData {
+  location: string;
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+  forecast: ForecastDay[];
+}
+
+interface ForecastDay {
+  date: string;
+  high: number;
+  low: number;
+  condition: string;
+}
+
+export default function WeatherDashboard() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [city, setCity] = useState('');
+
+  // Implement your weather fetching logic here
+  const fetchWeather = async (cityName: string) => {
+    // TODO: Implement API call
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Weather Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 mb-4">
+            <Input 
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Enter city name..."
+            />
+            <Button onClick={() => fetchWeather(city)}>
+              Get Weather
+            </Button>
+          </div>
+          
+          {/* Display weather data here */}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}`,
+    solution: `import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, Cloud, Sun, CloudRain } from 'lucide-react';
+
+interface WeatherData {
+  location: string;
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+  forecast: ForecastDay[];
+}
+
+interface ForecastDay {
+  date: string;
+  high: number;
+  low: number;
+  condition: string;
+}
+
+// Simple cache implementation
+const weatherCache = new Map<string, { data: WeatherData; timestamp: number }>();
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+export default function WeatherDashboard() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [city, setCity] = useState('');
+
+  const fetchWeather = async (cityName: string) => {
+    if (!cityName.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Check cache first
+      const cached = weatherCache.get(cityName.toLowerCase());
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        setWeather(cached.data);
+        setLoading(false);
+        return;
+      }
+      
+      // Simulate API call (replace with real API)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock weather data (replace with real API response)
+      const mockWeather: WeatherData = {
+        location: cityName,
+        temperature: Math.floor(Math.random() * 30) + 10,
+        condition: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+        humidity: Math.floor(Math.random() * 50) + 30,
+        windSpeed: Math.floor(Math.random() * 20) + 5,
+        forecast: Array.from({ length: 5 }, (_, i) => ({
+          date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          high: Math.floor(Math.random() * 25) + 15,
+          low: Math.floor(Math.random() * 15) + 5,
+          condition: ['Sunny', 'Cloudy', 'Rainy'][Math.floor(Math.random() * 3)]
+        }))
+      };
+      
+      // Cache the data
+      weatherCache.set(cityName.toLowerCase(), {
+        data: mockWeather,
+        timestamp: Date.now()
+      });
+      
+      setWeather(mockWeather);
+    } catch (err) {
+      setError('Failed to fetch weather data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getWeatherIcon = (condition: string) => {
+    switch (condition.toLowerCase()) {
+      case 'sunny': return <Sun className="w-8 h-8 text-yellow-500" />;
+      case 'cloudy': return <Cloud className="w-8 h-8 text-gray-500" />;
+      case 'rainy': return <CloudRain className="w-8 h-8 text-blue-500" />;
+      default: return <Cloud className="w-8 h-8 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Weather Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 mb-4">
+            <Input 
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Enter city name..."
+              onKeyPress={(e) => e.key === 'Enter' && fetchWeather(city)}
+            />
+            <Button onClick={() => fetchWeather(city)} disabled={loading}>
+              {loading ? 'Loading...' : 'Get Weather'}
+            </Button>
+          </div>
+          
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-100 border border-red-300 rounded mb-4">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <span className="text-red-700">{error}</span>
+            </div>
+          )}
+          
+          {weather && (
+            <div className="space-y-6">
+              {/* Current Weather */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold">{weather.location}</h2>
+                      <p className="text-4xl font-bold text-blue-600">{weather.temperature}°C</p>
+                      <p className="text-gray-600">{weather.condition}</p>
+                    </div>
+                    {getWeatherIcon(weather.condition)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Humidity</p>
+                      <p className="font-semibold">{weather.humidity}%</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Wind Speed</p>
+                      <p className="font-semibold">{weather.windSpeed} km/h</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* 5-Day Forecast */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>5-Day Forecast</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-5 gap-4">
+                    {weather.forecast.map((day, index) => (
+                      <div key={index} className="text-center p-3 border rounded">
+                        <p className="text-sm font-medium">{day.date}</p>
+                        {getWeatherIcon(day.condition)}
+                        <p className="text-xs text-gray-600 mt-2">{day.condition}</p>
+                        <div className="flex justify-between text-sm mt-1">
+                          <span className="font-semibold">{day.high}°</span>
+                          <span className="text-gray-500">{day.low}°</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}`,
+    testCases: [
+      'Weather data loads when city is entered',
+      'Loading state shows while fetching data',
+      'Error messages display for invalid cities',
+      'Data is cached to reduce API calls',
+      '5-day forecast displays correctly'
+    ]
+  },
+  {
+    id: 'state-management-challenge',
+    title: 'Build a Shopping Cart with Complex State',
+    description: 'Create a shopping cart system with quantity management, discounts, and local storage persistence.',
+    difficulty: 'Advanced',
+    points: 350,
+    timeLimit: '75 mins',
+    tasks: [
+      'Implement add/remove items functionality',
+      'Calculate totals with tax and discounts',
+      'Persist cart data in localStorage',
+      'Add quantity controls and validation',
+      'Implement coupon code system'
+    ],
+    starterCode: `import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  image?: string;
+}
+
+const mockProducts: Product[] = [
+  { id: '1', name: 'Laptop', price: 999.99, stock: 5 },
+  { id: '2', name: 'Phone', price: 699.99, stock: 10 },
+  { id: '3', name: 'Headphones', price: 199.99, stock: 15 }
+];
+
+export default function ShoppingCart() {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+
+  // TODO: Implement cart functionality
+  const addToCart = (product: Product) => {
+    // Implement add to cart logic
+  };
+
+  const removeFromCart = (itemId: string) => {
+    // Implement remove from cart logic
+  };
+
+  const updateQuantity = (itemId: string, quantity: number) => {
+    // Implement quantity update logic
+  };
+
+  const calculateTotal = () => {
+    // Implement total calculation with tax and discounts
+    return 0;
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Products */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Display products here */}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cart */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Shopping Cart</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Display cart items here */}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}`,
+    solution: `import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Minus, Plus, Trash2, Tag } from 'lucide-react';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  image?: string;
+}
+
+const mockProducts: Product[] = [
+  { id: '1', name: 'Laptop', price: 999.99, stock: 5 },
+  { id: '2', name: 'Phone', price: 699.99, stock: 10 },
+  { id: '3', name: 'Headphones', price: 199.99, stock: 15 },
+  { id: '4', name: 'Mouse', price: 49.99, stock: 20 },
+  { id: '5', name: 'Keyboard', price: 129.99, stock: 8 }
+];
+
+const coupons = {
+  'SAVE10': 0.10,
+  'WELCOME20': 0.20,
+  'STUDENT15': 0.15
+};
+
+const TAX_RATE = 0.08; // 8% tax
+
+export default function ShoppingCart() {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem('shopping-cart');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('shopping-cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (product: Product) => {
+    setCart(currentCart => {
+      const existingItem = currentCart.find(item => item.id === product.id);
+      
+      if (existingItem) {
+        if (existingItem.quantity >= product.stock) {
+          alert('Not enough stock available');
+          return currentCart;
+        }
+        return currentCart.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...currentCart, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: 1
+        }];
+      }
+    });
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCart(currentCart => currentCart.filter(item => item.id !== itemId));
+  };
+
+  const updateQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId);
+      return;
+    }
+
+    const product = mockProducts.find(p => p.id === itemId);
+    if (product && quantity > product.stock) {
+      alert('Not enough stock available');
+      return;
+    }
+
+    setCart(currentCart =>
+      currentCart.map(item =>
+        item.id === itemId
+          ? { ...item, quantity }
+          : item
+      )
+    );
+  };
+
+  const applyCoupon = () => {
+    const couponDiscount = coupons[couponCode.toUpperCase() as keyof typeof coupons];
+    if (couponDiscount) {
+      setDiscount(couponDiscount);
+      setCouponError('');
+    } else {
+      setCouponError('Invalid coupon code');
+      setDiscount(0);
+    }
+  };
+
+  const calculateSubtotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const calculateDiscount = () => {
+    return calculateSubtotal() * discount;
+  };
+
+  const calculateTax = () => {
+    return (calculateSubtotal() - calculateDiscount()) * TAX_RATE;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - calculateDiscount() + calculateTax();
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Products */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mockProducts.map(product => {
+                  const cartItem = cart.find(item => item.id === product.id);
+                  const inStock = product.stock > (cartItem?.quantity || 0);
+                  
+                  return (
+                    <div key={product.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">{product.name}</h3>
+                        <Badge variant={inStock ? "secondary" : "destructive"}>
+                          Stock: {product.stock}
+                        </Badge>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-600 mb-3">
+                        \${product.price}
+                      </p>
+                      <Button 
+                        onClick={() => addToCart(product)}
+                        disabled={!inStock}
+                        className="w-full"
+                      >
+                        {inStock ? 'Add to Cart' : 'Out of Stock'}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cart */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Shopping Cart
+                {getTotalItems() > 0 && (
+                  <Badge>{getTotalItems()} items</Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {cart.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">Your cart is empty</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Cart Items */}
+                  {cart.map(item => (
+                    <div key={item.id} className="flex items-center justify-between border-b pb-3">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-gray-600">\${item.price}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Coupon Code */}
+                  <div className="pt-4">
+                    <div className="flex gap-2 mb-2">
+                      <Input
+                        placeholder="Coupon code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                      />
+                      <Button onClick={applyCoupon} variant="outline">
+                        <Tag className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {couponError && (
+                      <p className="text-sm text-red-500">{couponError}</p>
+                    )}
+                    {discount > 0 && (
+                      <p className="text-sm text-green-600">
+                        Coupon applied: {(discount * 100)}% off
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Order Summary */}
+                  <div className="border-t pt-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>\${calculateSubtotal().toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount:</span>
+                        <span>-\${calculateDiscount().toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span>Tax:</span>
+                      <span>\${calculateTax().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg border-t pt-2">
+                      <span>Total:</span>
+                      <span>\${calculateTotal().toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <Button className="w-full mt-4">
+                    Checkout
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}`,
+    testCases: [
+      'Items can be added to cart',
+      'Quantity controls work correctly',
+      'Cart persists in localStorage',
+      'Coupon codes apply discounts',
+      'Tax and totals calculate correctly'
     ]
   }
 ];
