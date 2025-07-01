@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { Home, Brain, Database, Network, Settings, Users, BarChart3, FileText, Zap, Github, BookOpen, Shield, Menu, X } from 'lucide-react';
+import { Home, Brain, Database, Network, Settings, Users, BarChart3, FileText, Zap, Github, BookOpen, Shield, Menu, X, Code } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 
@@ -148,11 +148,36 @@ const Navigation = () => {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/docs" className={`text-sm font-medium px-5 py-2.5 rounded-lg transition-all duration-300 hover:bg-blue-400/10 hover:text-blue-400 border border-transparent hover:border-blue-400/30 ${isActive('/docs') ? 'text-blue-400 bg-blue-400/20 border-blue-400/50' : 'text-white/90'}`}>
-                      Docs
-                    </Link>
-                  </NavigationMenuLink>
+                  <NavigationMenuTrigger className="text-white/90 hover:text-blue-400 font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:bg-blue-400/10">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Learn
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid gap-3 p-6 w-[300px] bg-black/95 backdrop-blur-xl border border-blue-400/30 rounded-xl shadow-2xl shadow-blue-500/20">
+                      <NavigationMenuLink asChild>
+                        <Link to="/docs" className={`block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 hover:text-blue-400 focus:bg-blue-400/10 focus:text-blue-400 border border-transparent hover:border-blue-400/30 ${isActive('/docs') ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-blue-400 border-blue-400/50' : 'text-white/90'}`}>
+                          <div className="flex items-center space-x-2">
+                            <BookOpen className="w-4 h-4" />
+                            <div className="text-sm font-medium leading-none">Documentation</div>
+                          </div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400">
+                            Framework guides and API references
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link to="/tutorials" className={`block select-none space-y-1 rounded-lg p-4 leading-none no-underline outline-none transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 hover:text-blue-400 focus:bg-blue-400/10 focus:text-blue-400 border border-transparent hover:border-blue-400/30 ${isActive('/tutorials') ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-blue-400 border-blue-400/50' : 'text-white/90'}`}>
+                          <div className="flex items-center space-x-2">
+                            <Code className="w-4 h-4" />
+                            <div className="text-sm font-medium leading-none">Interactive Tutorials</div>
+                          </div>
+                          <p className="line-clamp-2 text-sm leading-snug text-gray-400">
+                            Hands-on coding tutorials and challenges
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </div>
+                  </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,10 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { 
   BookOpen, 
   Code, 
@@ -48,7 +51,15 @@ import {
   Mic,
   X,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Terminal,
+  Box,
+  Layers,
+  Workflow,
+  PenTool,
+  Save,
+  Eye,
+  RotateCcw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -80,6 +91,7 @@ interface Module {
   codeExample?: string;
   exercise?: string;
   solution?: string;
+  liveDemo?: () => JSX.Element;
 }
 
 interface Tutorial {
@@ -93,6 +105,7 @@ interface Tutorial {
   features: string[];
   steps: TutorialStep[];
   finalCode: string;
+  livePreview?: () => JSX.Element;
 }
 
 interface TutorialStep {
@@ -102,6 +115,7 @@ interface TutorialStep {
   code: string;
   explanation: string;
   tips: string[];
+  liveExample?: () => JSX.Element;
 }
 
 interface Challenge {
@@ -117,176 +131,14 @@ interface Challenge {
   testCases: string[];
 }
 
-const learningPaths: LearningPath[] = [
-  {
-    id: 'lovable-fundamentals',
-    title: 'Lovable Platform Fundamentals',
-    description: 'Master the complete Lovable development environment and understand how to build production-ready applications with the fixed technology stack.',
-    difficulty: 'Beginner',
-    duration: '4-6 hours',
-    modules: 8,
-    prerequisites: [],
-    learningOutcomes: [
-      'Understand Lovable\'s fixed technology stack (React 18, Tailwind CSS, Vite, Shadcn/UI, Supabase)',
-      'Learn how to prompt effectively for Lovable applications',
-      'Master the vibe coding approach and conversational development',
-      'Understand how integrations work (Stripe, Resend, Clerk, Replicate)',
-      'Build complete applications using Lovable\'s no-code approach'
-    ],
-    technologies: ['Lovable Platform', 'React 18', 'TypeScript', 'Tailwind CSS', 'Vite', 'Shadcn/UI'],
-    color: 'purple',
-    icon: Heart,
-    isUnlocked: true,
-    progress: 0,
-    modules_list: [
-      {
-        id: 'intro-lovable',
-        title: 'Introduction to Lovable',
-        description: 'Learn what makes Lovable unique and how it revolutionizes app development',
-        duration: '30 mins',
-        type: 'theory',
-        isCompleted: false,
-        content: `# Welcome to Lovable
-
-Lovable is a revolutionary no-code platform that uses AI to build production-ready applications. Unlike traditional development, Lovable uses a fixed, optimized technology stack that ensures consistency, reliability, and scalability.
-
-## What makes Lovable special?
-
-1. **Fixed Technology Stack**: No decisions needed - everything is pre-configured
-2. **AI-Powered Development**: Build apps through conversation
-3. **Production Ready**: Deploy immediately with confidence
-4. **Modern Technologies**: Latest React, TypeScript, and cloud services
-
-## The Lovable Stack
-
-- **Frontend**: React 18 + TypeScript + Tailwind CSS + Vite + Shadcn/UI
-- **Backend**: Supabase (PostgreSQL + Auth + Storage + Realtime + Edge Functions)
-- **Integrations**: Stripe + Resend + Clerk + Replicate + GitHub
-- **Deployment**: Vercel/Netlify with custom domains
-
-This fixed stack eliminates choice paralysis and ensures every app is built with modern, battle-tested technologies.
-
-## Key Benefits
-
-- **Zero Configuration**: Everything works out of the box
-- **AI-First Development**: Natural language to production code
-- **Instant Deployment**: From idea to live app in minutes
-- **Professional Quality**: Enterprise-grade applications`,
-        codeExample: `// Example: Basic Lovable App Structure
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
-export default function WelcomeCard() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Welcome to Lovable</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>You've clicked {count} times</p>
-        <Button 
-          onClick={() => setCount(count + 1)}
-          className="mt-4"
-        >
-          Click me
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}`
-      },
-      {
-        id: 'react-fundamentals',
-        title: 'React 18 in Lovable',
-        description: 'Understand how React 18 powers Lovable applications',
-        duration: '45 mins',
-        type: 'coding',
-        isCompleted: false,
-        content: `# React 18 in Lovable Applications
-
-React 18 is the foundation of every Lovable app. Let's understand the key concepts you'll encounter.
-
-## Component Structure
-
-Every Lovable app is built with functional components using modern React patterns.
-
-## Hooks You'll Use Most
-
-1. **useState**: For component state management
-2. **useEffect**: For side effects and lifecycle events
-3. **useContext**: For global state management
-4. **Custom Hooks**: For reusable logic
-
-## Modern Patterns
-
-- Functional components only
-- TypeScript for type safety
-- Shadcn/UI for consistent styling
-- Tailwind CSS for utility-first styling`,
-        codeExample: `import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
-export default function CounterApp() {
-  const [count, setCount] = useState(0);
-  const [isEven, setIsEven] = useState(true);
-
-  useEffect(() => {
-    setIsEven(count % 2 === 0);
-  }, [count]);
-
-  const increment = () => setCount(prev => prev + 1);
-  const decrement = () => setCount(prev => prev - 1);
-  const reset = () => setCount(0);
-
-  return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>React Counter</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center">
-          <span className="text-4xl font-bold">{count}</span>
-          <p className="text-sm text-gray-500">
-            {isEven ? 'Even' : 'Odd'} number
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={decrement} variant="outline">-</Button>
-          <Button onClick={reset} variant="secondary">Reset</Button>
-          <Button onClick={increment}>+</Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}`,
-        exercise: 'Create a todo list component with add, delete, and toggle functionality.',
-        solution: `import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-
-interface Todo {
-  id: number;
-  text: string;
-  completed: boolean;
-}
-
-export default function TodoList() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+// Live Demo Components for Tutorials
+const TodoAppDemo = () => {
+  const [todos, setTodos] = useState<Array<{id: number, text: string, completed: boolean}>>([]);
   const [inputValue, setInputValue] = useState('');
 
   const addTodo = () => {
     if (inputValue.trim()) {
-      setTodos([...todos, { 
-        id: Date.now(), 
-        text: inputValue, 
-        completed: false 
-      }]);
+      setTodos([...todos, { id: Date.now(), text: inputValue, completed: false }]);
       setInputValue('');
     }
   };
@@ -304,7 +156,7 @@ export default function TodoList() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Todo List</CardTitle>
+        <CardTitle>Live Todo Demo</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
@@ -318,7 +170,7 @@ export default function TodoList() {
         </div>
         <div className="space-y-2">
           {todos.map(todo => (
-            <div key={todo.id} className="flex items-center gap-2">
+            <div key={todo.id} className="flex items-center gap-2 p-2 border rounded">
               <Checkbox 
                 checked={todo.completed}
                 onCheckedChange={() => toggleTodo(todo.id)}
@@ -339,53 +191,635 @@ export default function TodoList() {
       </CardContent>
     </Card>
   );
-}`
+};
+
+const CounterDemo = () => {
+  const [count, setCount] = useState(0);
+  const [isEven, setIsEven] = useState(true);
+
+  useEffect(() => {
+    setIsEven(count % 2 === 0);
+  }, [count]);
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Live Counter Demo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="text-center">
+          <span className="text-4xl font-bold">{count}</span>
+          <p className="text-sm text-gray-500">
+            {isEven ? 'Even' : 'Odd'} number
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setCount(count - 1)} variant="outline">-</Button>
+          <Button onClick={() => setCount(0)} variant="secondary">Reset</Button>
+          <Button onClick={() => setCount(count + 1)}>+</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const FormDemo = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+    subscribe: false
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000);
+  };
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Live Form Demo</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {submitted ? (
+          <div className="text-center p-4 bg-green-100 rounded">
+            <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="text-green-800">Form submitted successfully!</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input 
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="message">Message</Label>
+              <Textarea 
+                id="message"
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                rows={3}
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="subscribe"
+                checked={formData.subscribe}
+                onCheckedChange={(checked) => setFormData({...formData, subscribe: !!checked})}
+              />
+              <Label htmlFor="subscribe">Subscribe to newsletter</Label>
+            </div>
+            <Button type="submit" className="w-full">Submit</Button>
+          </form>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const WeatherDemo = () => {
+  const [weather, setWeather] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [city, setCity] = useState('London');
+
+  const fetchWeather = async () => {
+    setLoading(true);
+    // Simulated weather data
+    setTimeout(() => {
+      setWeather({
+        city: city,
+        temperature: Math.floor(Math.random() * 30) + 10,
+        condition: ['Sunny', 'Cloudy', 'Rainy', 'Snowy'][Math.floor(Math.random() * 4)],
+        humidity: Math.floor(Math.random() * 50) + 30,
+        windSpeed: Math.floor(Math.random() * 20) + 5
+      });
+      setLoading(false);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Live Weather Demo</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <Input 
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Enter city..."
+          />
+          <Button onClick={fetchWeather} disabled={loading}>
+            {loading ? 'Loading...' : 'Get Weather'}
+          </Button>
+        </div>
+        {weather && (
+          <div className="p-4 bg-blue-50 rounded">
+            <h3 className="font-bold text-lg">{weather.city}</h3>
+            <p className="text-2xl font-bold">{weather.temperature}°C</p>
+            <p className="text-gray-600">{weather.condition}</p>
+            <div className="mt-2 space-y-1">
+              <p>Humidity: {weather.humidity}%</p>
+              <p>Wind: {weather.windSpeed} km/h</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode: string, language?: string }) => {
+  const [code, setCode] = useState(initialCode);
+  const [output, setOutput] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+
+  const runCode = () => {
+    try {
+      // Simple code execution simulation for demo purposes
+      if (language === 'javascript') {
+        const result = eval(code);
+        setOutput(String(result));
+      }
+    } catch (error) {
+      setOutput(`Error: ${error}`);
+    }
+  };
+
+  return (
+    <div className="border rounded-lg p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <Badge variant="secondary">{language}</Badge>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={runCode} variant="outline">
+            <PlayCircle className="w-4 h-4 mr-1" />
+            Run
+          </Button>
+          <Button size="sm" onClick={() => setShowPreview(!showPreview)} variant="outline">
+            <Eye className="w-4 h-4 mr-1" />
+            Preview
+          </Button>
+        </div>
+      </div>
+      <Textarea 
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        className="font-mono text-sm"
+        rows={8}
+      />
+      {output && (
+        <div className="bg-gray-100 p-2 rounded border">
+          <p className="text-sm font-mono">Output: {output}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const learningPaths: LearningPath[] = [
+  {
+    id: 'web-fundamentals',
+    title: 'Web Development Fundamentals',
+    description: 'Complete beginner course covering HTML, CSS, JavaScript, and modern web development practices.',
+    difficulty: 'Beginner',
+    duration: '8-12 hours',
+    modules: 12,
+    prerequisites: [],
+    learningOutcomes: [
+      'Master HTML structure and semantic markup',
+      'Create responsive layouts with CSS',
+      'Understand JavaScript fundamentals and DOM manipulation',
+      'Build interactive web applications',
+      'Learn version control with Git',
+      'Deploy projects to the web'
+    ],
+    technologies: ['HTML5', 'CSS3', 'JavaScript', 'Git', 'Netlify'],
+    color: 'green',
+    icon: Globe,
+    isUnlocked: true,
+    progress: 0,
+    modules_list: [
+      {
+        id: 'html-basics',
+        title: 'HTML Fundamentals',
+        description: 'Learn the building blocks of web pages with HTML5.',
+        duration: '90 mins',
+        type: 'coding',
+        isCompleted: false,
+        content: `# HTML Fundamentals
+
+HTML (HyperText Markup Language) is the standard markup language for creating web pages. It describes the structure of a web page using elements.
+
+## Key Concepts
+
+### HTML Document Structure
+Every HTML document follows a basic structure:
+- DOCTYPE declaration
+- HTML root element
+- Head section (metadata)
+- Body section (visible content)
+
+### Semantic HTML
+Use semantic elements that describe their meaning:
+- \`<header>\`, \`<nav>\`, \`<main>\`, \`<article>\`, \`<section>\`, \`<aside>\`, \`<footer>\`
+- These provide better accessibility and SEO
+
+### Common Elements
+- Headings: \`<h1>\` to \`<h6>\`
+- Paragraphs: \`<p>\`
+- Links: \`<a href="">\`
+- Images: \`<img src="" alt="">\`
+- Lists: \`<ul>\`, \`<ol>\`, \`<li>\`
+- Forms: \`<form>\`, \`<input>\`, \`<button>\``,
+        codeExample: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Web Page</title>
+</head>
+<body>
+    <header>
+        <h1>Welcome to My Website</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="home">
+            <h2>Home Section</h2>
+            <p>This is the main content of my website.</p>
+            <img src="image.jpg" alt="Description of image">
+        </section>
+        
+        <section id="about">
+            <h2>About Me</h2>
+            <p>I'm learning web development!</p>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 My Website. All rights reserved.</p>
+    </footer>
+</body>
+</html>`,
+        exercise: 'Create a personal portfolio page with header, navigation, about section, projects section, and footer.',
+        solution: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Doe - Portfolio</title>
+</head>
+<body>
+    <header>
+        <h1>John Doe</h1>
+        <p>Web Developer & Designer</p>
+        <nav>
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="about">
+            <h2>About Me</h2>
+            <p>I'm a passionate web developer with experience in modern technologies.</p>
+            <ul>
+                <li>Frontend Development</li>
+                <li>Responsive Design</li>
+                <li>User Experience</li>
+            </ul>
+        </section>
+        
+        <section id="projects">
+            <h2>My Projects</h2>
+            <article>
+                <h3>Project 1: E-commerce Site</h3>
+                <p>A fully responsive online store built with React and Node.js.</p>
+                <a href="#">View Project</a>
+            </article>
+            <article>
+                <h3>Project 2: Weather App</h3>
+                <p>Real-time weather application with geolocation features.</p>
+                <a href="#">View Project</a>
+            </article>
+        </section>
+        
+        <section id="contact">
+            <h2>Contact Me</h2>
+            <form>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                
+                <button type="submit">Send Message</button>
+            </form>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 John Doe. All rights reserved.</p>
+        <p>
+            <a href="mailto:john@example.com">Email</a> |
+            <a href="https://linkedin.com/in/johndoe">LinkedIn</a> |
+            <a href="https://github.com/johndoe">GitHub</a>
+        </p>
+    </footer>
+</body>
+</html>`
+      },
+      {
+        id: 'css-styling',
+        title: 'CSS Styling & Layout',
+        description: 'Master CSS for beautiful, responsive web designs.',
+        duration: '120 mins',
+        type: 'coding',
+        isCompleted: false,
+        content: `# CSS Styling & Layout
+
+CSS (Cascading Style Sheets) controls the visual presentation of web pages. Learn to create beautiful, responsive designs.
+
+## Key Concepts
+
+### CSS Selectors
+- Element selectors: \`h1 { }\`
+- Class selectors: \`.class-name { }\`
+- ID selectors: \`#id-name { }\`
+- Attribute selectors: \`[type="text"] { }\`
+
+### Layout Methods
+1. **Flexbox**: One-dimensional layout
+2. **Grid**: Two-dimensional layout
+3. **Position**: Absolute, relative, fixed, sticky
+
+### Responsive Design
+- Mobile-first approach
+- Media queries
+- Flexible units (rem, em, %, vw, vh)
+- Responsive images
+
+### Modern CSS Features
+- CSS Variables (Custom Properties)
+- CSS Grid
+- Flexbox
+- Animations and Transitions`,
+        codeExample: `/* Modern CSS Styling */
+
+/* CSS Variables */
+:root {
+  --primary-color: #3b82f6;
+  --secondary-color: #64748b;
+  --text-color: #1e293b;
+  --bg-color: #ffffff;
+  --border-radius: 8px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background: var(--bg-color);
+}
+
+/* Layout with Grid */
+.container {
+  display: grid;
+  grid-template-areas: 
+    "header header"
+    "sidebar main"
+    "footer footer";
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+header {
+  grid-area: header;
+  background: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+main {
+  grid-area: main;
+  padding: 1rem;
+}
+
+footer {
+  grid-area: footer;
+  text-align: center;
+  padding: 1rem;
+  background: var(--secondary-color);
+  color: white;
+  border-radius: var(--border-radius);
+}
+
+/* Flexbox Navigation */
+nav ul {
+  display: flex;
+  list-style: none;
+  gap: 1rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  transition: background 0.3s ease;
+}
+
+nav a:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Card Component */
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    grid-template-areas: 
+      "header"
+      "main"
+      "sidebar"
+      "footer";
+    grid-template-columns: 1fr;
+  }
+  
+  nav ul {
+    flex-direction: column;
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+}`,
+        exercise: 'Create a responsive portfolio layout with header, navigation, project cards, and footer using CSS Grid and Flexbox.',
+        liveDemo: () => (
+          <div className="w-full max-w-4xl mx-auto border rounded-lg overflow-hidden">
+            <div className="bg-blue-600 text-white p-4">
+              <h1 className="text-xl font-bold mb-2">Portfolio Demo</h1>
+              <nav className="flex flex-wrap gap-2">
+                <a href="#" className="px-3 py-1 bg-white/20 rounded">Home</a>
+                <a href="#" className="px-3 py-1 bg-white/20 rounded">About</a>
+                <a href="#" className="px-3 py-1 bg-white/20 rounded">Projects</a>
+                <a href="#" className="px-3 py-1 bg-white/20 rounded">Contact</a>
+              </nav>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4 p-4">
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="font-bold mb-2">Project 1</h3>
+                <p className="text-sm text-gray-600">E-commerce platform</p>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="font-bold mb-2">Project 2</h3>
+                <p className="text-sm text-gray-600">Weather app</p>
+              </div>
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="font-bold mb-2">Project 3</h3>
+                <p className="text-sm text-gray-600">Blog platform</p>
+              </div>
+            </div>
+            <div className="bg-gray-200 p-4 text-center text-sm">
+              © 2024 Portfolio. All rights reserved.
+            </div>
+          </div>
+        )
       }
     ]
   },
   {
-    id: 'supabase-mastery',
-    title: 'Supabase Backend Development',
-    description: 'Learn how to leverage Supabase for authentication, database operations, real-time features, and storage in Lovable applications.',
+    id: 'react-mastery',
+    title: 'React Development Mastery',
+    description: 'Master modern React development with hooks, state management, and best practices.',
     difficulty: 'Intermediate',
-    duration: '6-8 hours',
-    modules: 10,
-    prerequisites: ['Lovable Platform Fundamentals'],
+    duration: '10-15 hours',
+    modules: 15,
+    prerequisites: ['Web Development Fundamentals'],
     learningOutcomes: [
-      'Set up and configure Supabase projects',
-      'Implement authentication and user management',
-      'Design and work with PostgreSQL databases',
-      'Build real-time features with Supabase Realtime',
-      'Manage file storage and uploads',
-      'Create and deploy Edge Functions'
+      'Build complex React applications',
+      'Master React hooks and state management',
+      'Implement routing and navigation',
+      'Handle forms and user input',
+      'Work with APIs and external data',
+      'Optimize performance and accessibility'
     ],
-    technologies: ['Supabase', 'PostgreSQL', 'Edge Functions', 'Realtime', 'Storage', 'Auth'],
-    color: 'green',
-    icon: Database,
+    technologies: ['React 18', 'TypeScript', 'React Router', 'React Query', 'Testing Library'],
+    color: 'blue',
+    icon: Brain,
     isUnlocked: true,
     progress: 0,
     modules_list: []
   },
   {
-    id: 'ui-design-system',
-    title: 'Tailwind CSS + Shadcn/UI Design System',
-    description: 'Master the complete design system used in Lovable applications, from basic styling to complex component compositions.',
-    difficulty: 'Beginner',
-    duration: '3-4 hours',
-    modules: 6,
-    prerequisites: [],
+    id: 'fullstack-development',
+    title: 'Full-Stack Development',
+    description: 'Build complete web applications with modern frontend and backend technologies.',
+    difficulty: 'Advanced',
+    duration: '20-25 hours',
+    modules: 20,
+    prerequisites: ['React Development Mastery'],
     learningOutcomes: [
-      'Understand Tailwind CSS utility-first approach',
-      'Use Shadcn/UI components effectively',
-      'Create responsive and accessible designs',
-      'Implement dark/light theme support',
-      'Build custom component variants',
-      'Optimize for mobile and desktop experiences'
+      'Design and implement REST APIs',
+      'Work with databases and ORMs',
+      'Implement authentication and authorization',
+      'Deploy applications to the cloud',
+      'Monitor and maintain production apps',
+      'Follow DevOps best practices'
     ],
-    technologies: ['Tailwind CSS', 'Shadcn/UI', 'CSS', 'Responsive Design'],
-    color: 'blue',
-    icon: Palette,
-    isUnlocked: true,
+    technologies: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'AWS', 'Docker'],
+    color: 'purple',
+    icon: Server,
+    isUnlocked: false,
     progress: 0,
     modules_list: []
   }
@@ -393,37 +827,36 @@ export default function TodoList() {
 
 const interactiveTutorials: Tutorial[] = [
   {
-    id: 'build-todo-lovable',
-    title: 'Build a Todo App with Lovable Stack',
-    description: 'Create a complete todo application using React 18, Supabase, and Tailwind CSS following Lovable best practices.',
+    id: 'build-todo-app',
+    title: 'Build a Complete Todo Application',
+    description: 'Create a fully functional todo app with React, including add, edit, delete, and filter functionality.',
     difficulty: 'Beginner',
     duration: '90 mins',
-    category: 'Full-Stack Project',
-    preview: 'Interactive todo list with real-time updates, user authentication, and beautiful UI using the complete Lovable stack.',
-    features: ['Supabase Authentication', 'Real-time Database', 'Tailwind Styling', 'Shadcn/UI Components'],
+    category: 'React Project',
+    preview: 'Interactive todo list with local storage, drag and drop, and filtering capabilities.',
+    features: ['React Hooks', 'Local Storage', 'Event Handling', 'Component Composition'],
     steps: [
       {
         id: 1,
-        title: 'Set up the Project Structure',
-        description: 'Create the basic structure for your todo app with proper TypeScript interfaces.',
-        code: `// types/todo.ts
-export interface Todo {
-  id: string;
-  text: string;
-  completed: boolean;
-  created_at: string;
-  user_id: string;
-}
-
-// components/TodoApp.tsx
-import { useState, useEffect } from 'react';
+        title: 'Project Setup and Component Structure',
+        description: 'Set up the project structure and create the basic todo component.',
+        code: `import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+  createdAt: Date;
+}
 
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [newTodo, setNewTodo] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -434,68 +867,142 @@ export default function TodoApp() {
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Input 
-              value={newTodo}
-              onChange={(e) => setNewTodo(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               placeholder="Add a new todo..."
             />
             <Button>Add Todo</Button>
           </div>
-          <div className="space-y-2">
-            {/* Todo items will go here */}
-          </div>
+          {/* Todo items will be added here */}
         </CardContent>
       </Card>
     </div>
   );
 }`,
-        explanation: 'We start by defining our data structure and creating a basic component layout using Shadcn/UI cards.',
+        explanation: 'We start by setting up the basic structure with TypeScript interfaces and state management.',
         tips: [
           'Always define TypeScript interfaces for your data structures',
-          'Use Shadcn/UI components for consistent styling',
-          'Follow Lovable\'s component naming conventions'
-        ]
+          'Use functional components with hooks for modern React development',
+          'Start with a simple structure and add complexity gradually'
+        ],
+        liveExample: () => <div className="text-center p-4 border rounded">Basic Todo App Structure</div>
       },
       {
         id: 2,
-        title: 'Add State Management',
-        description: 'Implement React state management for the todo functionality.',
-        code: `import { useState } from 'react';
+        title: 'Add Todo Functionality',
+        description: 'Implement the ability to add new todos with validation.',
+        code: `const addTodo = () => {
+  if (inputValue.trim()) {
+    const newTodo: Todo = {
+      id: Date.now(),
+      text: inputValue.trim(),
+      completed: false,
+      createdAt: new Date()
+    };
+    setTodos([...todos, newTodo]);
+    setInputValue('');
+  }
+};
+
+const handleKeyPress = (e: React.KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    addTodo();
+  }
+};
+
+// Update the JSX
+<div className="flex gap-2 mb-4">
+  <Input 
+    value={inputValue}
+    onChange={(e) => setInputValue(e.target.value)}
+    onKeyPress={handleKeyPress}
+    placeholder="Add a new todo..."
+  />
+  <Button onClick={addTodo} disabled={!inputValue.trim()}>
+    Add Todo
+  </Button>
+</div>`,
+        explanation: 'We implement the addTodo function with input validation and keyboard support.',
+        tips: [
+          'Always validate user input before processing',
+          'Use trim() to remove whitespace',
+          'Add keyboard shortcuts for better UX'
+        ],
+        liveExample: () => {
+          const [value, setValue] = useState('');
+          return (
+            <div className="flex gap-2 p-4 border rounded">
+              <Input 
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Type and press Enter..."
+              />
+              <Button disabled={!value.trim()}>Add</Button>
+            </div>
+          );
+        }
+      }
+    ],
+    finalCode: `// Complete Todo App Implementation
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface Todo {
-  id: string;
+  id: number;
   text: string;
   completed: boolean;
+  createdAt: Date;
 }
 
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [newTodo, setNewTodo] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+
+  // Load todos from localStorage on mount
+  useEffect(() => {
+    const savedTodos = localStorage.getItem('todos');
+    if (savedTodos) {
+      setTodos(JSON.parse(savedTodos));
+    }
+  }, []);
+
+  // Save todos to localStorage whenever todos change
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
 
   const addTodo = () => {
-    if (newTodo.trim()) {
-      const todo: Todo = {
-        id: crypto.randomUUID(),
-        text: newTodo,
-        completed: false
+    if (inputValue.trim()) {
+      const newTodo: Todo = {
+        id: Date.now(),
+        text: inputValue.trim(),
+        completed: false,
+        createdAt: new Date()
       };
-      setTodos([...todos, todo]);
-      setNewTodo('');
+      setTodos([...todos, newTodo]);
+      setInputValue('');
     }
   };
 
-  const toggleTodo = (id: string) => {
+  const toggleTodo = (id: number) => {
     setTodos(todos.map(todo => 
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
   };
 
-  const deleteTodo = (id: string) => {
+  const deleteTodo = (id: number) => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
+
+  const filteredTodos = todos.filter(todo => {
+    if (filter === 'active') return !todo.completed;
+    if (filter === 'completed') return todo.completed;
+    return true;
+  });
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -506,1004 +1013,1032 @@ export default function TodoApp() {
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Input 
-              value={newTodo}
-              onChange={(e) => setNewTodo(e.target.value)}
-              placeholder="Add a new todo..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && addTodo()}
-            />
-            <Button onClick={addTodo}>Add Todo</Button>
-          </div>
-          <div className="space-y-2">
-            {todos.map(todo => (
-              <div key={todo.id} className="flex items-center gap-2 p-2 border rounded">
-                <Checkbox 
-                  checked={todo.completed}
-                  onCheckedChange={() => toggleTodo(todo.id)}
-                />
-                <span className={todo.completed ? 'line-through text-gray-500' : ''}>
-                  {todo.text}
-                </span>
-                <Button 
-                  size="sm" 
-                  variant="destructive"
-                  onClick={() => deleteTodo(todo.id)}
-                  className="ml-auto"
-                >
-                  Delete
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}`,
-        explanation: 'We add full CRUD operations using React state. The component can now add, toggle, and delete todos.',
-        tips: [
-          'Use crypto.randomUUID() for unique IDs',
-          'Always validate input before adding to state',
-          'Use the spread operator for immutable updates'
-        ]
-      }
-    ],
-    finalCode: `// Complete Todo App implementation
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-
-interface Todo {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: Date;
-}
-
-export default function TodoApp() {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [newTodo, setNewTodo] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
-
-  const addTodo = () => {
-    if (newTodo.trim()) {
-      const todo: Todo = {
-        id: crypto.randomUUID(),
-        text: newTodo,
-        completed: false,
-        createdAt: new Date()
-      };
-      setTodos([...todos, todo]);
-      setNewTodo('');
-    }
-  };
-
-  const toggleTodo = (id: string) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
-  };
-
-  const deleteTodo = (id: string) => {
-    setTodos(todos.filter(todo => todo.id !== id));
-  };
-
-  const clearCompleted = () => {
-    setTodos(todos.filter(todo => !todo.completed));
-  };
-
-  const filteredTodos = todos.filter(todo => {
-    if (filter === 'active') return !todo.completed;
-    if (filter === 'completed') return todo.completed;
-    return true;
-  });
-
-  const completedCount = todos.filter(todo => todo.completed).length;
-  const activeCount = todos.length - completedCount;
-
-  return (
-    <div className="max-w-2xl mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>My Todo List</span>
-            <Badge variant="outline">
-              {activeCount} active, {completedCount} completed
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 mb-4">
-            <Input 
-              value={newTodo}
-              onChange={(e) => setNewTodo(e.target.value)}
               placeholder="Add a new todo..."
-              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
             />
-            <Button onClick={addTodo}>Add Todo</Button>
+            <Button onClick={addTodo} disabled={!inputValue.trim()}>
+              Add Todo
+            </Button>
           </div>
           
           <div className="flex gap-2 mb-4">
             <Button 
-              size="sm" 
               variant={filter === 'all' ? 'default' : 'outline'}
               onClick={() => setFilter('all')}
             >
               All
             </Button>
             <Button 
-              size="sm" 
               variant={filter === 'active' ? 'default' : 'outline'}
               onClick={() => setFilter('active')}
             >
               Active
             </Button>
             <Button 
-              size="sm" 
               variant={filter === 'completed' ? 'default' : 'outline'}
               onClick={() => setFilter('completed')}
             >
               Completed
             </Button>
-            {completedCount > 0 && (
-              <Button 
-                size="sm" 
-                variant="destructive"
-                onClick={clearCompleted}
-                className="ml-auto"
-              >
-                Clear Completed
-              </Button>
-            )}
           </div>
           
           <div className="space-y-2">
             {filteredTodos.map(todo => (
-              <div key={todo.id} className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50">
+              <div key={todo.id} className="flex items-center gap-2 p-2 border rounded">
                 <Checkbox 
                   checked={todo.completed}
                   onCheckedChange={() => toggleTodo(todo.id)}
                 />
-                <div className="flex-1">
-                  <span className={todo.completed ? 'line-through text-gray-500' : ''}>
-                    {todo.text}
-                  </span>
-                  <div className="text-xs text-gray-400">
-                    {todo.createdAt.toLocaleDateString()}
-                  </div>
-                </div>
+                <span className={todo.completed ? 'line-through text-gray-500 flex-1' : 'flex-1'}>
+                  {todo.text}
+                </span>
                 <Button 
                   size="sm" 
-                  variant="ghost"
+                  variant="destructive"
                   onClick={() => deleteTodo(todo.id)}
                 >
                   Delete
                 </Button>
               </div>
             ))}
-            {filteredTodos.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                {filter === 'all' ? 'No todos yet. Add one above!' : 
-                 filter === 'active' ? 'No active todos!' : 'No completed todos!'}
-              </div>
-            )}
           </div>
+          
+          {filteredTodos.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No todos found. Add one above!
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
-}`
+}`,
+    livePreview: TodoAppDemo
+  },
+  {
+    id: 'react-form-handling',
+    title: 'Advanced Form Handling in React',
+    description: 'Learn to build complex forms with validation, error handling, and user feedback.',
+    difficulty: 'Intermediate',
+    duration: '75 mins',
+    category: 'React Forms',
+    preview: 'Complete form system with real-time validation, error states, and submission handling.',
+    features: ['Form Validation', 'Error Handling', 'Real-time Feedback', 'Accessibility'],
+    steps: [
+      {
+        id: 1,
+        title: 'Form Structure and Basic State',
+        description: 'Set up a comprehensive form with proper TypeScript typing.',
+        code: `interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  terms: boolean;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  terms?: string;
+}
+
+export default function AdvancedForm() {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    terms: false
+  });
+  
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  return (
+    <Card className="max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Sign Up Form</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4">
+          {/* Form fields will go here */}
+        </form>
+      </CardContent>
+    </Card>
+  );
+}`,
+        explanation: 'We define TypeScript interfaces for form data and errors, then set up the basic component structure.',
+        tips: [
+          'Always type your form data and error states',
+          'Separate concerns: data, errors, and submission state',
+          'Use interfaces to ensure type safety'
+        ]
+      }
+    ],
+    finalCode: 'Complete form implementation with validation...',
+    livePreview: FormDemo
+  },
+  {
+    id: 'weather-api-app',
+    title: 'Weather Dashboard with API Integration',
+    description: 'Build a weather application that fetches data from external APIs with error handling.',
+    difficulty: 'Intermediate',
+    duration: '105 mins',
+    category: 'API Integration',
+    preview: 'Real-time weather dashboard with geolocation, search, and detailed forecasts.',
+    features: ['API Integration', 'Geolocation', 'Error Handling', 'Loading States'],
+    steps: [],
+    finalCode: 'Complete weather app implementation...',
+    livePreview: WeatherDemo
   }
 ];
 
 const codingChallenges: Challenge[] = [
   {
-    id: 'react-hooks-challenge',
-    title: 'React Hooks Mastery',
-    description: 'Test your understanding of useState, useEffect, and custom hooks in Lovable applications.',
+    id: 'array-manipulation',
+    title: 'Array Manipulation Challenge',
+    description: 'Implement common array operations without using built-in methods.',
     difficulty: 'Beginner',
     points: 100,
     timeLimit: '30 mins',
     tasks: [
-      'Create a counter component with increment/decrement',
-      'Add a reset button that resets to initial value',
-      'Display the count history in a list',
-      'Add persistence using localStorage'
+      'Implement a function to find the maximum value in an array',
+      'Create a function to reverse an array without using reverse()',
+      'Write a function to remove duplicates from an array'
+    ],
+    starterCode: `// Challenge: Array Manipulation
+// Implement the following functions:
+
+function findMax(arr) {
+  // Your code here
+}
+
+function reverseArray(arr) {
+  // Your code here
+}
+
+function removeDuplicates(arr) {
+  // Your code here
+}
+
+// Test your functions
+console.log(findMax([1, 5, 3, 9, 2])); // Should return 9
+console.log(reverseArray([1, 2, 3, 4])); // Should return [4, 3, 2, 1]
+console.log(removeDuplicates([1, 2, 2, 3, 3, 4])); // Should return [1, 2, 3, 4]`,
+    solution: `function findMax(arr) {
+  if (arr.length === 0) return undefined;
+  let max = arr[0];
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      max = arr[i];
+    }
+  }
+  return max;
+}
+
+function reverseArray(arr) {
+  const reversed = [];
+  for (let i = arr.length - 1; i >= 0; i--) {
+    reversed.push(arr[i]);
+  }
+  return reversed;
+}
+
+function removeDuplicates(arr) {
+  const unique = [];
+  for (let i = 0; i < arr.length; i++) {
+    if (unique.indexOf(arr[i]) === -1) {
+      unique.push(arr[i]);
+    }
+  }
+  return unique;
+}`,
+    testCases: [
+      'findMax([1, 5, 3, 9, 2]) === 9',
+      'reverseArray([1, 2, 3, 4]).join(",") === "4,3,2,1"',
+      'removeDuplicates([1, 2, 2, 3, 3, 4]).join(",") === "1,2,3,4"'
+    ]
+  },
+  {
+    id: 'react-component-challenge',
+    title: 'Build a Reusable Modal Component',
+    description: 'Create a flexible modal component with animations and keyboard support.',
+    difficulty: 'Intermediate',
+    points: 200,
+    timeLimit: '45 mins',
+    tasks: [
+      'Create a modal component with open/close functionality',
+      'Add keyboard support (ESC to close)',
+      'Implement click-outside-to-close behavior',
+      'Add fade-in/fade-out animations'
     ],
     starterCode: `import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export default function CounterChallenge() {
-  // Your code here
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  // Implement modal functionality here
+  
+  if (!isOpen) return null;
   
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Counter Challenge</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Your UI here */}
-      </CardContent>
-    </Card>
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>{title}</h2>
+        {children}
+        <Button onClick={onClose}>Close</Button>
+      </div>
+    </div>
+  );
+}
+
+// Usage example
+export default function App() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  return (
+    <div>
+      <Button onClick={() => setIsModalOpen(true)}>
+        Open Modal
+      </Button>
+      
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Example Modal"
+      >
+        <p>This is the modal content!</p>
+      </Modal>
+    </div>
   );
 }`,
     solution: `import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
-export default function CounterChallenge() {
-  const [count, setCount] = useState(() => {
-    const saved = localStorage.getItem('counter');
-    return saved ? parseInt(saved) : 0;
-  });
-  const [history, setHistory] = useState<number[]>([]);
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
 
+function Modal({ isOpen, onClose, title, children }: ModalProps) {
   useEffect(() => {
-    localStorage.setItem('counter', count.toString());
-    setHistory(prev => [...prev, count].slice(-10)); // Keep last 10
-  }, [count]);
-
-  const increment = () => setCount(prev => prev + 1);
-  const decrement = () => setCount(prev => prev - 1);
-  const reset = () => setCount(0);
-
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+  
+  if (!isOpen) return null;
+  
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Counter Challenge</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center">
-          <div className="text-4xl font-bold">{count}</div>
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg p-6 max-w-md w-full mx-4 animate-in zoom-in duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
-        <div className="flex gap-2 justify-center">
-          <Button onClick={decrement}>-</Button>
-          <Button onClick={reset} variant="outline">Reset</Button>
-          <Button onClick={increment}>+</Button>
-        </div>
-        <div>
-          <h4 className="font-medium mb-2">History:</h4>
-          <div className="text-sm text-gray-600">
-            {history.join(' → ')}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        {children}
+      </div>
+    </div>
   );
 }`,
     testCases: [
-      'Counter should increment when + button is clicked',
-      'Counter should decrement when - button is clicked',
-      'Counter should reset to 0 when reset button is clicked',
-      'History should track the last 10 values',
-      'Counter value should persist in localStorage'
+      'Modal opens when button is clicked',
+      'Modal closes when ESC key is pressed',
+      'Modal closes when clicking outside',
+      'Body scroll is disabled when modal is open'
     ]
   }
 ];
 
-const Tutorials = () => {
-  const [activeTab, setActiveTab] = useState('paths');
+export default function Tutorials() {
   const [selectedPath, setSelectedPath] = useState<LearningPath | null>(null);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedTutorial, setSelectedTutorial] = useState<Tutorial | null>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [userProgress, setUserProgress] = useState<Record<string, number>>({});
-  const [challengeCode, setChallengeCode] = useState('');
-  const [showSolution, setShowSolution] = useState(false);
+  const [userCode, setUserCode] = useState('');
   const { toast } = useToast();
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied to clipboard",
-      description: `${label} has been copied to your clipboard.`,
-    });
-  };
-
-  const downloadContent = (content: string, filename: string) => {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Download Complete",
-      description: `${filename} has been downloaded.`,
-    });
-  };
-
-  const startLearningPath = (pathId: string) => {
-    const path = learningPaths.find(p => p.id === pathId);
-    if (path && path.isUnlocked) {
-      setSelectedPath(path);
-      toast({
-        title: "Learning Path Started",
-        description: `You've started the ${path.title} learning path.`,
-      });
-    } else if (path && !path.isUnlocked) {
-      toast({
-        title: "Path Locked",
-        description: "Complete prerequisites to unlock this learning path.",
-        variant: "destructive"
-      });
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return 'bg-green-500';
+      case 'Intermediate': return 'bg-yellow-500';
+      case 'Advanced': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
+  };
+
+  const startLearningPath = (path: LearningPath) => {
+    setSelectedPath(path);
+    toast({
+      title: "Learning Path Started",
+      description: `Welcome to ${path.title}! Let's begin your journey.`,
+    });
+  };
+
+  const startModule = (module: Module) => {
+    setSelectedModule(module);
+    setUserCode(module.codeExample || '');
   };
 
   const startTutorial = (tutorial: Tutorial) => {
     setSelectedTutorial(tutorial);
     setCurrentStep(0);
+    setUserCode(tutorial.steps[0]?.code || '');
     toast({
       title: "Tutorial Started",
-      description: `Started "${tutorial.title}" tutorial.`,
+      description: `Let's build: ${tutorial.title}`,
     });
   };
 
   const startChallenge = (challenge: Challenge) => {
     setSelectedChallenge(challenge);
-    setChallengeCode(challenge.starterCode);
-    setShowSolution(false);
+    setUserCode(challenge.starterCode);
     toast({
       title: "Challenge Started",
-      description: `Started "${challenge.title}" challenge.`,
+      description: `Time to code: ${challenge.title}`,
     });
   };
 
   const completeModule = (moduleId: string) => {
     if (selectedPath) {
-      const updatedModules = selectedPath.modules_list.map(m => 
-        m.id === moduleId ? { ...m, isCompleted: true } : m
+      const updatedModules = selectedPath.modules_list.map(module =>
+        module.id === moduleId ? { ...module, isCompleted: true } : module
       );
-      const completedCount = updatedModules.filter(m => m.isCompleted).length;
-      const progress = (completedCount / updatedModules.length) * 100;
-
-      setUserProgress(prev => ({
-        ...prev,
-        [selectedPath.id]: progress
-      }));
-
+      setSelectedPath({ ...selectedPath, modules_list: updatedModules });
       toast({
-        title: "Module Completed!",
-        description: `Great job! You've completed "${selectedModule?.title}".`,
+        title: "Module Completed! 🎉",
+        description: "Great job! Moving to the next module.",
       });
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Advanced': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({
+      title: "Code Copied!",
+      description: "Code has been copied to your clipboard.",
+    });
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 pb-12 px-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold gradient-logo-text mb-6">
-            Complete Lovable Tutorials
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+            Interactive Learning Hub
           </h1>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto mb-8">
-            Master the complete Lovable development stack through interactive tutorials, hands-on projects, 
-            and structured learning paths. Build production-ready applications with confidence.
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Master web development through hands-on tutorials, structured learning paths, and coding challenges. 
+            Every tutorial includes live examples and production-ready code.
           </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-purple-400" />
-              <span>Lovable-Focused Content</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Code className="w-5 h-5 text-blue-400" />
-              <span>Interactive Coding</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-400" />
-              <span>Project-Based Learning</span>
-            </div>
-          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900 border border-blue-400/30">
-            <TabsTrigger value="paths" className="data-[state=active]:bg-blue-600">
-              <BookOpen className="w-4 h-4 mr-2" />
+        <Tabs defaultValue="paths" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="paths" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
               Learning Paths
             </TabsTrigger>
-            <TabsTrigger value="tutorials" className="data-[state=active]:bg-blue-600">
-              <PlayCircle className="w-4 h-4 mr-2" />
+            <TabsTrigger value="tutorials" className="flex items-center gap-2">
+              <Code className="w-4 h-4" />
               Interactive Tutorials
             </TabsTrigger>
-            <TabsTrigger value="challenges" className="data-[state=active]:bg-blue-600">
-              <Target className="w-4 h-4 mr-2" />
+            <TabsTrigger value="challenges" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
               Coding Challenges
             </TabsTrigger>
-            <TabsTrigger value="projects" className="data-[state=active]:bg-blue-600">
-              <Rocket className="w-4 h-4 mr-2" />
-              Real Projects
-            </TabsTrigger>
-            <TabsTrigger value="resources" className="data-[state=active]:bg-blue-600">
-              <FileText className="w-4 h-4 mr-2" />
-              Resources
+            <TabsTrigger value="playground" className="flex items-center gap-2">
+              <Terminal className="w-4 h-4" />
+              Code Playground
             </TabsTrigger>
           </TabsList>
 
+          {/* Learning Paths */}
           <TabsContent value="paths" className="mt-8">
-            <div className="grid gap-6">
-              {learningPaths.map((path, index) => (
-                <Card key={path.id} className="bg-gray-900 border-purple-400/30">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-purple-600/20 rounded-lg">
-                          <path.icon className="w-8 h-8 text-purple-400" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-3 mb-2">
+            {!selectedPath ? (
+              <div className="grid gap-6">
+                {learningPaths.map((path, index) => (
+                  <Card key={path.id} className={`bg-gray-900 border-${path.color}-400/30 hover:border-${path.color}-400/50 transition-all`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`p-3 bg-${path.color}-500/20 rounded-lg`}>
+                            <path.icon className={`w-6 h-6 text-${path.color}-400`} />
+                          </div>
+                          <div>
                             <h3 className="text-xl font-semibold text-white">{path.title}</h3>
-                            {!path.isUnlocked && <Lock className="w-5 h-5 text-gray-400" />}
                             <Badge className={getDifficultyColor(path.difficulty)}>
                               {path.difficulty}
                             </Badge>
                           </div>
-                          <p className="text-gray-300">{path.description}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-400">{path.duration}</p>
+                          <p className="text-sm text-gray-400">{path.modules} modules</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                          <Clock className="w-4 h-4" />
-                          <span>{path.duration}</span>
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          {path.modules} modules
-                        </div>
-                      </div>
-                    </div>
 
-                    {path.progress > 0 && (
+                      <p className="text-gray-300 mb-4">{path.description}</p>
+
                       <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-400">Progress</span>
-                          <span className="text-sm text-gray-400">{Math.round(userProgress[path.id] || path.progress)}%</span>
-                        </div>
-                        <Progress value={userProgress[path.id] || path.progress} className="h-2" />
-                      </div>
-                    )}
-
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <h4 className="font-medium text-purple-400 mb-2 text-sm">Technologies:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {path.technologies.map((tech, techIndex) => (
-                            <Badge key={techIndex} variant="outline" className="text-xs">
-                              {tech}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-purple-400 mb-2 text-sm">Learning Outcomes:</h4>
-                        <ul className="space-y-1">
-                          {path.learningOutcomes.slice(0, 3).map((outcome, outcomeIndex) => (
-                            <li key={outcomeIndex} className="text-xs text-gray-300 flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-purple-400 rounded-full mt-1.5 flex-shrink-0" />
+                        <h4 className="font-medium text-blue-400 mb-2">Learning Outcomes:</h4>
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                          {path.learningOutcomes.map((outcome, i) => (
+                            <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                              <CheckCircle className="w-3 h-3 text-green-400" />
                               {outcome}
                             </li>
                           ))}
                         </ul>
                       </div>
-                    </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Users className="w-4 h-4" />
-                        <span>{Math.floor(Math.random() * 500) + 100} learners enrolled</span>
+                      <div className="mb-4">
+                        <h4 className="font-medium text-purple-400 mb-2">Technologies:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {path.technologies.map((tech, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                      <Button 
-                        className="bg-purple-600 hover:bg-purple-700"
-                        onClick={() => startLearningPath(path.id)}
-                        disabled={!path.isUnlocked}
-                      >
-                        {path.progress > 0 ? 'Continue Learning' : 'Start Learning Path'}
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
 
-          <TabsContent value="tutorials" className="mt-8">
-            <div className="grid gap-6">
-              {interactiveTutorials.map((tutorial, index) => (
-                <Card key={tutorial.id} className="bg-gray-900 border-blue-400/30">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-semibold text-white">{tutorial.title}</h3>
-                      <Badge className={getDifficultyColor(tutorial.difficulty)}>
-                        {tutorial.difficulty}
-                      </Badge>
-                    </div>
-                    <p className="text-gray-300 mb-4">{tutorial.description}</p>
-
-                    <div className="mb-4 p-3 bg-blue-900/20 border border-blue-400/30 rounded">
-                      <p className="text-sm text-blue-200">
-                        <strong>What you'll build:</strong> {tutorial.preview}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm text-gray-300">{tutorial.duration}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm text-gray-300">{tutorial.category}</span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="font-medium text-blue-400 mb-2">Key Features:</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {tutorial.features.map((feature, featureIndex) => (
-                          <div key={featureIndex} className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                            <span className="text-xs text-gray-300">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Button className="w-full" onClick={() => startTutorial(tutorial)}>
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Start Interactive Tutorial
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="challenges" className="mt-8">
-            <div className="grid gap-6">
-              {codingChallenges.map((challenge, index) => (
-                <Card key={challenge.id} className="bg-gray-900 border-green-400/30">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-semibold text-white">{challenge.title}</h3>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm text-yellow-400">{challenge.points}pts</span>
-                      </div>
-                    </div>
-                    <p className="text-gray-300 mb-4">{challenge.description}</p>
-
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge className={getDifficultyColor(challenge.difficulty)}>
-                        {challenge.difficulty}
-                      </Badge>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        <span>{challenge.timeLimit}</span>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="font-medium text-green-400 mb-2 text-sm">Challenge Tasks:</h4>
-                      <ul className="space-y-1">
-                        {challenge.tasks.map((task, taskIndex) => (
-                          <li key={taskIndex} className="text-xs text-gray-300 flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-shrink-0" />
-                            {task}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => startChallenge(challenge)}>
-                      <Target className="w-4 h-4 mr-2" />
-                      Start Challenge
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="projects" className="mt-8">
-            <Card className="bg-gray-900 border-purple-400/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <Rocket className="w-6 h-6 text-purple-400" />
-                  Real-World Projects
-                </CardTitle>
-                <CardDescription>
-                  Build complete, production-ready applications using the Lovable stack.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Rocket className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Coming Soon!</h3>
-                  <p className="text-gray-400">
-                    Real-world projects are being developed. Check back soon for hands-on project tutorials.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="resources" className="mt-8">
-            <div className="grid gap-6">
-              <Card className="bg-gray-900 border-yellow-400/30">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <FileText className="w-6 h-6 text-yellow-400" />
-                    Quick Reference & Cheat Sheets
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-3 gap-6">
-                    {[
-                      {
-                        title: 'Lovable Stack Cheat Sheet',
-                        description: 'Complete reference for all Lovable technologies, APIs, and best practices.',
-                        items: ['Component Library', 'Supabase APIs', 'TypeScript Types', 'Tailwind Classes'],
-                      },
-                      {
-                        title: 'React 18 Hooks Reference',
-                        description: 'Comprehensive guide to all React 18 hooks with examples and use cases.',
-                        items: ['useState', 'useEffect', 'useContext', 'Custom Hooks'],
-                      },
-                      {
-                        title: 'Tailwind CSS Classes',
-                        description: 'Quick reference for Tailwind CSS utility classes and responsive design.',
-                        items: ['Layout Classes', 'Typography', 'Colors', 'Responsive Design'],
-                      }
-                    ].map((resource, index) => (
-                      <div key={index} className="p-5 bg-black/30 border border-yellow-400/30 rounded-lg">
-                        <h3 className="text-lg font-semibold text-white mb-2">{resource.title}</h3>
-                        <p className="text-gray-300 text-sm mb-4">{resource.description}</p>
-
+                      {path.prerequisites.length > 0 && (
                         <div className="mb-4">
-                          <h4 className="font-medium text-yellow-400 mb-2 text-sm">Includes:</h4>
-                          <div className="space-y-1">
-                            {resource.items.map((item, itemIndex) => (
-                              <div key={itemIndex} className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" />
-                                <span className="text-xs text-gray-300">{item}</span>
-                              </div>
+                          <h4 className="font-medium text-orange-400 mb-2">Prerequisites:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {path.prerequisites.map((prereq, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {prereq}
+                              </Badge>
                             ))}
                           </div>
                         </div>
+                      )}
 
-                        <Button className="w-full bg-yellow-600 hover:bg-yellow-700" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download PDF
-                        </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Progress value={path.progress} className="w-32" />
+                          <span className="text-sm text-gray-400">{path.progress}% complete</span>
+                        </div>
+                        
+                        {path.isUnlocked ? (
+                          <Button onClick={() => startLearningPath(path)} className="flex items-center gap-2">
+                            <PlayCircle className="w-4 h-4" />
+                            Start Learning Path
+                          </Button>
+                        ) : (
+                          <Button disabled className="flex items-center gap-2">
+                            <Lock className="w-4 h-4" />
+                            Locked
+                          </Button>
+                        )}
                       </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              // Selected Learning Path Detail View
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <Button variant="outline" onClick={() => setSelectedPath(null)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Paths
+                  </Button>
+                  <h2 className="text-2xl font-bold">{selectedPath.title}</h2>
+                </div>
+
+                {!selectedModule ? (
+                  <div className="grid gap-4">
+                    {selectedPath.modules_list.map((module, index) => (
+                      <Card key={module.id} className="bg-gray-900 border-blue-400/30">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  module.isCompleted ? 'bg-green-500 text-white' : 'bg-gray-600 text-gray-300'
+                                }`}>
+                                  {module.isCompleted ? <CheckCircle className="w-4 h-4" /> : index + 1}
+                                </div>
+                                <h3 className="text-lg font-semibold">{module.title}</h3>
+                                <Badge variant="secondary">{module.type}</Badge>
+                              </div>
+                              <p className="text-gray-300 mb-3">{module.description}</p>
+                              <div className="flex items-center gap-4 text-sm text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {module.duration}
+                                </span>
+                              </div>
+                            </div>
+                            <Button onClick={() => startModule(module)}>
+                              Start Module
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Learning Path Detail Modal */}
-        {selectedPath && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="bg-gray-900 border-blue-400/30 max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <selectedPath.icon className="w-8 h-8 text-purple-400" />
-                    <div>
-                      <CardTitle className="text-2xl">{selectedPath.title}</CardTitle>
-                      <CardDescription className="text-lg">{selectedPath.description}</CardDescription>
-                    </div>
-                  </div>
-                  <Button variant="ghost" onClick={() => setSelectedPath(null)}>
-                    <X className="w-5 h-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[60vh]">
-                  <div className="space-y-6">
-                    {/* Learning Outcomes */}
-                    <div>
-                      <h4 className="font-semibold text-blue-400 mb-3">What You'll Learn</h4>
-                      <ul className="space-y-2">
-                        {selectedPath.learningOutcomes.map((outcome, index) => (
-                          <li key={index} className="flex items-start gap-2 text-gray-300">
-                            <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                            {outcome}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Modules */}
-                    <div>
-                      <h4 className="font-semibold text-blue-400 mb-3">Course Modules</h4>
-                      {selectedPath.modules_list.length > 0 ? (
-                        <Accordion type="single" collapsible className="w-full">
-                          {selectedPath.modules_list.map((module, index) => (
-                            <AccordionItem key={module.id} value={module.id}>
-                              <AccordionTrigger className="hover:no-underline">
-                                <div className="flex items-center gap-3">
-                                  {module.isCompleted ? (
-                                    <CheckCircle className="w-5 h-5 text-green-400" />
-                                  ) : (
-                                    <div className="w-5 h-5 border-2 border-gray-400 rounded-full" />
-                                  )}
-                                  <div className="text-left">
-                                    <div className="font-medium">{module.title}</div>
-                                    <div className="text-sm text-gray-400">{module.duration} • {module.type}</div>
-                                  </div>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <div className="pl-8 space-y-4">
-                                  <p className="text-gray-300">{module.description}</p>
-
-                                  {module.content && (
-                                    <div className="space-y-3">
-                                      <div className="bg-black/50 p-4 rounded-lg border border-gray-600">
-                                        <pre className="text-sm text-gray-300 whitespace-pre-wrap">{module.content.substring(0, 300)}...</pre>
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <Button size="sm" onClick={() => setSelectedModule(module)}>
-                                          <PlayCircle className="w-4 h-4 mr-2" />
-                                          Start Module
-                                        </Button>
-                                        {module.codeExample && (
-                                          <Button size="sm" variant="outline" onClick={() => copyToClipboard(module.codeExample!, 'Code example')}>
-                                            <Copy className="w-4 h-4 mr-2" />
-                                            Copy Code
-                                          </Button>
-                                        )}
-                                        <Button size="sm" variant="outline" onClick={() => completeModule(module.id)}>
-                                          <CheckCircle className="w-4 h-4 mr-2" />
-                                          Mark Complete
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          ))}
-                        </Accordion>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                          <p>Modules for this learning path are being developed.</p>
-                          <p className="text-sm">Check back soon for detailed course content!</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Tutorial Detail Modal */}
-        {selectedTutorial && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="bg-gray-900 border-blue-400/30 max-w-6xl w-full max-h-[90vh] overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
+                ) : (
+                  // Module Detail View
                   <div>
-                    <CardTitle className="text-2xl">{selectedTutorial.title}</CardTitle>
-                    <CardDescription className="text-lg">{selectedTutorial.description}</CardDescription>
-                  </div>
-                  <Button variant="ghost" onClick={() => {setSelectedTutorial(null); setCurrentStep(0);}}>
-                    <X className="w-5 h-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[70vh]">
-                  <div className="space-y-6">
-                    {/* Current Step */}
-                    {selectedTutorial.steps[currentStep] && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
-                            {selectedTutorial.steps[currentStep].id}
-                          </div>
-                          <h3 className="text-xl font-semibold">{selectedTutorial.steps[currentStep].title}</h3>
-                          <Badge className="bg-blue-600 text-white">Current Step</Badge>
-                        </div>
+                    <div className="flex items-center gap-4 mb-6">
+                      <Button variant="outline" onClick={() => setSelectedModule(null)}>
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Back to Modules
+                      </Button>
+                      <h3 className="text-xl font-bold">{selectedModule.title}</h3>
+                    </div>
 
-                        <p className="text-gray-300 pl-11">{selectedTutorial.steps[currentStep].description}</p>
+                    <div className="grid lg:grid-cols-2 gap-8">
+                      <div>
+                        <Card className="bg-gray-900 border-blue-400/30 mb-6">
+                          <CardHeader>
+                            <CardTitle>Module Content</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <ScrollArea className="h-96">
+                              <div className="prose prose-invert max-w-none">
+                                {selectedModule.content.split('\n').map((line, i) => (
+                                  <p key={i} className="mb-2">{line}</p>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </CardContent>
+                        </Card>
 
-                        {selectedTutorial.steps[currentStep].code && (
-                          <div className="pl-11">
-                            <div className="bg-black/50 p-4 rounded-lg border border-gray-600">
-                              <pre className="text-sm text-green-400 font-mono overflow-x-auto">{selectedTutorial.steps[currentStep].code}</pre>
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                              <Button size="sm" variant="outline" onClick={() => copyToClipboard(selectedTutorial.steps[currentStep].code, 'Step code')}>
-                                <Copy className="w-4 h-4 mr-2" />
-                                Copy Code
+                        {selectedModule.exercise && (
+                          <Card className="bg-gray-900 border-yellow-400/30">
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <Target className="w-5 h-5 text-yellow-400" />
+                                Exercise
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-gray-300">{selectedModule.exercise}</p>
+                              <Button 
+                                className="mt-4" 
+                                onClick={() => completeModule(selectedModule.id)}
+                              >
+                                Mark as Complete
                               </Button>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="pl-11">
-                          <h4 className="font-medium text-blue-400 mb-2">Explanation:</h4>
-                          <p className="text-gray-300 text-sm">{selectedTutorial.steps[currentStep].explanation}</p>
-                        </div>
-
-                        {selectedTutorial.steps[currentStep].tips.length > 0 && (
-                          <div className="pl-11">
-                            <h4 className="font-medium text-yellow-400 mb-2">Tips:</h4>
-                            <ul className="space-y-1">
-                              {selectedTutorial.steps[currentStep].tips.map((tip, tipIndex) => (
-                                <li key={tipIndex} className="text-sm text-gray-300 flex items-start gap-2">
-                                  <Lightbulb className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                                  {tip}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                            </CardContent>
+                          </Card>
                         )}
                       </div>
-                    )}
 
-                    {/* Tutorial Navigation */}
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-600">
-                      <Button 
-                        variant="outline" 
-                        disabled={currentStep === 0}
-                        onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Previous Step
-                      </Button>
-                      <span className="text-sm text-gray-400">
-                        Step {currentStep + 1} of {selectedTutorial.steps.length}
-                      </span>
-                      <Button 
-                        disabled={currentStep === selectedTutorial.steps.length - 1}
-                        onClick={() => setCurrentStep(Math.min(selectedTutorial.steps.length - 1, currentStep + 1))}
-                      >
-                        Next Step
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      <div>
+                        {selectedModule.codeExample && (
+                          <Card className="bg-gray-900 border-green-400/30 mb-6">
+                            <CardHeader>
+                              <CardTitle className="flex items-center justify-between">
+                                Code Example
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => copyCode(selectedModule.codeExample!)}
+                                >
+                                  <Copy className="w-4 h-4 mr-1" />
+                                  Copy
+                                </Button>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <CodePlayground 
+                                initialCode={selectedModule.codeExample}
+                                language="javascript"
+                              />
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {selectedModule.liveDemo && (
+                          <Card className="bg-gray-900 border-purple-400/30">
+                            <CardHeader>
+                              <CardTitle>Live Demo</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {selectedModule.liveDemo()}
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
 
-                    {/* Final Code */}
-                    {currentStep === selectedTutorial.steps.length - 1 && selectedTutorial.finalCode && (
-                      <div className="space-y-4">
-                        <h4 className="font-semibold text-green-400">Complete Final Code:</h4>
-                        <div className="bg-black/50 p-4 rounded-lg border border-gray-600">
-                          <pre className="text-sm text-green-400 font-mono overflow-x-auto">{selectedTutorial.finalCode}</pre>
+          {/* Interactive Tutorials */}
+          <TabsContent value="tutorials" className="mt-8">
+            {!selectedTutorial ? (
+              <div className="grid gap-6">
+                {interactiveTutorials.map((tutorial, index) => (
+                  <Card key={tutorial.id} className="bg-gray-900 border-blue-400/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="text-xl font-semibold text-white">{tutorial.title}</h3>
+                        <Badge className={getDifficultyColor(tutorial.difficulty)}>
+                          {tutorial.difficulty}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-300 mb-4">{tutorial.description}</p>
+
+                      <div className="mb-4 p-3 bg-blue-900/20 border border-blue-400/30 rounded">
+                        <p className="text-sm text-blue-200">
+                          <strong>What you'll build:</strong> {tutorial.preview}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-blue-400" />
+                          <span className="text-sm text-gray-300">{tutorial.duration}</span>
                         </div>
-                        <Button onClick={() => copyToClipboard(selectedTutorial.finalCode, 'Final code')}>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Final Code
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-400" />
+                          <span className="text-sm text-gray-300">{tutorial.category}</span>
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <h4 className="font-medium text-blue-400 mb-2">Key Features:</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {tutorial.features.map((feature, featureIndex) => (
+                            <div key={featureIndex} className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                              <span className="text-xs text-gray-300">{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        {tutorial.livePreview && (
+                          <Button variant="outline" onClick={() => {
+                            // Show live preview in a modal or expand
+                          }}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Live Preview
+                          </Button>
+                        )}
+                        <Button className="ml-auto" onClick={() => startTutorial(tutorial)}>
+                          <PlayCircle className="w-4 h-4 mr-2" />
+                          Start Interactive Tutorial
                         </Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              // Tutorial Detail View
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <Button variant="outline" onClick={() => {setSelectedTutorial(null); setCurrentStep(0);}}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Tutorials
+                  </Button>
+                  <h2 className="text-2xl font-bold">{selectedTutorial.title}</h2>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <div>
+                    {/* Current Step */}
+                    {selectedTutorial.steps[currentStep] && (
+                      <Card className="bg-gray-900 border-blue-400/30 mb-6">
+                        <CardHeader>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                              {selectedTutorial.steps[currentStep].id}
+                            </div>
+                            <CardTitle>{selectedTutorial.steps[currentStep].title}</CardTitle>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-gray-300 mb-4">{selectedTutorial.steps[currentStep].description}</p>
+                          <p className="text-sm text-gray-400 mb-4">{selectedTutorial.steps[currentStep].explanation}</p>
+                          
+                          {selectedTutorial.steps[currentStep].tips.length > 0 && (
+                            <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-400/30 rounded">
+                              <h4 className="font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4" />
+                                Pro Tips
+                              </h4>
+                              <ul className="text-sm text-yellow-200 space-y-1">
+                                {selectedTutorial.steps[currentStep].tips.map((tip, i) => (
+                                  <li key={i}>• {tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Live Preview */}
+                    {selectedTutorial.livePreview && (
+                      <Card className="bg-gray-900 border-purple-400/30">
+                        <CardHeader>
+                          <CardTitle>Final Result Preview</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedTutorial.livePreview()}
+                        </CardContent>
+                      </Card>
                     )}
                   </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* Challenge Modal */}
-        {selectedChallenge && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="bg-gray-900 border-green-400/30 max-w-6xl w-full max-h-[90vh] overflow-hidden">
-              <CardHeader>
-                <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-2xl">{selectedChallenge.title}</CardTitle>
-                    <CardDescription className="text-lg">{selectedChallenge.description}</CardDescription>
+                    {/* Code Editor */}
+                    {selectedTutorial.steps[currentStep] && (
+                      <Card className="bg-gray-900 border-green-400/30 mb-6">
+                        <CardHeader>
+                          <CardTitle className="flex items-center justify-between">
+                            Step Code
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => copyCode(selectedTutorial.steps[currentStep].code)}
+                            >
+                              <Copy className="w-4 h-4 mr-1" />
+                              Copy
+                            </Button>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <CodePlayground 
+                            initialCode={selectedTutorial.steps[currentStep].code}
+                            language="javascript"
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Live Example for Current Step */}
+                    {selectedTutorial.steps[currentStep]?.liveExample && (
+                      <Card className="bg-gray-900 border-orange-400/30">
+                        <CardHeader>
+                          <CardTitle>Step Example</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedTutorial.steps[currentStep].liveExample()}
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
-                  <Button variant="ghost" onClick={() => setSelectedChallenge(null)}>
-                    <X className="w-5 h-5" />
+                </div>
+
+                {/* Tutorial Navigation */}
+                <div className="flex items-center justify-between pt-6 border-t border-gray-600 mt-8">
+                  <Button 
+                    variant="outline" 
+                    disabled={currentStep === 0}
+                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Previous Step
+                  </Button>
+                  <span className="text-sm text-gray-400">
+                    Step {currentStep + 1} of {selectedTutorial.steps.length}
+                  </span>
+                  <Button 
+                    disabled={currentStep === selectedTutorial.steps.length - 1}
+                    onClick={() => setCurrentStep(Math.min(selectedTutorial.steps.length - 1, currentStep + 1))}
+                  >
+                    Next Step
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-6 h-[70vh]">
-                  {/* Challenge Info */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <Badge className={getDifficultyColor(selectedChallenge.difficulty)}>
-                        {selectedChallenge.difficulty}
-                      </Badge>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        <span>{selectedChallenge.timeLimit}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm text-yellow-400">{selectedChallenge.points}pts</span>
-                      </div>
-                    </div>
+              </div>
+            )}
+          </TabsContent>
 
-                    <div>
-                      <h4 className="font-medium text-green-400 mb-2">Tasks:</h4>
-                      <ul className="space-y-1">
-                        {selectedChallenge.tasks.map((task, taskIndex) => (
-                          <li key={taskIndex} className="text-sm text-gray-300 flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-shrink-0" />
-                            {task}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-green-400 mb-2">Test Cases:</h4>
-                      <ul className="space-y-1">
-                        {selectedChallenge.testCases.map((test, testIndex) => (
-                          <li key={testIndex} className="text-sm text-gray-300 flex items-start gap-2">
-                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-1.5 flex-shrink-0" />
-                            {test}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => setShowSolution(!showSolution)}
-                        variant="outline"
-                      >
-                        {showSolution ? 'Hide Solution' : 'Show Solution'}
-                      </Button>
-                      <Button onClick={() => copyToClipboard(challengeCode, 'Challenge code')}>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Code
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Code Editor */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-green-400">Your Code:</h4>
-                    <div className="bg-black/50 p-4 rounded-lg border border-gray-600 h-[50vh] overflow-auto">
-                      <pre className="text-sm text-green-400 font-mono">{challengeCode}</pre>
-                    </div>
-                    
-                    {showSolution && (
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-yellow-400">Solution:</h4>
-                        <div className="bg-black/50 p-4 rounded-lg border border-gray-600 max-h-[20vh] overflow-auto">
-                          <pre className="text-sm text-yellow-400 font-mono">{selectedChallenge.solution}</pre>
+          {/* Coding Challenges */}
+          <TabsContent value="challenges" className="mt-8">
+            {!selectedChallenge ? (
+              <div className="grid gap-6">
+                {codingChallenges.map((challenge, index) => (
+                  <Card key={challenge.id} className="bg-gray-900 border-green-400/30">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="text-xl font-semibold text-white">{challenge.title}</h3>
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-yellow-400" />
+                          <span className="text-sm text-yellow-400">{challenge.points}pts</span>
                         </div>
                       </div>
-                    )}
+                      <p className="text-gray-300 mb-4">{challenge.description}</p>
+
+                      <div className="flex items-center gap-4 mb-4">
+                        <Badge className={getDifficultyColor(challenge.difficulty)}>
+                          {challenge.difficulty}
+                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-green-400" />
+                          <span className="text-sm text-gray-300">{challenge.timeLimit}</span>
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <h4 className="font-medium text-green-400 mb-2">Tasks:</h4>
+                        <ul className="space-y-1">
+                          {challenge.tasks.map((task, taskIndex) => (
+                            <li key={taskIndex} className="flex items-start gap-2 text-sm text-gray-300">
+                              <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-2" />
+                              {task}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <Button onClick={() => startChallenge(challenge)}>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Start Challenge
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              // Challenge Detail View
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <Button variant="outline" onClick={() => setSelectedChallenge(null)}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Challenges
+                  </Button>
+                  <h2 className="text-2xl font-bold">{selectedChallenge.title}</h2>
+                  <Badge className={getDifficultyColor(selectedChallenge.difficulty)}>
+                    {selectedChallenge.difficulty}
+                  </Badge>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <div>
+                    <Card className="bg-gray-900 border-green-400/30 mb-6">
+                      <CardHeader>
+                        <CardTitle>Challenge Instructions</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-gray-300 mb-4">{selectedChallenge.description}</p>
+                        
+                        <div className="mb-4">
+                          <h4 className="font-medium text-green-400 mb-2">Tasks to Complete:</h4>
+                          <ul className="space-y-2">
+                            {selectedChallenge.tasks.map((task, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <Checkbox />
+                                <span className="text-sm text-gray-300">{task}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-yellow-400" />
+                            <span className="text-sm text-gray-300">{selectedChallenge.timeLimit}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Star className="w-4 h-4 text-yellow-400" />
+                            <span className="text-sm text-gray-300">{selectedChallenge.points} points</span>
+                          </div>
+                        </div>
+
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            // Show solution
+                            setUserCode(selectedChallenge.solution);
+                          }}
+                        >
+                          Show Solution
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gray-900 border-blue-400/30">
+                      <CardHeader>
+                        <CardTitle>Test Cases</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {selectedChallenge.testCases.map((testCase, i) => (
+                            <li key={i} className="text-sm text-gray-300 font-mono bg-gray-800 p-2 rounded">
+                              {testCase}
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div>
+                    <Card className="bg-gray-900 border-yellow-400/30">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          Code Editor
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <RotateCcw className="w-4 h-4 mr-1" />
+                              Reset
+                            </Button>
+                            <Button size="sm">
+                              <PlayCircle className="w-4 h-4 mr-1" />
+                              Test Code
+                            </Button>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CodePlayground 
+                          initialCode={userCode}
+                          language="javascript"
+                        />
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Code Playground */}
+          <TabsContent value="playground" className="mt-8">
+            <Card className="bg-gray-900 border-purple-400/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="w-5 h-5 text-purple-400" />
+                  Live Code Playground
+                </CardTitle>
+                <CardDescription>
+                  Experiment with code in real-time. Try out concepts from tutorials and challenges.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CodePlayground 
+                  initialCode={`// Welcome to the Code Playground!
+// Try writing some JavaScript here
+
+function greet(name) {
+  return \`Hello, \${name}! Welcome to the playground.\`;
+}
+
+console.log(greet("Developer"));
+
+// Try creating a simple calculator
+function add(a, b) {
+  return a + b;
+}
+
+console.log("2 + 3 =", add(2, 3));`}
+                  language="javascript"
+                />
               </CardContent>
             </Card>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
-};
-
-export default Tutorials;
+}
