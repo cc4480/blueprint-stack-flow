@@ -3048,7 +3048,7 @@ export default function Tutorials() {
                               <CardTitle>Live Demo</CardTitle>
                             </CardHeader>
                             <CardContent>
-                              {selectedModule.liveDemo()}
+                              <selectedModule.liveDemo />
                             </CardContent>
                           </Card>
                         )}
@@ -3174,7 +3174,7 @@ export default function Tutorials() {
                           <CardTitle>Final Result Preview</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {selectedTutorial.livePreview()}
+                          <selectedTutorial.livePreview />
                         </CardContent>
                       </Card>
                     )}
@@ -3213,7 +3213,7 @@ export default function Tutorials() {
                           <CardTitle>Step Example</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {selectedTutorial.steps[currentStep].liveExample()}
+                          <selectedTutorial.steps[currentStep].liveExample />
                         </CardContent>
                       </Card>
                     )}
