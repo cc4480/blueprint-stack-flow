@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -117,25 +118,12 @@ const useMCPServers = () => {
   // Fetch servers from API
   const { data: servers = [], isLoading } = useQuery({
     queryKey: ['/api/mcp-servers'],
+    queryFn: () => api.mcpServers.getAll(),
     refetchInterval: 10000, // Refetch every 10 seconds for real-time status updates
   });
 
   const addServerMutation = useMutation({
-    mutationFn: async (serverData: MCPServerForm) => {
-      const response = await fetch('/api/mcp-servers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(serverData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add MCP server');
-      }
-
-      return response.json();
-    },
+    mutationFn: (serverData: MCPServerForm) => api.mcpServers.create(serverData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/mcp-servers'] });
       toast({
@@ -182,8 +170,20 @@ const useMCPServers = () => {
   };
 
   const updateServerStatus = async (id: string, status: MCPServer['status']) => {
-    // This would be handled server-side in a real implementation
-    console.log('Updating server status:', id, status);
+    try {
+      await api.mcpServers.updateStatus(id, status);
+      queryClient.invalidateQueries({ queryKey: ['/api/mcp-servers'] });
+      toast({
+        title: "Status Updated",
+        description: `Server status updated to ${status}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update server status",
+        variant: "destructive",
+      });
+    }
   };
 
   return {
