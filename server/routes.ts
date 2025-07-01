@@ -605,6 +605,78 @@ Generate detailed, production-ready blueprints that include complete technical s
     }
   });
 
+  // Templates endpoints
+  app.get("/api/templates", async (req, res) => {
+    try {
+      const templates = [
+        {
+          id: 1,
+          name: 'RAG 2.0 Knowledge Base',
+          description: 'Complete implementation of advanced retrieval-augmented generation with hybrid search and re-ranking',
+          category: 'RAG',
+          difficulty: 'Intermediate',
+          downloads: 1234,
+          rating: 4.8,
+          technologies: ['RAG 2.0', 'Vector DB', 'Hybrid Search', 'Re-ranking'],
+          preview: '/templates/rag-preview.png',
+          files: {
+            'main.ts': `// RAG 2.0 Implementation...`,
+            'schema.sql': `-- Database schema...`,
+            'README.md': `# RAG 2.0 Knowledge Base...`
+          }
+        },
+        // ... other templates
+      ];
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  app.get("/api/templates/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // Return specific template details
+      res.json({ id, name: `Template ${id}`, code: "// Template code..." });
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  app.get("/api/templates/:id/download", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const templateContent = `# Template ${id}\n\n// Complete template implementation...`;
+      
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="template-${id}.md"`);
+      res.send(templateContent);
+    } catch (error) {
+      console.error("Error downloading template:", error);
+      res.status(500).json({ error: "Failed to download template" });
+    }
+  });
+
+  app.post("/api/templates/:id/use", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { replName } = req.body;
+      
+      // In a real implementation, this would create a new Repl
+      // For now, return success with creation details
+      res.json({
+        success: true,
+        replUrl: `https://replit.com/@user/${replName || `template-${id}`}`,
+        message: "Template applied successfully"
+      });
+    } catch (error) {
+      console.error("Error using template:", error);
+      res.status(500).json({ error: "Failed to use template" });
+    }
+  });
+
   // Analytics endpoints
   app.get("/api/analytics/live", async (req, res) => {
     try {

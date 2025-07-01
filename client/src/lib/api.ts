@@ -59,7 +59,31 @@ export const api = {
     },
   },
 
-  // DeepSeek Conversations
+  // Templates API
+  templates: {
+    getAll: async () => {
+      const response = await fetch(`${API_BASE}/templates`);
+      return response.json();
+    },
+    getById: async (id: string) => {
+      const response = await fetch(`${API_BASE}/templates/${id}`);
+      return response.json();
+    },
+    download: async (id: string) => {
+      const response = await fetch(`${API_BASE}/templates/${id}/download`);
+      return response.blob();
+    },
+    use: async (id: string, replName?: string) => {
+      const response = await fetch(`${API_BASE}/templates/${id}/use`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ replName }),
+      });
+      return response.json();
+    },
+  },
+
+  // DeepSeek Conversations API
   deepseek: {
     getConversations: async (sessionId: string) => {
       const response = await fetch(`${API_BASE}/deepseek/conversations/${sessionId}`);
