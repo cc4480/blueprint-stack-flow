@@ -528,6 +528,33 @@ CREATE TABLE access_logs (
     }
   };
 
+  const handleCreateProject = async (template: any) => {
+    const content = templateContents[template.id as keyof typeof templateContents];
+    if (content) {
+      try {
+        // Create project files in the current workspace
+        const projectName = `${template.name.toLowerCase().replace(/\s+/g, '-')}-project`;
+        
+        // You can expand this to actually create files in the workspace
+        // For now, we'll show a success message and copy the main code
+        await navigator.clipboard.writeText(content.code);
+        
+        toast({
+          title: "Project Template Ready!",
+          description: `${template.name} code copied to clipboard. You can now create files in your workspace.`,
+        });
+        
+        setIsPreviewOpen(false);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create project. Please try downloading the template instead.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
   const handleDownloadTemplate = (template: any) => {
     const content = templateContents[template.id as keyof typeof templateContents];
     if (content) {
@@ -576,13 +603,13 @@ ${template.category}
   };
 
   const handleUseTemplate = (template: any) => {
-    // Create a new Repl with this template
-    const replitUrl = `https://replit.com/@replit/new?template=${encodeURIComponent(template.name)}`;
-    window.open(replitUrl, '_blank');
+    // Instead of trying to create a new Repl, show the template content
+    setSelectedTemplate(template);
+    setIsPreviewOpen(true);
     
     toast({
-      title: "Creating New Repl",
-      description: `Opening ${template.name} template in a new Repl...`,
+      title: "Template Ready",
+      description: `${template.name} template is now available. Use the preview to copy code or download files.`,
     });
   };
 
@@ -668,11 +695,11 @@ ${template.category}
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button 
-                onClick={() => handleUseTemplate(selectedTemplate)}
+                onClick={() => handleCreateProject(selectedTemplate)}
                 className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Use Template in New Repl
+                Create Project in Workspace
               </Button>
               <Button 
                 variant="outline" 
@@ -759,7 +786,7 @@ ${template.category}
                   <Button 
                     size="sm" 
                     className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 hover:from-blue-600 hover:via-purple-600 hover:to-red-600"
-                    onClick={() => handleUseTemplate(template)}
+                    onClick={() => handlePreview(template)}
                   >
                     <Zap className="w-3 h-3 mr-1" />
                     Use Template
