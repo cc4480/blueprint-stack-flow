@@ -151,37 +151,42 @@ ${prompt}
         }
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
+        const lines = buffer.split('\n');
 
+        // Process all complete lines except the last one
         for (let i = 0; i < lines.length - 1; i++) {
           const line = lines[i].trim();
           if (line.startsWith('data: ')) {
             try {
-              const jsonStr = line.slice(6);
+              const jsonStr = line.slice(6).trim();
               if (jsonStr === '[DONE]') {
                 setStreamProgress('✅ Blueprint generation completed!');
                 setIsStreaming(false);
                 return;
               }
 
-              const data = JSON.parse(jsonStr);
+              if (jsonStr) {
+                const data = JSON.parse(jsonStr);
 
-              if (data.type === 'token' && data.content) {
-                accumulatedContent += data.content;
-                setGeneratedBlueprint(accumulatedContent);
-                setStreamProgress(`📝 Generating... ${accumulatedContent.length} characters`);
-              } else if (data.type === 'complete') {
-                setStreamProgress(`✅ Generation completed! Total: ${data.totalCharacters || accumulatedContent.length} characters`);
-                setIsStreaming(false);
-                return;
-              } else if (data.type === 'error') {
-                throw new Error(data.error || 'Unknown streaming error');
+                if (data.type === 'token' && data.content) {
+                  accumulatedContent += data.content;
+                  setGeneratedBlueprint(accumulatedContent);
+                  setStreamProgress(`📝 Generating... ${accumulatedContent.length} characters`);
+                } else if (data.type === 'complete') {
+                  setStreamProgress(`✅ Generation completed! Total: ${data.totalCharacters || accumulatedContent.length} characters`);
+                  setIsStreaming(false);
+                  return;
+                } else if (data.type === 'error') {
+                  throw new Error(data.error || 'Unknown streaming error');
+                }
               }
             } catch (parseError) {
               console.warn('Failed to parse streaming data:', parseError, 'Raw line:', line);
             }
           }
         }
+        
+        // Keep the last incomplete line in the buffer
         buffer = lines[lines.length - 1];
       }
     } catch (error) {
