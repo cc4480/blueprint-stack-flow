@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface ErrorMetrics {
   totalErrors: number;
   errorsByType: Record<string, number>;

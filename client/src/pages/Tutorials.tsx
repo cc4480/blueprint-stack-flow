@@ -362,11 +362,11 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
     setIsRunning(true);
     setOutput('');
     setTestResults([]);
-    
+
     try {
       // Simulate code execution delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       if (language === 'javascript') {
         // Create a safe execution environment
         const consoleOutput: string[] = [];
@@ -375,15 +375,15 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
           error: (...args: any[]) => consoleOutput.push('ERROR: ' + args.map(arg => String(arg)).join(' ')),
           warn: (...args: any[]) => consoleOutput.push('WARN: ' + args.map(arg => String(arg)).join(' '))
         };
-        
+
         // Replace console temporarily
         const originalConsole = console;
         (global as any).console = mockConsole;
-        
+
         try {
           // Execute the code
           const result = new Function('console', code)(mockConsole);
-          
+
           if (consoleOutput.length > 0) {
             setOutput(consoleOutput.join('\n'));
           } else if (result !== undefined) {
@@ -413,7 +413,7 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
 
   const runTests = () => {
     const results: Array<{test: string, passed: boolean, error?: string}> = [];
-    
+
     // Basic test cases for common functions
     if (code.includes('findMax')) {
       try {
@@ -523,14 +523,14 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
           )}
         </div>
       </div>
-      
+
       <Tabs defaultValue="code" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="code">Code</TabsTrigger>
           <TabsTrigger value="output">Output</TabsTrigger>
           {showPreview && <TabsTrigger value="preview">Preview</TabsTrigger>}
         </TabsList>
-        
+
         <TabsContent value="code" className="mt-4">
           <Textarea 
             value={code}
@@ -539,7 +539,7 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
             placeholder="Write your code here..."
           />
         </TabsContent>
-        
+
         <TabsContent value="output" className="mt-4">
           <div className="space-y-4">
             {output && (
@@ -547,7 +547,7 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
                 <pre className="whitespace-pre-wrap">{output}</pre>
               </div>
             )}
-            
+
             {testResults.length > 0 && (
               <div className="space-y-2">
                 <h4 className="font-medium">Test Results:</h4>
@@ -577,7 +577,7 @@ const CodePlayground = ({ initialCode, language = 'javascript' }: { initialCode:
             )}
           </div>
         </TabsContent>
-        
+
         {showPreview && (
           <TabsContent value="preview" className="mt-4">
             <div className="border rounded p-4 bg-white">
@@ -676,20 +676,20 @@ Use semantic elements that describe their meaning:
             </ul>
         </nav>
     </header>
-    
+
     <main>
         <section id="home">
             <h2>Home Section</h2>
             <p>This is the main content of my website.</p>
             <img src="image.jpg" alt="Description of image">
         </section>
-        
+
         <section id="about">
             <h2>About Me</h2>
             <p>I'm learning web development!</p>
         </section>
     </main>
-    
+
     <footer>
         <p>&copy; 2024 My Website. All rights reserved.</p>
     </footer>
@@ -715,7 +715,7 @@ Use semantic elements that describe their meaning:
             </ul>
         </nav>
     </header>
-    
+
     <main>
         <section id="about">
             <h2>About Me</h2>
@@ -726,7 +726,7 @@ Use semantic elements that describe their meaning:
                 <li>User Experience</li>
             </ul>
         </section>
-        
+
         <section id="projects">
             <h2>My Projects</h2>
             <article>
@@ -740,24 +740,24 @@ Use semantic elements that describe their meaning:
                 <a href="#">View Project</a>
             </article>
         </section>
-        
+
         <section id="contact">
             <h2>Contact Me</h2>
             <form>
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" required>
-                
+
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required>
-                
+
                 <label for="message">Message:</label>
                 <textarea id="message" name="message" rows="4" required></textarea>
-                
+
                 <button type="submit">Send Message</button>
             </form>
         </section>
     </main>
-    
+
     <footer>
         <p>&copy; 2024 John Doe. All rights reserved.</p>
         <p>
@@ -939,11 +939,11 @@ nav a:hover {
       "footer";
     grid-template-columns: 1fr;
   }
-  
+
   nav ul {
     flex-direction: column;
   }
-  
+
   .card {
     padding: 1rem;
   }
@@ -1162,7 +1162,7 @@ function useFormValidation(initialValues, validationRules) {
 
   const handleChange = (name, value) => {
     setValues(prev => ({ ...prev, [name]: value }));
-    
+
     if (touched[name]) {
       const error = validate(name, value);
       setErrors(prev => ({ ...prev, [name]: error }));
@@ -1213,7 +1213,7 @@ function LoginForm() {
         onBlur={() => handleBlur('email')}
       />
       {touched.email && errors.email && <span>{errors.email}</span>}
-      
+
       <input
         type="password"
         value={values.password}
@@ -1221,7 +1221,7 @@ function LoginForm() {
         onBlur={() => handleBlur('password')}
       />
       {touched.password && errors.password && <span>{errors.password}</span>}
-      
+
       <button type="submit" disabled={!isValid}>Login</button>
     </form>
   );
@@ -1229,7 +1229,7 @@ function LoginForm() {
         liveDemo: () => {
           const [theme, setTheme] = useState('light');
           const [count, setCount] = useState(0);
-          
+
           return (
             <Card className="w-full max-w-md mx-auto">
               <CardHeader>
@@ -1479,7 +1479,7 @@ export default function TodoApp() {
               Add Todo
             </Button>
           </div>
-          
+
           <div className="flex gap-2 mb-4">
             <Button 
               variant={filter === 'all' ? 'default' : 'outline'}
@@ -1500,7 +1500,7 @@ export default function TodoApp() {
               Completed
             </Button>
           </div>
-          
+
           <div className="space-y-2">
             {filteredTodos.map(todo => (
               <div key={todo.id} className="flex items-center gap-2 p-2 border rounded">
@@ -1521,7 +1521,7 @@ export default function TodoApp() {
               </div>
             ))}
           </div>
-          
+
           {filteredTodos.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No todos found. Add one above!
@@ -1572,10 +1572,10 @@ export default function AdvancedForm() {
     confirmPassword: '',
     terms: false
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   return (
     <Card className="max-w-md mx-auto">
       <CardHeader>
@@ -1606,12 +1606,12 @@ export default function AdvancedForm() {
       if (!value) return 'Name is required';
       if (value.length < 2) return 'Name must be at least 2 characters';
       return '';
-    
+
     case 'email':
       if (!value) return 'Email is required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
       return '';
-    
+
     case 'password':
       if (!value) return 'Password is required';
       if (value.length < 8) return 'Password must be at least 8 characters';
@@ -1619,16 +1619,16 @@ export default function AdvancedForm() {
         return 'Password must contain uppercase, lowercase, and number';
       }
       return '';
-    
+
     case 'confirmPassword':
       if (!value) return 'Please confirm your password';
       if (value !== formData.password) return 'Passwords do not match';
       return '';
-    
+
     case 'terms':
       if (!value) return 'You must accept the terms and conditions';
       return '';
-    
+
     default:
       return '';
   }
@@ -1636,11 +1636,11 @@ export default function AdvancedForm() {
 
 const handleInputChange = (name: keyof FormData, value: any) => {
   setFormData(prev => ({ ...prev, [name]: value }));
-  
+
   // Real-time validation
   const error = validateField(name, value);
   setErrors(prev => ({ ...prev, [name]: error }));
-  
+
   // Revalidate confirm password when password changes
   if (name === 'password' && formData.confirmPassword) {
     const confirmError = validateField('confirmPassword', formData.confirmPassword);
@@ -1660,20 +1660,20 @@ const handleInputChange = (name: keyof FormData, value: any) => {
         description: 'Add the complete form JSX with submission handling and loading states.',
         code: `const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  
+
   // Validate all fields
   const newErrors: FormErrors = {};
   Object.keys(formData).forEach(key => {
     const error = validateField(key as keyof FormData, formData[key as keyof FormData]);
     if (error) newErrors[key as keyof FormErrors] = error;
   });
-  
+
   setErrors(newErrors);
-  
+
   if (Object.keys(newErrors).length > 0) return;
-  
+
   setIsSubmitting(true);
-  
+
   try {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1806,7 +1806,7 @@ export default function AdvancedForm() {
     confirmPassword: '',
     terms: false
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1841,10 +1841,10 @@ export default function AdvancedForm() {
 
   const handleInputChange = (name: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     const error = validateField(name, value);
     setErrors(prev => ({ ...prev, [name]: error }));
-    
+
     if (name === 'password' && formData.confirmPassword) {
       const confirmError = validateField('confirmPassword', formData.confirmPassword);
       setErrors(prev => ({ ...prev, confirmPassword: confirmError }));
@@ -1853,19 +1853,19 @@ export default function AdvancedForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: FormErrors = {};
     Object.keys(formData).forEach(key => {
       const error = validateField(key as keyof FormData, formData[key as keyof FormData]);
       if (error) newErrors[key as keyof FormErrors] = error;
     });
-    
+
     setErrors(newErrors);
-    
+
     if (Object.keys(newErrors).length > 0) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       alert('Account created successfully!');
@@ -2006,9 +2006,9 @@ interface ModalProps {
 
 function Modal({ isOpen, onClose, title, children }: ModalProps) {
   // Implement modal functionality here
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div className="modal-overlay">
       <div className="modal-content">
@@ -2023,13 +2023,13 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
 // Usage example
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   return (
     <div>
       <Button onClick={() => setIsModalOpen(true)}>
         Open Modal
       </Button>
-      
+
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -2058,20 +2058,20 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
         onClose();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('keydown', handleEsc);
       document.body.style.overflow = 'hidden';
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div 
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in duration-200"
@@ -2162,7 +2162,7 @@ export default function WeatherDashboard() {
               Get Weather
             </Button>
           </div>
-          
+
           {/* Display weather data here */}
         </CardContent>
       </Card>
@@ -2203,10 +2203,10 @@ export default function WeatherDashboard() {
 
   const fetchWeather = async (cityName: string) => {
     if (!cityName.trim()) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Check cache first
       const cached = weatherCache.get(cityName.toLowerCase());
@@ -2215,10 +2215,10 @@ export default function WeatherDashboard() {
         setLoading(false);
         return;
       }
-      
+
       // Simulate API call (replace with real API)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Mock weather data (replace with real API response)
       const mockWeather: WeatherData = {
         location: cityName,
@@ -2233,13 +2233,13 @@ export default function WeatherDashboard() {
           condition: ['Sunny', 'Cloudy', 'Rainy'][Math.floor(Math.random() * 3)]
         }))
       };
-      
+
       // Cache the data
       weatherCache.set(cityName.toLowerCase(), {
         data: mockWeather,
         timestamp: Date.now()
       });
-      
+
       setWeather(mockWeather);
     } catch (err) {
       setError('Failed to fetch weather data. Please try again.');
@@ -2275,14 +2275,14 @@ export default function WeatherDashboard() {
               {loading ? 'Loading...' : 'Get Weather'}
             </Button>
           </div>
-          
+
           {error && (
             <div className="flex items-center gap-2 p-3 bg-red-100 border border-red-300 rounded mb-4">
               <AlertCircle className="w-5 h-5 text-red-500" />
               <span className="text-red-700">{error}</span>
             </div>
           )}
-          
+
           {weather && (
             <div className="space-y-6">
               {/* Current Weather */}
@@ -2296,7 +2296,7 @@ export default function WeatherDashboard() {
                     </div>
                     {getWeatherIcon(weather.condition)}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     <div>
                       <p className="text-sm text-gray-500">Humidity</p>
@@ -2309,7 +2309,7 @@ export default function WeatherDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               {/* 5-Day Forecast */}
               <Card>
                 <CardHeader>
@@ -2501,7 +2501,7 @@ export default function ShoppingCart() {
   const addToCart = (product: Product) => {
     setCart(currentCart => {
       const existingItem = currentCart.find(item => item.id === product.id);
-      
+
       if (existingItem) {
         if (existingItem.quantity >= product.stock) {
           alert('Not enough stock available');
@@ -2593,7 +2593,7 @@ export default function ShoppingCart() {
                 {mockProducts.map(product => {
                   const cartItem = cart.find(item => item.id === product.id);
                   const inStock = product.stock > (cartItem?.quantity || 0);
-                  
+
                   return (
                     <div key={product.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
@@ -2896,7 +2896,7 @@ export default function Tutorials() {
                           <div className="flex flex-wrap gap-2">
                             {path.prerequisites.map((prereq, i) => (
                               <Badge key={i} variant="outline" className="text-xs">
-                                {prereq}
+                                                               {prereq}
                               </Badge>
                             ))}
                           </div>
@@ -2908,7 +2908,7 @@ export default function Tutorials() {
                           <Progress value={path.progress} className="w-32" />
                           <span className="text-sm text-gray-400">{path.progress}% complete</span>
                         </div>
-                        
+
                         {path.isUnlocked ? (
                           <Button onClick={() => startLearningPath(path)} className="flex items-center gap-2">
                             <PlayCircle className="w-4 h-4" />
@@ -3149,7 +3149,7 @@ export default function Tutorials() {
                         <CardContent>
                           <p className="text-gray-300 mb-4">{selectedTutorial.steps[currentStep].description}</p>
                           <p className="text-sm text-gray-400 mb-4">{selectedTutorial.steps[currentStep].explanation}</p>
-                          
+
                           {selectedTutorial.steps[currentStep].tips.length > 0 && (
                             <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-400/30 rounded">
                               <h4 className="font-medium text-yellow-400 mb-2 flex items-center gap-2">
@@ -3208,15 +3208,18 @@ export default function Tutorials() {
 
                     {/* Live Example for Current Step */}
                     {selectedTutorial.steps[currentStep]?.liveExample && (
-                      <Card className="bg-gray-900 border-orange-400/30">
-                        <CardHeader>
-                          <CardTitle>Step Example</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <selectedTutorial.steps[currentStep].liveExample />
-                        </CardContent>
-                      </Card>
-                    )}
+                          <Card className="bg-gray-900 border-orange-400/30">
+                            <CardHeader>
+                              <CardTitle>Step Example</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {(() => {
+                                const LiveExample = selectedTutorial.steps[currentStep].liveExample;
+                                return LiveExample ? <LiveExample /> : null;
+                              })()}
+                            </CardContent>
+                          </Card>
+                        )}
                   </div>
                 </div>
 
@@ -3313,7 +3316,7 @@ export default function Tutorials() {
                       </CardHeader>
                       <CardContent>
                         <p className="text-gray-300 mb-4">{selectedChallenge.description}</p>
-                        
+
                         <div className="mb-4">
                           <h4 className="font-medium text-green-400 mb-2">Tasks to Complete:</h4>
                           <ul className="space-y-2">

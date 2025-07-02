@@ -314,5 +314,7 @@ export const isValidationError = (error: Error): boolean => {
 export const isTimeoutError = (error: Error): boolean => {
   return error.message.includes('timeout') ||
          error.message.includes('aborted') ||
-         error.name === 'AbortError';
+         error.name === 'AbortError' ||
+         error.name === 'TimeoutError';
+};or';
 };
