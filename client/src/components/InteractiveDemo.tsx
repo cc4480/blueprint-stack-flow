@@ -122,55 +122,63 @@ ${prompt}
         },
         body: JSON.stringify({
           prompt: fullPrompt,
-          temperature: 0.7,
           systemPrompt: 'You are a Lovable 2.0 blueprint generation expert specialized in creating production-ready applications using React 18, Tailwind CSS, Vite, Shadcn/UI, and Supabase.'
         }),
+        signal: abortController.signal
       });
 
-      if (!response.body) throw new Error("No response stream");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      if (!response.body) {
+        throw new Error("No response stream received");
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
+      let accumulatedContent = "";
+
+      setStreamProgress('🚀 Connected to streaming endpoint...');
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        if (done) {
+          setStreamProgress('✅ Stream completed');
+          break;
+        }
 
-        const lines = buffer.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+
         for (let i = 0; i < lines.length - 1; i++) {
           const line = lines[i].trim();
-          if (line.startsWith('data:')) {
+          if (line.startsWith('data: ')) {
             try {
-              const jsonData = line.slice(5).trim();
-              if (jsonData) {
-                const data = JSON.parse(jsonData);
-                
-                if (data.type === 'token' && data.content) {
-                  setGeneratedBlueprint(prev => {
-                    const newContent = prev + data.content;
-                    setStreamProgress(`Generating blueprint... ${newContent.length} characters`);
-                    return newContent;
-                  });
-                } else if (data.type === 'complete') {
-                  // Display detailed completion statistics
-                  const processingTime = data.processingTime || 0;
-                  const totalTokens = data.totalTokens || 0;
-                  const totalCharacters = data.totalCharacters || 0;
-                  const timeInSeconds = (processingTime / 1000).toFixed(1);
-                  
-                  setStreamProgress(`✅ Blueprint completed! ${totalCharacters} characters, ${totalTokens} tokens in ${timeInSeconds}s`);
-                  setIsStreaming(false);
-                  console.log(`✅ Blueprint generation completed in ${processingTime}ms`);
-                  return;
-                } else if (data.type === 'error') {
-                  setStreamProgress(`❌ Error: ${data.error}`);
-                  throw new Error(data.error);
-                }
+              const jsonStr = line.slice(6);
+              if (jsonStr === '[DONE]') {
+                setStreamProgress('✅ Blueprint generation completed!');
+                setIsStreaming(false);
+                return;
+              }
+
+              const data = JSON.parse(jsonStr);
+
+              if (data.type === 'token' && data.content) {
+                accumulatedContent += data.content;
+                setGeneratedBlueprint(accumulatedContent);
+                setStreamProgress(`📝 Generating... ${accumulatedContent.length} characters`);
+              } else if (data.type === 'complete') {
+                setStreamProgress(`✅ Generation completed! Total: ${data.totalCharacters || accumulatedContent.length} characters`);
+                setIsStreaming(false);
+                return;
+              } else if (data.type === 'error') {
+                throw new Error(data.error || 'Unknown streaming error');
               }
             } catch (parseError) {
-              console.warn('Failed to parse streaming data:', parseError);
+              console.warn('Failed to parse streaming data:', parseError, 'Raw line:', line);
             }
           }
         }
@@ -178,12 +186,20 @@ ${prompt}
       }
     } catch (error) {
       console.error('Streaming generation failed:', error);
-      if (error instanceof Error && error.name === 'AbortError') {
-        setGeneratedBlueprint('Blueprint generation was cancelled due to timeout.');
-        setStreamProgress('❌ Generation cancelled (timeout)');
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setGeneratedBlueprint('Blueprint generation was cancelled due to timeout. DeepSeek reasoning requires more processing time for complex blueprints.');
+          setStreamProgress('⏱️ Generation timeout (5 minutes exceeded)');
+        } else if (error.message.includes('HTTP')) {
+          setGeneratedBlueprint(`Server error: ${error.message}. Please check if the DeepSeek API key is configured.`);
+          setStreamProgress('❌ Server connection failed');
+        } else {
+          setGeneratedBlueprint(`Generation failed: ${error.message}`);
+          setStreamProgress('❌ Generation error');
+        }
       } else {
-        setGeneratedBlueprint('Failed to generate blueprint. Please check your connection and try again.');
-        setStreamProgress('❌ Generation failed');
+        setGeneratedBlueprint('Unknown error occurred during blueprint generation.');
+        setStreamProgress('❌ Unknown error');
       }
     } finally {
       // Cleanup
@@ -356,7 +372,7 @@ ${prompt}
                     </>
                   )}
                 </Button>
-                
+
                 {/* Streaming Progress */}
                 {(isGenerating || streamProgress) && (
                   <div className="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-400/30 backdrop-blur-sm">

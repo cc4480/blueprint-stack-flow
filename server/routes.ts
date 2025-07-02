@@ -120,18 +120,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // DeepSeek Streaming Blueprint Generation
-  // DeepSeek Streaming Blueprint Generation - EXACT implementation as provided
   app.post("/api/stream-blueprint", async (req, res) => {
     const { prompt, systemPrompt } = req.body;
 
+    console.log('🔥 Blueprint streaming request received:', { 
+      promptLength: prompt?.length, 
+      hasSystemPrompt: !!systemPrompt 
+    });
+
     if (!prompt?.trim()) {
+      console.error('❌ No prompt provided');
       return res.status(400).json({ error: "Prompt is required" });
     }
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
-      return res.status(400).json({ error: "DeepSeek API key is required" });
+      console.error('❌ DeepSeek API key not configured');
+      return res.status(500).json({ error: "DeepSeek API key not configured on server" });
     }
 
     // Set streaming headers
@@ -156,6 +162,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       ];
 
+      console.log('🤖 Sending request to DeepSeek API...');
+
       const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -172,8 +180,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ DeepSeek API error:', response.status, errorText);
+        throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
       }
+
+      console.log('✅ DeepSeek API responded successfully, starting stream...');
 
       if (!response.body) {
         throw new Error("No response stream");
@@ -224,12 +236,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buffer = parts[parts.length - 1];
       }
     } catch (error) {
-      console.error("Streaming error:", error);
-      res.write(`data: ${JSON.stringify({
-        type: "error",
-        error: error instanceof Error ? error.message : "Streaming failed"
-      })}\n\n`);
-      res.end();
+      console.error("❌ Streaming error:", error);
+      
+      if (!res.headersSent) {
+        // If headers haven't been sent, send JSON error
+        return res.status(500).json({
+          error: error instanceof Error ? error.message : "Streaming failed"
+        });
+      } else {
+        // If streaming has started, send streaming error
+        res.write(`data: ${JSON.stringify({
+          type: "error",
+          error: error instanceof Error ? error.message : "Streaming failed"
+        })}\n\n`);
+        res.end();
+      }
     }
   });
 
