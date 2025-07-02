@@ -1,0 +1,43 @@
+
+{
+  "frontend_dependencies": {
+    "required": [
+      "react",
+      "lucide-react",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-card",
+      "@radix-ui/react-button",
+      "@radix-ui/react-textarea",
+      "@radix-ui/react-badge",
+      "class-variance-authority",
+      "clsx",
+      "tailwind-merge"
+    ],
+    "install_command": "npm install react lucide-react @radix-ui/react-dialog @radix-ui/react-card @radix-ui/react-button @radix-ui/react-textarea @radix-ui/react-badge class-variance-authority clsx tailwind-merge"
+  },
+  "backend_dependencies": {
+    "required": [
+      "express",
+      "@types/express",
+      "cors",
+      "dotenv"
+    ],
+    "install_command": "npm install express @types/express cors dotenv"
+  },
+  "environment_variables": {
+    "required": [
+      "DEEPSEEK_API_KEY"
+    ],
+    "example": {
+      "DEEPSEEK_API_KEY": "sk-your-deepseek-api-key-here"
+    }
+  },
+  "typescript_support": {
+    "types": [
+      "@types/node",
+      "@types/react",
+      "@types/react-dom"
+    ],
+    "install_command": "npm install -D @types/node @types/react @types/react-dom typescript"
+  }
+}
