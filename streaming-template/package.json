@@ -1,0 +1,27 @@
+
+{
+  "name": "streaming-template",
+  "version": "1.0.0",
+  "description": "Complete streaming implementation template for DeepSeek API",
+  "main": "server/streaming-routes.js",
+  "scripts": {
+    "dev": "node server/example-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "streaming",
+    "deepseek",
+    "api",
+    "template",
+    "react",
+    "express"
+  ]
+}
