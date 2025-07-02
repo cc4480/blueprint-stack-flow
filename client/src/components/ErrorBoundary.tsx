@@ -5,20 +5,6 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
-
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-
-interface Props {
-  children: ReactNode;
   fallback?: ReactNode;
 }
 
