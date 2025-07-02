@@ -317,4 +317,3 @@ export const isTimeoutError = (error: Error): boolean => {
          error.name === 'AbortError' ||
          error.name === 'TimeoutError';
 };
-};
