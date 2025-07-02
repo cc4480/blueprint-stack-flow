@@ -13,7 +13,6 @@ import PromptStudio from "./pages/PromptStudio";
 import A2AAgents from "./pages/A2AAgents";
 import Analytics from "./pages/Analytics";
 import Documentation from "./pages/Documentation";
-import Tutorials from "./pages/Tutorials";
 import Projects from "./pages/Projects";
 import Templates from "./pages/Templates";
 import Integrations from "./pages/Integrations";
@@ -77,7 +76,6 @@ const App: React.FC = () => {
               <Route path="/a2a-agents" element={<A2AAgents />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/docs" element={<Documentation />} />
-              <Route path="/tutorials" element={<Tutorials />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/templates" element={<Templates />} />
               <Route path="/integrations" element={<Integrations />} />
