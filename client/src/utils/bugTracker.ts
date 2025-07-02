@@ -316,5 +316,5 @@ export const isTimeoutError = (error: Error): boolean => {
          error.message.includes('aborted') ||
          error.name === 'AbortError' ||
          error.name === 'TimeoutError';
-};or';
+};
 };
