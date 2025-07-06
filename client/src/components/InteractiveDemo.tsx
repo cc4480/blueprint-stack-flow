@@ -75,6 +75,45 @@ export default function InteractiveDemo() {
     setSelectAll(!selectAll);
   };
 
+  const saveBlueprintToDatabase = async (userPrompt: string, generatedBlueprint: string, metadata: any) => {
+    try {
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const blueprintData = {
+        userPrompt,
+        generatedBlueprint,
+        reasoningContent: '',
+        estimatedBuildTime: 'Variable based on complexity',
+        complexity: 'AI-Generated',
+        suggestedComponents: [],
+        mcpEndpoints: [],
+        a2aProtocols: [],
+        ragPipeline: 'RAG 2.0 Integration',
+        sessionId: sessionId,
+        tokensUsed: metadata.totalCharacters || 0,
+        modelUsed: 'deepseek-reasoner',
+        temperature: 0.7
+      };
+
+      const response = await fetch('/api/blueprint-prompts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(blueprintData),
+      });
+
+      if (response.ok) {
+        console.log('Blueprint automatically saved to database');
+        setStreamProgress('💾 Blueprint automatically saved to database');
+      } else {
+        console.error('Failed to save blueprint to database');
+      }
+    } catch (error) {
+      console.error('Failed to save blueprint to database:', error);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
@@ -87,6 +126,8 @@ export default function InteractiveDemo() {
     // Create AbortController for request cancellation
     const abortController = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let accumulatedContent = '';
+    let blueprintSaved = false;
 
     try {
       // Create comprehensive prompt for Lovable 2.0
@@ -139,7 +180,6 @@ ${prompt}
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
-      let accumulatedContent = "";
 
       setStreamProgress('🚀 Connected to streaming endpoint...');
 
@@ -174,6 +214,14 @@ ${prompt}
                   setStreamProgress(`📝 Generating... ${accumulatedContent.length} characters`);
                 } else if (data.type === 'complete') {
                   setStreamProgress(`✅ Generation completed! Total: ${data.totalCharacters || accumulatedContent.length} characters`);
+                  
+                  // Automatically save the generated blueprint to database
+                  await saveBlueprintToDatabase(prompt, accumulatedContent, {
+                    features: selectedFeatures,
+                    totalCharacters: data.totalCharacters || accumulatedContent.length
+                  });
+                  blueprintSaved = true;
+                  
                   setIsStreaming(false);
                   return;
                 } else if (data.type === 'error') {
@@ -207,6 +255,18 @@ ${prompt}
         setStreamProgress('❌ Unknown error');
       }
     } finally {
+      // Auto-save if we have generated content and it wasn't already saved
+      if (!blueprintSaved && accumulatedContent && accumulatedContent.length > 100) {
+        try {
+          await saveBlueprintToDatabase(prompt, accumulatedContent, {
+            features: selectedFeatures,
+            totalCharacters: accumulatedContent.length
+          });
+        } catch (saveError) {
+          console.warn('Failed to auto-save blueprint:', saveError);
+        }
+      }
+      
       // Cleanup
       if (timeoutId) {
         clearTimeout(timeoutId);
