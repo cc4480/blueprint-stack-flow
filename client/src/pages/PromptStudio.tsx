@@ -298,11 +298,6 @@ ${response}
         </div>
 
         <div className="mb-6 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-400/30 rounded-lg">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <p className="text-green-400">DeepSeek API configured with AI Master Blueprint Template v4.0</p>
-          </div>
-          
           <div className="max-w-2xl mx-auto p-4 bg-blue-900/20 border border-blue-400/30 rounded-lg">
             <h3 className="text-blue-300 font-medium mb-2">AI Master Blueprint Template v4.0 Features:</h3>
             <div className="grid grid-cols-2 gap-2 text-sm text-blue-200">
