@@ -72,9 +72,20 @@ Always generate comprehensive prompts that leverage Lovable's full platform capa
 
   const loadSavedPrompts = async () => {
     try {
+      console.log('Loading saved prompts...');
       const response = await fetch('/api/blueprint-prompts');
-      const prompts = await response.json();
-      setSavedPrompts(prompts);
+      if (response.ok) {
+        const prompts = await response.json();
+        console.log('Loaded prompts:', prompts);
+        setSavedPrompts(prompts);
+        setShowSavedPrompts(true);
+        toast({
+          title: "Prompts Loaded",
+          description: `Found ${prompts.length} saved prompts.`,
+        });
+      } else {
+        throw new Error('Failed to load saved prompts');
+      }
     } catch (error) {
       console.error('Failed to load saved prompts:', error);
       toast({
