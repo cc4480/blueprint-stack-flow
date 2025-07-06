@@ -14,6 +14,8 @@ const PromptStudio = () => {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
+  const [savedPrompts, setSavedPrompts] = useState<any[]>([]);
+  const [showSavedPrompts, setShowSavedPrompts] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState(`You are an expert AI architect and Lovable 2.0 platform specialist. Your role is to create comprehensive application prompts specifically optimized for the Lovable no-code platform.
 
 ## Lovable 2.0 Platform Knowledge:
@@ -68,6 +70,31 @@ Always generate comprehensive prompts that leverage Lovable's full platform capa
     console.log('API key configured');
   };
 
+  const loadSavedPrompts = async () => {
+    try {
+      const response = await fetch('/api/blueprint-prompts');
+      const prompts = await response.json();
+      setSavedPrompts(prompts);
+    } catch (error) {
+      console.error('Failed to load saved prompts:', error);
+      toast({
+        title: "Failed to Load",
+        description: "Could not load saved prompts. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadPrompt = (savedPrompt: any) => {
+    setPrompt(savedPrompt.userPrompt);
+    setResponse(savedPrompt.generatedBlueprint);
+    setShowSavedPrompts(false);
+    toast({
+      title: "Prompt Loaded",
+      description: "Saved prompt has been loaded successfully.",
+    });
+  };
+
   const saveBlueprintToDatabase = async (userPrompt: string, generatedBlueprint: string, metadata: any) => {
     try {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -97,6 +124,10 @@ Always generate comprehensive prompts that leverage Lovable's full platform capa
       });
 
       console.log('Blueprint automatically saved to database');
+      // Refresh saved prompts if currently viewing them
+      if (showSavedPrompts) {
+        await loadSavedPrompts();
+      }
     } catch (error) {
       console.error('Failed to save blueprint to database:', error);
     }
@@ -297,19 +328,62 @@ ${response}
           </p>
         </div>
 
-        <div className="mb-6 text-center space-y-4">
-          <div className="max-w-2xl mx-auto p-4 bg-blue-900/20 border border-blue-400/30 rounded-lg">
-            <h3 className="text-blue-300 font-medium mb-2">AI Master Blueprint Template v4.0 Features:</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm text-blue-200">
-              <div>✓ AI-native architecture patterns</div>
-              <div>✓ Production-ready code examples</div>
-              <div>✓ RAG 2.0 integration guides</div>
-              <div>✓ MCP protocol implementations</div>
-              <div>✓ A2A agent coordination</div>
-              <div>✓ Complete deployment strategies</div>
-            </div>
-          </div>
-        </div>
+
+        
+        {/* Saved Prompts Section */}
+        {showSavedPrompts && (
+          <Card className="bg-gray-900 border-yellow-400/30 mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Save className="w-5 h-5 text-yellow-400" />
+                Saved Prompts ({savedPrompts.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {savedPrompts.length === 0 ? (
+                <p className="text-gray-400">No saved prompts found.</p>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {savedPrompts.map((savedPrompt, index) => (
+                    <div key={savedPrompt.id} className="border border-gray-700 rounded-lg p-4 hover:border-yellow-400/50 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-yellow-300 mb-1">
+                            Prompt #{index + 1}
+                          </h4>
+                          <p className="text-gray-300 text-sm line-clamp-2">
+                            {savedPrompt.userPrompt}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => loadPrompt(savedPrompt)}
+                          className="ml-4 border-yellow-400/50 text-yellow-300 hover:bg-yellow-900/20"
+                        >
+                          Load
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 text-xs text-gray-500">
+                        <Badge variant="outline" className="text-xs">
+                          {savedPrompt.modelUsed}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {new Date(savedPrompt.createdAt).toLocaleDateString()}
+                        </Badge>
+                        {savedPrompt.tokensUsed > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {savedPrompt.tokensUsed} tokens
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-gray-900 border-blue-400/30">
@@ -350,9 +424,16 @@ ${response}
                   <Play className="w-4 h-4 mr-2" />
                   {isLoading ? 'Processing...' : 'Execute'}
                 </Button>
-                <Button variant="outline" className="border-blue-400/50">
+                <Button 
+                  variant="outline" 
+                  className="border-blue-400/50"
+                  onClick={() => {
+                    setShowSavedPrompts(!showSavedPrompts);
+                    if (!showSavedPrompts) loadSavedPrompts();
+                  }}
+                >
                   <Save className="w-4 h-4 mr-2" />
-                  Save
+                  {showSavedPrompts ? 'Hide' : 'View Saved'}
                 </Button>
               </div>
             </CardContent>
