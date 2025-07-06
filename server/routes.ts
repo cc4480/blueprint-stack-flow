@@ -692,7 +692,21 @@ Generate detailed, production-ready blueprints that include complete technical s
     }
   });
 
-  const httpServer = createServer(app);
+  // Tutorial system seeding endpoint
+  app.post("/api/admin/seed-tutorials", async (req, res) => {
+    try {
+      const { seedTutorialSystem } = await import('./tutorial-seed-data');
+      const result = await seedTutorialSystem();
+      res.json({ 
+        message: "Tutorial system seeded successfully",
+        data: result
+      });
+    } catch (error) {
+      console.error("Error seeding tutorial system:", error);
+      res.status(500).json({ error: "Failed to seed tutorial system" });
+    }
+  });
+
   // Blueprint Prompts API routes
   app.get("/api/blueprint-prompts", async (req, res) => {
     try {
@@ -1000,5 +1014,224 @@ Generate detailed, production-ready blueprints that include complete technical s
     }
   });
 
+  // Tutorial Categories endpoints
+  app.get("/api/tutorial-categories", async (req, res) => {
+    try {
+      const categories = await storage.getTutorialCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching tutorial categories:", error);
+      res.status(500).json({ error: "Failed to fetch tutorial categories" });
+    }
+  });
+
+  app.post("/api/tutorial-categories", async (req, res) => {
+    try {
+      const category = await storage.createTutorialCategory(req.body);
+      res.status(201).json(category);
+    } catch (error) {
+      console.error("Error creating tutorial category:", error);
+      res.status(500).json({ error: "Failed to create tutorial category" });
+    }
+  });
+
+  // Learning Paths endpoints
+  app.get("/api/learning-paths", async (req, res) => {
+    try {
+      const { categoryId } = req.query;
+      const paths = await storage.getLearningPaths(categoryId as string);
+      res.json(paths);
+    } catch (error) {
+      console.error("Error fetching learning paths:", error);
+      res.status(500).json({ error: "Failed to fetch learning paths" });
+    }
+  });
+
+  app.get("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const path = await storage.getLearningPath(id);
+      if (!path) {
+        return res.status(404).json({ error: "Learning path not found" });
+      }
+      res.json(path);
+    } catch (error) {
+      console.error("Error fetching learning path:", error);
+      res.status(500).json({ error: "Failed to fetch learning path" });
+    }
+  });
+
+  app.post("/api/learning-paths", async (req, res) => {
+    try {
+      const path = await storage.createLearningPath(req.body);
+      res.status(201).json(path);
+    } catch (error) {
+      console.error("Error creating learning path:", error);
+      res.status(500).json({ error: "Failed to create learning path" });
+    }
+  });
+
+  app.put("/api/learning-paths/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.updateLearningPath(id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating learning path:", error);
+      res.status(500).json({ error: "Failed to update learning path" });
+    }
+  });
+
+  // Tutorials endpoints
+  app.get("/api/tutorials", async (req, res) => {
+    try {
+      const { categoryId, learningPathId } = req.query;
+      const tutorials = await storage.getTutorials(categoryId as string, learningPathId as string);
+      res.json(tutorials);
+    } catch (error) {
+      console.error("Error fetching tutorials:", error);
+      res.status(500).json({ error: "Failed to fetch tutorials" });
+    }
+  });
+
+  app.get("/api/tutorials/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const tutorial = await storage.getTutorial(id);
+      if (!tutorial) {
+        return res.status(404).json({ error: "Tutorial not found" });
+      }
+      res.json(tutorial);
+    } catch (error) {
+      console.error("Error fetching tutorial:", error);
+      res.status(500).json({ error: "Failed to fetch tutorial" });
+    }
+  });
+
+  app.post("/api/tutorials", async (req, res) => {
+    try {
+      const tutorial = await storage.createTutorial(req.body);
+      res.status(201).json(tutorial);
+    } catch (error) {
+      console.error("Error creating tutorial:", error);
+      res.status(500).json({ error: "Failed to create tutorial" });
+    }
+  });
+
+  app.put("/api/tutorials/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.updateTutorial(id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating tutorial:", error);
+      res.status(500).json({ error: "Failed to update tutorial" });
+    }
+  });
+
+  app.delete("/api/tutorials/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTutorial(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting tutorial:", error);
+      res.status(500).json({ error: "Failed to delete tutorial" });
+    }
+  });
+
+  // Tutorial Modules endpoints
+  app.get("/api/tutorial-modules", async (req, res) => {
+    try {
+      const { tutorialId, learningPathId } = req.query;
+      const modules = await storage.getTutorialModules(tutorialId as string, learningPathId as string);
+      res.json(modules);
+    } catch (error) {
+      console.error("Error fetching tutorial modules:", error);
+      res.status(500).json({ error: "Failed to fetch tutorial modules" });
+    }
+  });
+
+  app.post("/api/tutorial-modules", async (req, res) => {
+    try {
+      const module = await storage.createTutorialModule(req.body);
+      res.status(201).json(module);
+    } catch (error) {
+      console.error("Error creating tutorial module:", error);
+      res.status(500).json({ error: "Failed to create tutorial module" });
+    }
+  });
+
+  app.put("/api/tutorial-modules/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.updateTutorialModule(id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating tutorial module:", error);
+      res.status(500).json({ error: "Failed to update tutorial module" });
+    }
+  });
+
+  // User Progress endpoints
+  app.get("/api/user-progress", async (req, res) => {
+    try {
+      const { userId, tutorialId, learningPathId } = req.query;
+      const progress = await storage.getUserProgress(
+        parseInt(userId as string), 
+        tutorialId as string, 
+        learningPathId as string
+      );
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      res.status(500).json({ error: "Failed to fetch user progress" });
+    }
+  });
+
+  app.post("/api/user-progress", async (req, res) => {
+    try {
+      const progress = await storage.createUserProgress(req.body);
+      res.status(201).json(progress);
+    } catch (error) {
+      console.error("Error creating user progress:", error);
+      res.status(500).json({ error: "Failed to create user progress" });
+    }
+  });
+
+  app.put("/api/user-progress/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.updateUserProgress(id, req.body);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating user progress:", error);
+      res.status(500).json({ error: "Failed to update user progress" });
+    }
+  });
+
+  // Tutorial Resources endpoints
+  app.get("/api/tutorial-resources/:tutorialId", async (req, res) => {
+    try {
+      const { tutorialId } = req.params;
+      const resources = await storage.getTutorialResources(tutorialId);
+      res.json(resources);
+    } catch (error) {
+      console.error("Error fetching tutorial resources:", error);
+      res.status(500).json({ error: "Failed to fetch tutorial resources" });
+    }
+  });
+
+  app.post("/api/tutorial-resources", async (req, res) => {
+    try {
+      const resource = await storage.createTutorialResource(req.body);
+      res.status(201).json(resource);
+    } catch (error) {
+      console.error("Error creating tutorial resource:", error);
+      res.status(500).json({ error: "Failed to create tutorial resource" });
+    }
+  });
+
+  const httpServer = createServer(app);
   return httpServer;
 }

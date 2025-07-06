@@ -52,6 +52,10 @@ const Navigation = () => {
     path: '/docs',
     label: 'Documentation',
     icon: BookOpen
+  }, {
+    path: '/tutorials',
+    label: 'Tutorials',
+    icon: BookOpen
   }];
   const secondaryNavItems = [{
     path: '/projects',

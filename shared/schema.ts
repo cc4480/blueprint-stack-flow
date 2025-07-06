@@ -176,6 +176,101 @@ export const analyticsEvents = pgTable("analytics_events", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Tutorial Categories table
+export const tutorialCategories = pgTable("tutorial_categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  slug: text("slug").notNull().unique(),
+  order: integer("order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Learning Paths table
+export const learningPaths = pgTable("learning_paths", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
+  duration: text("duration"), // e.g., '4-6 hours'
+  moduleCount: integer("module_count").default(0),
+  categoryId: uuid("category_id").references(() => tutorialCategories.id),
+  slug: text("slug").notNull().unique(),
+  order: integer("order").default(0),
+  isActive: boolean("is_active").default(true),
+  prerequisites: json("prerequisites"), // Array of prerequisite path IDs
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tutorials table
+export const tutorials = pgTable("tutorials", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").notNull(), // 'interactive', 'deep_dive', 'project_based'
+  difficulty: text("difficulty").notNull(),
+  duration: text("duration"),
+  content: text("content"), // Markdown content
+  codeExamples: json("code_examples"), // Array of code examples
+  keyFeatures: json("key_features"), // Array of key features
+  learningObjectives: json("learning_objectives"), // Array of learning objectives
+  technology: text("technology"), // Main technology (React, Vue, etc.)
+  categoryId: uuid("category_id").references(() => tutorialCategories.id),
+  learningPathId: uuid("learning_path_id").references(() => learningPaths.id),
+  slug: text("slug").notNull().unique(),
+  order: integer("order").default(0),
+  isActive: boolean("is_active").default(true),
+  estimatedMinutes: integer("estimated_minutes").default(60),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tutorial Modules table
+export const tutorialModules = pgTable("tutorial_modules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tutorialId: uuid("tutorial_id").references(() => tutorials.id),
+  learningPathId: uuid("learning_path_id").references(() => learningPaths.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: text("content"), // Markdown content
+  codeExample: text("code_example"),
+  order: integer("order").default(0),
+  duration: text("duration"), // e.g., '15 minutes'
+  isCompleted: boolean("is_completed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User Progress table
+export const userProgress = pgTable("user_progress", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  tutorialId: uuid("tutorial_id").references(() => tutorials.id),
+  learningPathId: uuid("learning_path_id").references(() => learningPaths.id),
+  moduleId: uuid("module_id").references(() => tutorialModules.id),
+  status: text("status").notNull().default("not_started"), // 'not_started', 'in_progress', 'completed'
+  progressPercentage: integer("progress_percentage").default(0),
+  timeSpent: integer("time_spent").default(0), // in minutes
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tutorial Resources table
+export const tutorialResources = pgTable("tutorial_resources", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  tutorialId: uuid("tutorial_id").references(() => tutorials.id),
+  title: text("title").notNull(),
+  type: text("type").notNull(), // 'link', 'document', 'video', 'github'
+  url: text("url"),
+  description: text("description"),
+  order: integer("order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -194,6 +289,12 @@ export const insertSystemMetricSchema = createInsertSchema(systemMetrics);
 export const insertIntegrationStatusSchema = createInsertSchema(integrationStatus);
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences);
 export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents);
+export const insertTutorialCategorySchema = createInsertSchema(tutorialCategories);
+export const insertLearningPathSchema = createInsertSchema(learningPaths);
+export const insertTutorialSchema = createInsertSchema(tutorials);
+export const insertTutorialModuleSchema = createInsertSchema(tutorialModules);
+export const insertUserProgressSchema = createInsertSchema(userProgress);
+export const insertTutorialResourceSchema = createInsertSchema(tutorialResources);
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -219,3 +320,15 @@ export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type TutorialCategory = typeof tutorialCategories.$inferSelect;
+export type InsertTutorialCategory = z.infer<typeof insertTutorialCategorySchema>;
+export type LearningPath = typeof learningPaths.$inferSelect;
+export type InsertLearningPath = z.infer<typeof insertLearningPathSchema>;
+export type Tutorial = typeof tutorials.$inferSelect;
+export type InsertTutorial = z.infer<typeof insertTutorialSchema>;
+export type TutorialModule = typeof tutorialModules.$inferSelect;
+export type InsertTutorialModule = z.infer<typeof insertTutorialModuleSchema>;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+export type TutorialResource = typeof tutorialResources.$inferSelect;
+export type InsertTutorialResource = z.infer<typeof insertTutorialResourceSchema>;

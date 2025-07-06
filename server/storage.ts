@@ -15,6 +15,12 @@ import {
   integrationStatus,
   userPreferences,
   analyticsEvents,
+  tutorialCategories,
+  learningPaths,
+  tutorials,
+  tutorialModules,
+  userProgress,
+  tutorialResources,
   type User, 
   type InsertUser,
   type RagDocument,
@@ -38,7 +44,19 @@ import {
   type UserPreferences,
   type InsertUserPreferences,
   type AnalyticsEvent,
-  type InsertAnalyticsEvent
+  type InsertAnalyticsEvent,
+  type TutorialCategory,
+  type InsertTutorialCategory,
+  type LearningPath,
+  type InsertLearningPath,
+  type Tutorial,
+  type InsertTutorial,
+  type TutorialModule,
+  type InsertTutorialModule,
+  type UserProgress,
+  type InsertUserProgress,
+  type TutorialResource,
+  type InsertTutorialResource
 } from "@shared/schema";
 import { eq, desc, and, gte, lte, like, count } from "drizzle-orm";
 
@@ -133,6 +151,37 @@ export interface IStorage {
   // Analytics methods
   createAnalyticsEvent(event: Partial<InsertAnalyticsEvent>): Promise<AnalyticsEvent>;
   getAnalyticsEvents(sessionId?: string, eventType?: string): Promise<AnalyticsEvent[]>;
+  
+  // Tutorial Categories methods
+  getTutorialCategories(): Promise<TutorialCategory[]>;
+  createTutorialCategory(category: Partial<InsertTutorialCategory>): Promise<TutorialCategory>;
+  
+  // Learning Paths methods
+  getLearningPaths(categoryId?: string): Promise<LearningPath[]>;
+  getLearningPath(id: string): Promise<LearningPath | undefined>;
+  createLearningPath(path: Partial<InsertLearningPath>): Promise<LearningPath>;
+  updateLearningPath(id: string, path: Partial<LearningPath>): Promise<void>;
+  
+  // Tutorials methods
+  getTutorials(categoryId?: string, learningPathId?: string): Promise<Tutorial[]>;
+  getTutorial(id: string): Promise<Tutorial | undefined>;
+  createTutorial(tutorial: Partial<InsertTutorial>): Promise<Tutorial>;
+  updateTutorial(id: string, tutorial: Partial<Tutorial>): Promise<void>;
+  deleteTutorial(id: string): Promise<void>;
+  
+  // Tutorial Modules methods
+  getTutorialModules(tutorialId?: string, learningPathId?: string): Promise<TutorialModule[]>;
+  createTutorialModule(module: Partial<InsertTutorialModule>): Promise<TutorialModule>;
+  updateTutorialModule(id: string, module: Partial<TutorialModule>): Promise<void>;
+  
+  // User Progress methods
+  getUserProgress(userId: number, tutorialId?: string, learningPathId?: string): Promise<UserProgress[]>;
+  createUserProgress(progress: Partial<InsertUserProgress>): Promise<UserProgress>;
+  updateUserProgress(id: string, progress: Partial<UserProgress>): Promise<void>;
+  
+  // Tutorial Resources methods
+  getTutorialResources(tutorialId: string): Promise<TutorialResource[]>;
+  createTutorialResource(resource: Partial<InsertTutorialResource>): Promise<TutorialResource>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -671,6 +720,230 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching analytics events:', error);
       throw new Error('Failed to fetch analytics events');
+    }
+  }
+
+  // Tutorial Categories methods
+  async getTutorialCategories(): Promise<TutorialCategory[]> {
+    try {
+      return await db.select().from(tutorialCategories).orderBy(tutorialCategories.order);
+    } catch (error) {
+      console.error('Error fetching tutorial categories:', error);
+      throw new Error('Failed to fetch tutorial categories');
+    }
+  }
+
+  async createTutorialCategory(category: Partial<InsertTutorialCategory>): Promise<TutorialCategory> {
+    try {
+      const result = await db.insert(tutorialCategories).values(category as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create tutorial category - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating tutorial category:', error);
+      throw new Error(`Failed to create tutorial category: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Learning Paths methods
+  async getLearningPaths(categoryId?: string): Promise<LearningPath[]> {
+    try {
+      if (categoryId) {
+        return await db.select().from(learningPaths).where(eq(learningPaths.categoryId, categoryId)).orderBy(learningPaths.order);
+      }
+      return await db.select().from(learningPaths).orderBy(learningPaths.order);
+    } catch (error) {
+      console.error('Error fetching learning paths:', error);
+      throw new Error('Failed to fetch learning paths');
+    }
+  }
+
+  async getLearningPath(id: string): Promise<LearningPath | undefined> {
+    try {
+      const result = await db.select().from(learningPaths).where(eq(learningPaths.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching learning path:', error);
+      throw new Error('Failed to fetch learning path');
+    }
+  }
+
+  async createLearningPath(path: Partial<InsertLearningPath>): Promise<LearningPath> {
+    try {
+      const result = await db.insert(learningPaths).values(path as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create learning path - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating learning path:', error);
+      throw new Error(`Failed to create learning path: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateLearningPath(id: string, path: Partial<LearningPath>): Promise<void> {
+    try {
+      await db.update(learningPaths).set(path as any).where(eq(learningPaths.id, id));
+    } catch (error) {
+      console.error('Error updating learning path:', error);
+      throw new Error('Failed to update learning path');
+    }
+  }
+
+  // Tutorials methods
+  async getTutorials(categoryId?: string, learningPathId?: string): Promise<Tutorial[]> {
+    try {
+      const conditions = [];
+      if (categoryId) conditions.push(eq(tutorials.categoryId, categoryId));
+      if (learningPathId) conditions.push(eq(tutorials.learningPathId, learningPathId));
+      
+      if (conditions.length > 0) {
+        return await db.select().from(tutorials).where(and(...conditions)).orderBy(tutorials.order);
+      }
+      return await db.select().from(tutorials).orderBy(tutorials.order);
+    } catch (error) {
+      console.error('Error fetching tutorials:', error);
+      throw new Error('Failed to fetch tutorials');
+    }
+  }
+
+  async getTutorial(id: string): Promise<Tutorial | undefined> {
+    try {
+      const result = await db.select().from(tutorials).where(eq(tutorials.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error fetching tutorial:', error);
+      throw new Error('Failed to fetch tutorial');
+    }
+  }
+
+  async createTutorial(tutorial: Partial<InsertTutorial>): Promise<Tutorial> {
+    try {
+      const result = await db.insert(tutorials).values(tutorial as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create tutorial - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating tutorial:', error);
+      throw new Error(`Failed to create tutorial: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateTutorial(id: string, tutorial: Partial<Tutorial>): Promise<void> {
+    try {
+      await db.update(tutorials).set(tutorial as any).where(eq(tutorials.id, id));
+    } catch (error) {
+      console.error('Error updating tutorial:', error);
+      throw new Error('Failed to update tutorial');
+    }
+  }
+
+  async deleteTutorial(id: string): Promise<void> {
+    try {
+      await db.delete(tutorials).where(eq(tutorials.id, id));
+    } catch (error) {
+      console.error('Error deleting tutorial:', error);
+      throw new Error('Failed to delete tutorial');
+    }
+  }
+
+  // Tutorial Modules methods
+  async getTutorialModules(tutorialId?: string, learningPathId?: string): Promise<TutorialModule[]> {
+    try {
+      const conditions = [];
+      if (tutorialId) conditions.push(eq(tutorialModules.tutorialId, tutorialId));
+      if (learningPathId) conditions.push(eq(tutorialModules.learningPathId, learningPathId));
+      
+      if (conditions.length > 0) {
+        return await db.select().from(tutorialModules).where(and(...conditions)).orderBy(tutorialModules.order);
+      }
+      return await db.select().from(tutorialModules).orderBy(tutorialModules.order);
+    } catch (error) {
+      console.error('Error fetching tutorial modules:', error);
+      throw new Error('Failed to fetch tutorial modules');
+    }
+  }
+
+  async createTutorialModule(module: Partial<InsertTutorialModule>): Promise<TutorialModule> {
+    try {
+      const result = await db.insert(tutorialModules).values(module as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create tutorial module - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating tutorial module:', error);
+      throw new Error(`Failed to create tutorial module: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateTutorialModule(id: string, module: Partial<TutorialModule>): Promise<void> {
+    try {
+      await db.update(tutorialModules).set(module as any).where(eq(tutorialModules.id, id));
+    } catch (error) {
+      console.error('Error updating tutorial module:', error);
+      throw new Error('Failed to update tutorial module');
+    }
+  }
+
+  // User Progress methods
+  async getUserProgress(userId: number, tutorialId?: string, learningPathId?: string): Promise<UserProgress[]> {
+    try {
+      const conditions = [eq(userProgress.userId, userId)];
+      if (tutorialId) conditions.push(eq(userProgress.tutorialId, tutorialId));
+      if (learningPathId) conditions.push(eq(userProgress.learningPathId, learningPathId));
+      
+      return await db.select().from(userProgress).where(and(...conditions)).orderBy(userProgress.createdAt);
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+      throw new Error('Failed to fetch user progress');
+    }
+  }
+
+  async createUserProgress(progress: Partial<InsertUserProgress>): Promise<UserProgress> {
+    try {
+      const result = await db.insert(userProgress).values(progress as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create user progress - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user progress:', error);
+      throw new Error(`Failed to create user progress: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateUserProgress(id: string, progress: Partial<UserProgress>): Promise<void> {
+    try {
+      await db.update(userProgress).set(progress as any).where(eq(userProgress.id, id));
+    } catch (error) {
+      console.error('Error updating user progress:', error);
+      throw new Error('Failed to update user progress');
+    }
+  }
+
+  // Tutorial Resources methods
+  async getTutorialResources(tutorialId: string): Promise<TutorialResource[]> {
+    try {
+      return await db.select().from(tutorialResources).where(eq(tutorialResources.tutorialId, tutorialId)).orderBy(tutorialResources.order);
+    } catch (error) {
+      console.error('Error fetching tutorial resources:', error);
+      throw new Error('Failed to fetch tutorial resources');
+    }
+  }
+
+  async createTutorialResource(resource: Partial<InsertTutorialResource>): Promise<TutorialResource> {
+    try {
+      const result = await db.insert(tutorialResources).values(resource as any).returning();
+      if (!result[0]) {
+        throw new Error('Failed to create tutorial resource - no result returned');
+      }
+      return result[0];
+    } catch (error) {
+      console.error('Error creating tutorial resource:', error);
+      throw new Error(`Failed to create tutorial resource: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

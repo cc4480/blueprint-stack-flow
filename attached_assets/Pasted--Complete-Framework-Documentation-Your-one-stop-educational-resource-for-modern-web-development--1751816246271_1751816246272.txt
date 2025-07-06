@@ -1,0 +1,177 @@
+
+
+Complete Framework Documentation
+Your one-stop educational resource for modern web development. Learn every framework, understand architectural patterns, and master the complete NoCodeLos Blueprint Stack.
+
+Overview
+Frameworks
+Architecture
+Tutorials
+Complete Beginner Learning Paths
+Structured learning paths designed specifically for beginners with no prior experience
+
+Web Development Fundamentals
+Absolute Beginner
+Start your journey with HTML, CSS, and JavaScript basics. Perfect for absolute beginners.
+
+Duration:
+4-6 hours
+Modules:
+5 modules
+Learning Path:
+HTML Structure
+CSS Styling
+JavaScript Basics
+DOM Manipulation
+Development Tools
+Start Learning Path
+React Fundamentals
+Beginner
+Master React from scratch with components, state, props, and hooks. Build real projects.
+
+Duration:
+6-8 hours
+Modules:
+7 modules
+Learning Path:
+Components & JSX
+Props & State
+Event Handling
+Hooks
+Project Structure
+Start Learning Path
+Backend API Development
+Getting Comfortable
+Create robust APIs with Node.js, Express, and databases. From basics to deployment.
+
+Duration:
+8-10 hours
+Modules:
+9 modules
+Learning Path:
+Express Setup
+Database Integration
+Authentication
+API Design
+Deployment
+Start Learning Path
+Interactive Coding Tutorials
+Hands-on tutorials with live code examples and step-by-step guidance
+
+Build a Todo App with React
+Beginner
+Create a complete todo application with state management, local storage, and modern React patterns.
+
+What you'll build: Interactive todo list with add, edit, delete, and filter functionality
+
+90 mins
+Key Features:
+useState Hook
+Event Handling
+Local Storage
+Component Composition
+Start Interactive Tutorial
+REST API with Express & PostgreSQL
+Intermediate
+Build a complete backend API with authentication, validation, and database integration.
+
+What you'll build: User management API with secure authentication and CRUD operations
+
+120 mins
+Key Features:
+Express Routing
+Database Models
+JWT Authentication
+Input Validation
+Start Interactive Tutorial
+Full-Stack Blog Platform
+Advanced
+Combine React frontend with Node.js backend to create a complete blogging platform.
+
+What you'll build: Complete blog with user accounts, post creation, and comment system
+
+180 mins
+Key Features:
+React Router
+API Integration
+User Authentication
+Rich Text Editor
+Start Interactive Tutorial
+Real-time Chat Application
+Advanced
+Learn WebSockets by building a real-time chat app with rooms and user presence.
+
+What you'll build: Live chat with multiple rooms, typing indicators, and online users
+
+150 mins
+Key Features:
+Socket.io
+Real-time Updates
+Chat Rooms
+User Presence
+Start Interactive Tutorial
+E-commerce Product Catalog
+Intermediate
+Create a product listing with search, filters, and shopping cart functionality.
+
+What you'll build: Product catalog with advanced search and shopping cart features
+
+135 mins
+Key Features:
+Search & Filter
+Shopping Cart
+Product Details
+Responsive Design
+Start Interactive Tutorial
+Weather Dashboard with APIs
+Beginner
+Build a weather dashboard consuming external APIs with data visualization.
+
+What you'll build: Weather dashboard with current conditions and 5-day forecast
+
+75 mins
+Key Features:
+API Integration
+Data Visualization
+Geolocation
+Error Handling
+Start Interactive Tutorial
+Framework Deep Dives
+Advanced tutorials focusing on specific frameworks and their ecosystems
+
+Next.js Full-Stack Development
+Master Next.js with SSR, API routes, and deployment strategies.
+
+Advanced
+4 hours
+Topics Covered:
+SSR/SSG
+API Routes
+Authentication
+Performance
+Deployment
+Start Deep Dive
+Vue.js Ecosystem Mastery
+Complete Vue.js development with Vuex, Vue Router, and Nuxt.js.
+
+Intermediate
+3.5 hours
+Topics Covered:
+Vue 3 Composition API
+Vuex State Management
+Vue Router
+Nuxt.js
+Testing
+Start Deep Dive
+Angular Enterprise Development
+Build large-scale applications with Angular, RxJS, and NgRx.
+
+Advanced
+5 hours
+Topics Covered:
+Angular Architecture
+RxJS Observables
+NgRx State Management
+Testing
+Performance
+Start Deep Dive
