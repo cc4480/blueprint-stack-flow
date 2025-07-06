@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import TutorialModal from '@/components/TutorialModal';
 import { 
   BookOpen, 
   Clock, 
@@ -59,6 +60,9 @@ const TutorialPage = () => {
   const [tutorials, setTutorials] = useState<Tutorial[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [selectedLearningPath, setSelectedLearningPath] = useState<string | null>(null);
+  const [selectedTutorial, setSelectedTutorial] = useState<string | null>(null);
+  const [isTutorialModalOpen, setIsTutorialModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,6 +114,54 @@ const TutorialPage = () => {
       case 'deep_dive': return <BookOpen className="w-4 h-4" />;
       case 'project_based': return <Code className="w-4 h-4" />;
       default: return <BookOpen className="w-4 h-4" />;
+    }
+  };
+
+  const handleStartLearningPath = async (pathId: string) => {
+    try {
+      setSelectedLearningPath(pathId);
+      // Here you could navigate to a dedicated learning path page
+      // or show a modal with the path content
+      console.log('Starting learning path:', pathId);
+      
+      // Example: Create user progress entry
+      const response = await fetch('/api/user-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 1, // This would come from auth context
+          learningPathId: pathId,
+          progress: 0,
+          status: 'started'
+        })
+      });
+      
+      if (response.ok) {
+        alert('Learning path started! Check your progress in the dashboard.');
+      }
+    } catch (error) {
+      console.error('Error starting learning path:', error);
+    }
+  };
+
+  const handleStartTutorial = async (tutorialId: string) => {
+    try {
+      setSelectedTutorial(tutorialId);
+      setIsTutorialModalOpen(true);
+      
+      // Example: Create user progress entry
+      const response = await fetch('/api/user-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 1, // This would come from auth context
+          tutorialId: tutorialId,
+          progress: 0,
+          status: 'started'
+        })
+      });
+    } catch (error) {
+      console.error('Error starting tutorial:', error);
     }
   };
 
@@ -236,7 +288,10 @@ const TutorialPage = () => {
                       <Progress value={0} className="w-full h-2" />
                     </div>
 
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleStartLearningPath(path.id)}
+                    >
                       <Play className="w-4 h-4 mr-2" />
                       Start Learning Path
                     </Button>
@@ -298,7 +353,10 @@ const TutorialPage = () => {
                       </div>
                     )}
 
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleStartTutorial(tutorial.id)}
+                    >
                       {getTypeIcon(tutorial.type)}
                       <span className="ml-2">Start {tutorial.type === 'interactive' ? 'Interactive' : ''} Tutorial</span>
                       <ArrowRight className="w-4 h-4 ml-2" />
@@ -371,6 +429,13 @@ const TutorialPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal
+        isOpen={isTutorialModalOpen}
+        onClose={() => setIsTutorialModalOpen(false)}
+        tutorialId={selectedTutorial}
+      />
     </div>
   );
 };
