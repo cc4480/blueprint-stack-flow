@@ -160,12 +160,7 @@ const Navigation = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="hidden md:flex text-white/90 hover:text-blue-400 hover:bg-blue-400/10 border border-transparent hover:border-blue-400/30 rounded-lg px-4 py-2 transition-all duration-300" asChild>
-              <Link to="/auth">
-                <Shield className="w-4 h-4 mr-2" />
-                Sign In
-              </Link>
-            </Button>
+
 
             <Button size="sm" className="hidden md:flex bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 hover:from-blue-600 hover:via-purple-600 hover:to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 border border-blue-400/30 transition-all duration-300 hover:scale-105" asChild>
               <Link to="/get-started">
