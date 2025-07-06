@@ -413,6 +413,285 @@ Generate detailed, production-ready blueprints that include complete technical s
     }
   });
 
+  // Templates API endpoints
+  app.get("/api/templates", async (req, res) => {
+    try {
+      const { category } = req.query;
+      const templates = await storage.getTemplates(category as string);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching templates:", error);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    }
+  });
+
+  app.get("/api/templates/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const template = await storage.getTemplate(id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching template:", error);
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  app.post("/api/templates", async (req, res) => {
+    try {
+      const templateData = req.body;
+      const newTemplate = await storage.createTemplate(templateData);
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      console.error("Error creating template:", error);
+      res.status(500).json({ error: "Failed to create template" });
+    }
+  });
+
+  app.put("/api/templates/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      await storage.updateTemplate(id, updates);
+      res.json({ message: "Template updated successfully" });
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Failed to update template" });
+    }
+  });
+
+  app.delete("/api/templates/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteTemplate(id);
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      res.status(500).json({ error: "Failed to delete template" });
+    }
+  });
+
+  // RAG Queries API endpoints
+  app.get("/api/rag-queries", async (req, res) => {
+    try {
+      const { sessionId } = req.query;
+      const queries = await storage.getRagQueries(sessionId as string);
+      res.json(queries);
+    } catch (error) {
+      console.error("Error fetching RAG queries:", error);
+      res.status(500).json({ error: "Failed to fetch RAG queries" });
+    }
+  });
+
+  app.post("/api/rag-queries", async (req, res) => {
+    try {
+      const queryData = req.body;
+      const newQuery = await storage.createRagQuery(queryData);
+      res.status(201).json(newQuery);
+    } catch (error) {
+      console.error("Error creating RAG query:", error);
+      res.status(500).json({ error: "Failed to create RAG query" });
+    }
+  });
+
+  // MCP Tool Executions API endpoints
+  app.get("/api/mcp-tool-executions", async (req, res) => {
+    try {
+      const { serverId } = req.query;
+      const executions = await storage.getMcpToolExecutions(serverId as string);
+      res.json(executions);
+    } catch (error) {
+      console.error("Error fetching MCP tool executions:", error);
+      res.status(500).json({ error: "Failed to fetch MCP tool executions" });
+    }
+  });
+
+  app.post("/api/mcp-tool-executions", async (req, res) => {
+    try {
+      const executionData = req.body;
+      const newExecution = await storage.createMcpToolExecution(executionData);
+      res.status(201).json(newExecution);
+    } catch (error) {
+      console.error("Error creating MCP tool execution:", error);
+      res.status(500).json({ error: "Failed to create MCP tool execution" });
+    }
+  });
+
+  // A2A Tasks API endpoints
+  app.get("/api/a2a-tasks", async (req, res) => {
+    try {
+      const { agentId } = req.query;
+      const tasks = await storage.getA2aTasks(agentId as string);
+      res.json(tasks);
+    } catch (error) {
+      console.error("Error fetching A2A tasks:", error);
+      res.status(500).json({ error: "Failed to fetch A2A tasks" });
+    }
+  });
+
+  app.post("/api/a2a-tasks", async (req, res) => {
+    try {
+      const taskData = req.body;
+      const newTask = await storage.createA2aTask(taskData);
+      res.status(201).json(newTask);
+    } catch (error) {
+      console.error("Error creating A2A task:", error);
+      res.status(500).json({ error: "Failed to create A2A task" });
+    }
+  });
+
+  app.patch("/api/a2a-tasks/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, result } = req.body;
+      await storage.updateA2aTaskStatus(id, status, result);
+      res.json({ message: "Task status updated successfully" });
+    } catch (error) {
+      console.error("Error updating A2A task status:", error);
+      res.status(500).json({ error: "Failed to update A2A task status" });
+    }
+  });
+
+  // System Metrics API endpoints
+  app.get("/api/system-metrics", async (req, res) => {
+    try {
+      const { category, startDate, endDate } = req.query;
+      const start = startDate ? new Date(startDate as string) : undefined;
+      const end = endDate ? new Date(endDate as string) : undefined;
+      const metrics = await storage.getSystemMetrics(category as string, start, end);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching system metrics:", error);
+      res.status(500).json({ error: "Failed to fetch system metrics" });
+    }
+  });
+
+  app.post("/api/system-metrics", async (req, res) => {
+    try {
+      const metricData = req.body;
+      const newMetric = await storage.createSystemMetric(metricData);
+      res.status(201).json(newMetric);
+    } catch (error) {
+      console.error("Error creating system metric:", error);
+      res.status(500).json({ error: "Failed to create system metric" });
+    }
+  });
+
+  // Integration Status API endpoints
+  app.get("/api/integration-status", async (req, res) => {
+    try {
+      const integrations = await storage.getIntegrationStatus();
+      res.json(integrations);
+    } catch (error) {
+      console.error("Error fetching integration status:", error);
+      res.status(500).json({ error: "Failed to fetch integration status" });
+    }
+  });
+
+  app.patch("/api/integration-status/:serviceName", async (req, res) => {
+    try {
+      const { serviceName } = req.params;
+      const statusData = req.body;
+      await storage.updateIntegrationStatus(serviceName, statusData);
+      res.json({ message: "Integration status updated successfully" });
+    } catch (error) {
+      console.error("Error updating integration status:", error);
+      res.status(500).json({ error: "Failed to update integration status" });
+    }
+  });
+
+  // User Preferences API endpoints
+  app.get("/api/user-preferences/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const preferences = await storage.getUserPreferences(parseInt(userId));
+      if (!preferences) {
+        return res.status(404).json({ error: "User preferences not found" });
+      }
+      res.json(preferences);
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.status(500).json({ error: "Failed to fetch user preferences" });
+    }
+  });
+
+  app.put("/api/user-preferences/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const preferencesData = req.body;
+      await storage.updateUserPreferences(parseInt(userId), preferencesData);
+      res.json({ message: "User preferences updated successfully" });
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      res.status(500).json({ error: "Failed to update user preferences" });
+    }
+  });
+
+  // Analytics API endpoints
+  app.get("/api/analytics/events", async (req, res) => {
+    try {
+      const { sessionId, eventType } = req.query;
+      const events = await storage.getAnalyticsEvents(sessionId as string, eventType as string);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching analytics events:", error);
+      res.status(500).json({ error: "Failed to fetch analytics events" });
+    }
+  });
+
+  app.post("/api/analytics/events", async (req, res) => {
+    try {
+      const eventData = req.body;
+      const newEvent = await storage.createAnalyticsEvent(eventData);
+      res.status(201).json(newEvent);
+    } catch (error) {
+      console.error("Error creating analytics event:", error);
+      res.status(500).json({ error: "Failed to create analytics event" });
+    }
+  });
+
+  // Search endpoints
+  app.get("/api/search/rag-documents", async (req, res) => {
+    try {
+      const { q, limit } = req.query;
+      if (!q) {
+        return res.status(400).json({ error: "Query parameter 'q' is required" });
+      }
+      const results = await storage.searchRagDocuments(q as string, parseInt(limit as string) || 10);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching RAG documents:", error);
+      res.status(500).json({ error: "Failed to search RAG documents" });
+    }
+  });
+
+  // Enhanced A2A Agent status update endpoint
+  app.patch("/api/a2a/agents/:id/status", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      await storage.updateA2aAgentStatus(id, status);
+      res.json({ message: "A2A agent status updated successfully" });
+    } catch (error) {
+      console.error("Error updating A2A agent status:", error);
+      res.status(500).json({ error: "Failed to update A2A agent status" });
+    }
+  });
+
+  // Database seeding endpoint (for development/testing)
+  app.post("/api/admin/seed-database", async (req, res) => {
+    try {
+      const { seedDatabase } = await import('./seed-data');
+      await seedDatabase();
+      res.json({ message: "Database seeded successfully" });
+    } catch (error) {
+      console.error("Error seeding database:", error);
+      res.status(500).json({ error: "Failed to seed database" });
+    }
+  });
+
   const httpServer = createServer(app);
   // Blueprint Prompts API routes
   app.get("/api/blueprint-prompts", async (req, res) => {
