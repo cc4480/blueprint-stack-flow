@@ -32,10 +32,10 @@ interface LearningPath {
   description: string;
   difficulty: string;
   duration: string;
-  moduleCount: number;
-  categoryId: string;
+  module_count: number;
+  category_id: string;
   slug: string;
-  isActive: boolean;
+  is_active: boolean;
 }
 
 interface Tutorial {
@@ -46,11 +46,11 @@ interface Tutorial {
   difficulty: string;
   duration: string;
   technology: string;
-  categoryId: string;
+  category_id: string;
   slug: string;
-  estimatedMinutes: number;
-  keyFeatures: string[];
-  learningObjectives: string[];
+  estimated_minutes: number;
+  key_features: string[];
+  learning_objectives: string[];
 }
 
 const TutorialPage = () => {
@@ -89,11 +89,11 @@ const TutorialPage = () => {
 
   const filteredPaths = selectedCategory === 'all' 
     ? learningPaths 
-    : learningPaths.filter(path => path.categoryId === selectedCategory);
+    : learningPaths.filter(path => path.category_id === selectedCategory);
 
   const filteredTutorials = selectedCategory === 'all'
     ? tutorials
-    : tutorials.filter(tutorial => tutorial.categoryId === selectedCategory);
+    : tutorials.filter(tutorial => tutorial.category_id === selectedCategory);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -220,7 +220,7 @@ const TutorialPage = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <BookOpen className="w-4 h-4" />
-                        {path.moduleCount} modules
+                        {path.module_count} modules
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
@@ -276,22 +276,22 @@ const TutorialPage = () => {
                         {tutorial.technology}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
-                        {tutorial.estimatedMinutes} mins
+                        {tutorial.estimated_minutes} mins
                       </Badge>
                     </div>
 
-                    {tutorial.keyFeatures && tutorial.keyFeatures.length > 0 && (
+                    {tutorial.key_features && tutorial.key_features.length > 0 && (
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium text-gray-300">Key Features:</h4>
                         <div className="flex flex-wrap gap-1">
-                          {tutorial.keyFeatures.slice(0, 3).map((feature, index) => (
+                          {tutorial.key_features.slice(0, 3).map((feature, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {feature}
                             </Badge>
                           ))}
-                          {tutorial.keyFeatures.length > 3 && (
+                          {tutorial.key_features.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{tutorial.keyFeatures.length - 3} more
+                              +{tutorial.key_features.length - 3} more
                             </Badge>
                           )}
                         </div>
