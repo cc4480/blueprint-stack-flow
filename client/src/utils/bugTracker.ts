@@ -1,3 +1,4 @@
+
 interface BugReport {
   id: string;
   type: 'error' | 'warning' | 'performance' | 'validation';
@@ -100,7 +101,7 @@ class BugTracker {
             message: 'Poor Largest Contentful Paint',
             context: {
               lcpTime: lcp.startTime,
-              element: (lcp as any).element?.tagName
+              element: (lcp as any).element?.tagName || 'unknown'
             },
             severity: 'medium'
           });

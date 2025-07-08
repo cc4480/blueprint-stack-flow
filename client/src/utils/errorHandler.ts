@@ -1,3 +1,4 @@
+
 interface ErrorMetrics {
   totalErrors: number;
   errorsByType: Record<string, number>;
@@ -196,7 +197,7 @@ class ErrorHandler {
       message: `Network request failed: ${endpoint}`,
       context: {
         endpoint,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         retryable: true,
         retryFunction
       },
