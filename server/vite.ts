@@ -33,6 +33,12 @@ export async function setupVite(app: Express, server: Server) {
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
+        // Dep-optimizer scan warnings about aliased local paths are non-fatal;
+        // Vite's runtime resolver handles them correctly at request time.
+        if (msg.includes("dependencies are imported but could not be resolved")) {
+          viteLogger.warn(msg, options);
+          return;
+        }
         viteLogger.error(msg, options);
         process.exit(1);
       },
@@ -49,15 +55,14 @@ export async function setupVite(app: Express, server: Server) {
       const clientTemplate = path.resolve(
         import.meta.dirname,
         "..",
-        "client",
         "index.html",
       );
 
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
+        `src="/client/src/main.tsx"`,
+        `src="/client/src/main.tsx?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);

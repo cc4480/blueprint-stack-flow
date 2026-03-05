@@ -62,27 +62,28 @@ import { eq, desc, and, gte, lte, like, count } from "drizzle-orm";
 
 // Database connection with error handling
 let client: ReturnType<typeof postgres>;
+// db is initialised below when DATABASE_URL is present;
+// PostgresStorage is only instantiated in that branch so the non-null assertion is safe
 let db: ReturnType<typeof drizzle>;
 
-try {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL environment variable is required');
+if (process.env.DATABASE_URL) {
+  try {
+    client = postgres(process.env.DATABASE_URL, {
+      max: 10,
+      idle_timeout: 60,
+      max_lifetime: 60 * 30,
+      onnotice: (notice) => {
+        console.log('PostgreSQL notice:', notice);
+      }
+    });
+    db = drizzle(client);
+    console.log('✅ Database connected successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    throw error;
   }
-  
-  client = postgres(process.env.DATABASE_URL, {
-    max: 10, // Maximum connections
-    idle_timeout: 60, // Close idle connections after 60 seconds
-    max_lifetime: 60 * 30, // Close connections after 30 minutes
-    onnotice: (notice) => {
-      console.log('PostgreSQL notice:', notice);
-    }
-  });
-  
-  db = drizzle(client);
-  console.log('✅ Database connected successfully');
-} catch (error) {
-  console.error('❌ Database connection failed:', error);
-  throw error;
+} else {
+  console.warn('⚠️  DATABASE_URL not set — using in-memory storage (dev/test mode)');
 }
 
 export interface IStorage {
@@ -948,4 +949,244 @@ export class PostgresStorage implements IStorage {
   }
 }
 
-export const storage = new PostgresStorage();
+// ---------------------------------------------------------------------------
+// In-memory storage — used when DATABASE_URL is not set (dev / test mode)
+// ---------------------------------------------------------------------------
+function uuid() {
+  return crypto.randomUUID();
+}
+function now() {
+  return new Date();
+}
+
+export class MemStorage implements IStorage {
+  private _users: User[] = [];
+  private _ragDocs: RagDocument[] = [];
+  private _mcpServers: McpServer[] = [];
+  private _a2aAgents: A2aAgent[] = [];
+  private _conversations: DeepseekConversation[] = [];
+  private _blueprints: BlueprintPrompt[] = [];
+  private _templates: Template[] = [];
+  private _ragQueries: RagQuery[] = [];
+  private _mcpExecs: McpToolExecution[] = [];
+  private _a2aTasks: A2aTask[] = [];
+  private _metrics: SystemMetric[] = [];
+  private _integrations: IntegrationStatus[] = [];
+  private _prefs: UserPreferences[] = [];
+  private _events: AnalyticsEvent[] = [];
+  private _tutCategories: TutorialCategory[] = [];
+  private _learningPaths: LearningPath[] = [];
+  private _tutorials: Tutorial[] = [];
+  private _tutModules: TutorialModule[] = [];
+  private _progress: UserProgress[] = [];
+  private _resources: TutorialResource[] = [];
+
+  async getUser(id: number) { return this._users.find(u => u.id === id); }
+  async getUserByUsername(username: string) { return this._users.find(u => u.username === username); }
+  async createUser(user: InsertUser): Promise<User> {
+    const u = { ...user, id: this._users.length + 1 } as User;
+    this._users.push(u); return u;
+  }
+
+  async getRagDocuments() { return [...this._ragDocs]; }
+  async createRagDocument(doc: Partial<RagDocument>): Promise<RagDocument> {
+    const d = { id: uuid(), title: '', content: '', metadata: null, embedding: null, createdAt: now(), updatedAt: now(), ...doc } as RagDocument;
+    this._ragDocs.push(d); return d;
+  }
+  async searchRagDocuments(query: string, limit = 10) {
+    const q = query.toLowerCase();
+    return this._ragDocs.filter(d => d.title.toLowerCase().includes(q) || d.content.toLowerCase().includes(q)).slice(0, limit);
+  }
+  async deleteRagDocument(id: string) { this._ragDocs = this._ragDocs.filter(d => d.id !== id); }
+
+  async getMcpServers() { return [...this._mcpServers]; }
+  async createMcpServer(server: Partial<McpServer>): Promise<McpServer> {
+    const s = { id: uuid(), name: '', transport: 'http', status: 'inactive', endpoint: null, capabilities: null, protocolVersion: null, command: null, createdAt: now(), updatedAt: now(), ...server } as McpServer;
+    this._mcpServers.push(s); return s;
+  }
+  async updateMcpServerStatus(id: string, status: string) {
+    const s = this._mcpServers.find(s => s.id === id); if (s) s.status = status;
+  }
+
+  async getA2aAgents() { return [...this._a2aAgents]; }
+  async createA2aAgent(agent: Partial<A2aAgent>): Promise<A2aAgent> {
+    const a = { id: uuid(), name: '', status: 'inactive', description: null, capabilities: null, endpoint: null, agentCard: null, createdAt: now(), updatedAt: now(), ...agent } as A2aAgent;
+    this._a2aAgents.push(a); return a;
+  }
+  async updateA2aAgentStatus(id: string, status: string) {
+    const a = this._a2aAgents.find(a => a.id === id); if (a) a.status = status;
+  }
+
+  async getDeepseekConversations(sessionId: string) {
+    return this._conversations.filter(c => c.sessionId === sessionId);
+  }
+  async createDeepseekConversation(conversation: Partial<DeepseekConversation>): Promise<DeepseekConversation> {
+    const c = { id: uuid(), sessionId: '', messages: [], reasoningSteps: null, model: null, temperature: null, maxSteps: null, confidence: null, processingTimeMs: null, createdAt: now(), updatedAt: now(), ...conversation } as DeepseekConversation;
+    this._conversations.push(c); return c;
+  }
+
+  async getBlueprintPrompts() { return [...this._blueprints]; }
+  async getBlueprintPrompt(id: string) { return this._blueprints.find(b => b.id === id); }
+  async createBlueprintPrompt(prompt: Partial<InsertBlueprintPrompt>): Promise<BlueprintPrompt> {
+    const b = { id: uuid(), userPrompt: '', generatedBlueprint: '', reasoningContent: null, estimatedBuildTime: null, complexity: null, suggestedComponents: null, mcpEndpoints: null, a2aProtocols: null, ragPipeline: null, tokensUsed: null, modelUsed: 'deepseek-reasoner', temperature: 0.7, sessionId: null, createdAt: now(), updatedAt: now(), ...prompt } as BlueprintPrompt;
+    this._blueprints.push(b); return b;
+  }
+  async updateBlueprintPrompt(id: string, prompt: Partial<BlueprintPrompt>) {
+    const i = this._blueprints.findIndex(b => b.id === id);
+    if (i !== -1) this._blueprints[i] = { ...this._blueprints[i], ...prompt };
+  }
+
+  async getTemplates(category?: string) {
+    return category ? this._templates.filter(t => t.category === category) : [...this._templates];
+  }
+  async getTemplate(id: string) { return this._templates.find(t => t.id === id); }
+  async createTemplate(template: Partial<InsertTemplate>): Promise<Template> {
+    const t = { id: uuid(), name: '', category: '', content: '', description: null, metadata: null, tags: null, isPublic: false, downloadCount: 0, rating: 0, createdAt: now(), updatedAt: now(), ...template } as Template;
+    this._templates.push(t); return t;
+  }
+  async updateTemplate(id: string, template: Partial<Template>) {
+    const i = this._templates.findIndex(t => t.id === id);
+    if (i !== -1) this._templates[i] = { ...this._templates[i], ...template };
+  }
+  async deleteTemplate(id: string) { this._templates = this._templates.filter(t => t.id !== id); }
+
+  async getRagQueries(sessionId?: string) {
+    return sessionId ? this._ragQueries.filter(q => q.sessionId === sessionId) : [...this._ragQueries];
+  }
+  async createRagQuery(query: Partial<InsertRagQuery>): Promise<RagQuery> {
+    const q = { id: uuid(), query: '', totalFound: 0, processingTimeMs: null, relevanceScore: null, feedbackScore: null, sessionId: null, createdAt: now(), ...query } as RagQuery;
+    this._ragQueries.push(q); return q;
+  }
+
+  async getMcpToolExecutions(serverId?: string) {
+    return serverId ? this._mcpExecs.filter(e => e.serverId === serverId) : [...this._mcpExecs];
+  }
+  async createMcpToolExecution(execution: Partial<InsertMcpToolExecution>): Promise<McpToolExecution> {
+    const e = { id: uuid(), toolName: '', serverId: null, status: 'completed', executionTimeMs: null, inputParams: null, outputData: null, errorMessage: null, createdAt: now(), ...execution } as McpToolExecution;
+    this._mcpExecs.push(e); return e;
+  }
+
+  async getA2aTasks(agentId?: string) {
+    return agentId ? this._a2aTasks.filter(t => t.agentId === agentId) : [...this._a2aTasks];
+  }
+  async createA2aTask(task: Partial<InsertA2aTask>): Promise<A2aTask> {
+    const t = { id: uuid(), taskType: '', agentId: null, status: 'pending', metadata: null, complexityScore: null, result: null, createdAt: now(), completedAt: null, ...task } as A2aTask;
+    this._a2aTasks.push(t); return t;
+  }
+  async updateA2aTaskStatus(id: string, status: string, result?: any) {
+    const t = this._a2aTasks.find(t => t.id === id);
+    if (t) { t.status = status; if (result !== undefined) t.result = result; }
+  }
+
+  async getSystemMetrics(category?: string) {
+    return category ? this._metrics.filter(m => m.category === category) : [...this._metrics];
+  }
+  async createSystemMetric(metric: Partial<InsertSystemMetric>): Promise<SystemMetric> {
+    const m = { id: uuid(), metricName: '', value: 0, category: '', timestamp: now(), ...metric } as SystemMetric;
+    this._metrics.push(m); return m;
+  }
+
+  async getIntegrationStatus() { return [...this._integrations]; }
+  async updateIntegrationStatus(serviceName: string, status: Partial<IntegrationStatus>) {
+    const i = this._integrations.findIndex(s => s.serviceName === serviceName);
+    if (i !== -1) { this._integrations[i] = { ...this._integrations[i], ...status }; }
+    else { this._integrations.push({ id: uuid(), serviceName, status: 'unknown', lastCheck: now(), responseTimeMs: null, errorCount: 0, lastError: null, ...status } as IntegrationStatus); }
+  }
+
+  async getUserPreferences(userId: number) { return this._prefs.find(p => p.userId === userId); }
+  async updateUserPreferences(userId: number, preferences: Partial<InsertUserPreferences>) {
+    const i = this._prefs.findIndex(p => p.userId === userId);
+    if (i !== -1) { this._prefs[i] = { ...this._prefs[i], ...preferences }; }
+    else { this._prefs.push({ id: uuid(), userId, preferences: {}, theme: 'dark', language: 'en', createdAt: now(), updatedAt: now(), ...preferences } as UserPreferences); }
+  }
+
+  async createAnalyticsEvent(event: Partial<InsertAnalyticsEvent>): Promise<AnalyticsEvent> {
+    const e = { id: uuid(), eventType: '', sessionId: '', userId: null, eventData: null, timestamp: now(), ...event } as AnalyticsEvent;
+    this._events.push(e); return e;
+  }
+  async getAnalyticsEvents(sessionId?: string, eventType?: string) {
+    return this._events.filter(e =>
+      (!sessionId || e.sessionId === sessionId) &&
+      (!eventType || e.eventType === eventType)
+    );
+  }
+
+  async getTutorialCategories() { return [...this._tutCategories]; }
+  async createTutorialCategory(category: Partial<InsertTutorialCategory>): Promise<TutorialCategory> {
+    const c = { id: uuid(), name: '', slug: '', description: null, icon: null, order: 0, createdAt: now(), updatedAt: now(), ...category } as TutorialCategory;
+    this._tutCategories.push(c); return c;
+  }
+
+  async getLearningPaths(categoryId?: string) {
+    return categoryId ? this._learningPaths.filter(p => p.categoryId === categoryId) : [...this._learningPaths];
+  }
+  async getLearningPath(id: string) { return this._learningPaths.find(p => p.id === id); }
+  async createLearningPath(path: Partial<InsertLearningPath>): Promise<LearningPath> {
+    const p = { id: uuid(), title: '', difficulty: 'beginner', slug: '', description: null, duration: null, moduleCount: 0, categoryId: null, order: 0, isActive: true, prerequisites: null, createdAt: now(), updatedAt: now(), ...path } as LearningPath;
+    this._learningPaths.push(p); return p;
+  }
+  async updateLearningPath(id: string, path: Partial<LearningPath>) {
+    const i = this._learningPaths.findIndex(p => p.id === id);
+    if (i !== -1) this._learningPaths[i] = { ...this._learningPaths[i], ...path };
+  }
+
+  async getTutorials(categoryId?: string, learningPathId?: string) {
+    return this._tutorials.filter(t =>
+      (!categoryId || t.categoryId === categoryId) &&
+      (!learningPathId || t.learningPathId === learningPathId)
+    );
+  }
+  async getTutorial(id: string) { return this._tutorials.find(t => t.id === id); }
+  async createTutorial(tutorial: Partial<InsertTutorial>): Promise<Tutorial> {
+    const t = { id: uuid(), title: '', type: 'interactive', difficulty: 'beginner', slug: '', description: null, duration: null, content: null, codeExamples: null, keyFeatures: null, learningObjectives: null, technology: null, categoryId: null, learningPathId: null, order: 0, isActive: true, estimatedMinutes: 60, createdAt: now(), updatedAt: now(), ...tutorial } as Tutorial;
+    this._tutorials.push(t); return t;
+  }
+  async updateTutorial(id: string, tutorial: Partial<Tutorial>) {
+    const i = this._tutorials.findIndex(t => t.id === id);
+    if (i !== -1) this._tutorials[i] = { ...this._tutorials[i], ...tutorial };
+  }
+  async deleteTutorial(id: string) { this._tutorials = this._tutorials.filter(t => t.id !== id); }
+
+  async getTutorialModules(tutorialId?: string, learningPathId?: string) {
+    return this._tutModules.filter(m =>
+      (!tutorialId || m.tutorialId === tutorialId) &&
+      (!learningPathId || m.learningPathId === learningPathId)
+    );
+  }
+  async createTutorialModule(module: Partial<InsertTutorialModule>): Promise<TutorialModule> {
+    const m = { id: uuid(), title: '', tutorialId: null, learningPathId: null, description: null, content: null, codeExample: null, order: 0, duration: null, isCompleted: false, createdAt: now(), updatedAt: now(), ...module } as TutorialModule;
+    this._tutModules.push(m); return m;
+  }
+  async updateTutorialModule(id: string, module: Partial<TutorialModule>) {
+    const i = this._tutModules.findIndex(m => m.id === id);
+    if (i !== -1) this._tutModules[i] = { ...this._tutModules[i], ...module };
+  }
+
+  async getUserProgress(userId: number, tutorialId?: string, learningPathId?: string) {
+    return this._progress.filter(p =>
+      p.userId === userId &&
+      (!tutorialId || p.tutorialId === tutorialId) &&
+      (!learningPathId || p.learningPathId === learningPathId)
+    );
+  }
+  async createUserProgress(progress: Partial<InsertUserProgress>): Promise<UserProgress> {
+    const p = { id: uuid(), userId: null, tutorialId: null, learningPathId: null, moduleId: null, status: 'not_started', progressPercentage: 0, timeSpent: 0, completedAt: null, createdAt: now(), updatedAt: now(), ...progress } as UserProgress;
+    this._progress.push(p); return p;
+  }
+  async updateUserProgress(id: string, progress: Partial<UserProgress>) {
+    const i = this._progress.findIndex(p => p.id === id);
+    if (i !== -1) this._progress[i] = { ...this._progress[i], ...progress };
+  }
+
+  async getTutorialResources(tutorialId: string) {
+    return this._resources.filter(r => r.tutorialId === tutorialId);
+  }
+  async createTutorialResource(resource: Partial<InsertTutorialResource>): Promise<TutorialResource> {
+    const r = { id: uuid(), tutorialId: null, title: '', type: 'link', url: null, description: null, order: 0, createdAt: now(), ...resource } as TutorialResource;
+    this._resources.push(r); return r;
+  }
+}
+
+export const storage: IStorage = process.env.DATABASE_URL
+  ? new PostgresStorage()
+  : new MemStorage();
