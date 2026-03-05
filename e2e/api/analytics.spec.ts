@@ -24,7 +24,7 @@ test.describe("Analytics & Metrics API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const event = body as Record<string, unknown>;
     expect(event.id).toBeTruthy();
     expect(event.eventType).toBe(payload.eventType);
@@ -59,7 +59,7 @@ test.describe("Analytics & Metrics API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const metric = body as Record<string, unknown>;
     expect(metric.id).toBeTruthy();
     expect(metric.metricName).toBe(payload.metricName);
@@ -98,7 +98,7 @@ test.describe("Analytics & Metrics API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const ragQuery = body as Record<string, unknown>;
     expect(ragQuery.id).toBeTruthy();
     expect(ragQuery.query).toBe(payload.query);

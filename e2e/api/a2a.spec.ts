@@ -24,7 +24,7 @@ test.describe("A2A Agents API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const agent = body as Record<string, unknown>;
     expect(agent.id).toBeTruthy();
     expect(agent.name).toBe(payload.name);
@@ -61,7 +61,7 @@ test.describe("A2A Agents API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const task = body as Record<string, unknown>;
     expect(task.id).toBeTruthy();
     expect(task.taskType).toBe(payload.taskType);

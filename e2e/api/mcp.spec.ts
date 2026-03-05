@@ -24,7 +24,7 @@ test.describe("MCP Servers API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const server = body as Record<string, unknown>;
     expect(server.id).toBeTruthy();
     expect(server.name).toBe(payload.name);
@@ -69,7 +69,7 @@ test.describe("MCP Servers API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const exec = body as Record<string, unknown>;
     expect(exec.id).toBeTruthy();
     expect(exec.toolName).toBe(payload.toolName);

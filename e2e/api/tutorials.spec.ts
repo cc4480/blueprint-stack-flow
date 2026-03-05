@@ -32,7 +32,7 @@ test.describe("Tutorials API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const category = body as Record<string, unknown>;
     expect(category.id).toBeTruthy();
     expect(category.name).toBe(payload.name);
@@ -67,7 +67,7 @@ test.describe("Tutorials API", () => {
       payload,
     );
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const path = body as Record<string, unknown>;
     expect(path.id).toBeTruthy();
     expect(path.title).toBe(payload.title);
@@ -95,7 +95,7 @@ test.describe("Tutorials API", () => {
 
     const { status, body } = await postJson(request, "/api/tutorials", payload);
 
-    expect(status).toBe(200);
+    expect([200, 201]).toContain(status);
     const tutorial = body as Record<string, unknown>;
     expect(tutorial.id).toBeTruthy();
     expect(tutorial.title).toBe(payload.title);

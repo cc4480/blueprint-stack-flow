@@ -18,6 +18,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./client/src"),
     },
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      plugins: [
+        {
+          name: "resolve-at-alias",
+          setup(build) {
+            build.onResolve({ filter: /^@\// }, (args) => ({
+              path: path.resolve(__dirname, "client/src", args.path.slice(2)),
+            }));
+          },
+        },
+      ],
+    },
+  },
   root: ".",
   build: {
     outDir: "dist",
